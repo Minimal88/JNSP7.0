@@ -1,7 +1,8 @@
+# Project Related
+*.dat
+
 # MAC Files
 src/._*
-
-
 
 # Python Stuff
 
