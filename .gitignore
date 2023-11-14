@@ -1,5 +1,15 @@
 # Project Related
 *.dat
+*.model
+*.output
+*.sat  
+*.cor
+*.filter
+*.ion
+*.meas
+*.pos
+*.var
+
 
 # MAC Files
 src/._*
