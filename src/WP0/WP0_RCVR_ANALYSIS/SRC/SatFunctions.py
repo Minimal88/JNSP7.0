@@ -172,24 +172,13 @@ def plotSatTracks(LosData):
 
 # T2.4 Plot Satellite Velicities Figures
 def plotSatVelocities(LosData):
-
-    velocities = LosData[[LOS_IDX["VEL-X[m/s]"], LOS_IDX["VEL-X[m/s]"], LOS_IDX["VEL-X[m/s]"]]].values
-
-    vel_x = LosData[LOS_IDX["VEL-X[m/s]"]] * 1000
-    vel_y = LosData[LOS_IDX["VEL-Y[m/s]"]] * 1000
-    vel_z = LosData[LOS_IDX["VEL-Z[m/s]"]] * 1000
-
-    print(vel_x.min(), vel_x.max()) # Check range
-
-    speed = np.linalg.norm([vel_x, vel_y, vel_z], axis=1)
-    #speed = np.linalg.norm([vel_x, vel_y, vel_z], axis=1) 
-
-    print(speed.min(), speed.max()) # Check computed speed range
     
-    # TOD: Separar los datos para un solo satelite
+    vel_x = LosData[LOS_IDX["VEL-X[m/s]"]] 
+    vel_y = LosData[LOS_IDX["VEL-Y[m/s]"]]
+    vel_z = LosData[LOS_IDX["VEL-Z[m/s]"]]
     
     # Speed is length of velocity vector 
-    speed = np.linalg.norm(velocities, axis=1)
+    speed = np.linalg.norm([vel_x, vel_y, vel_z], axis=0)
     
     # Plot settings
     PlotConf = {}
