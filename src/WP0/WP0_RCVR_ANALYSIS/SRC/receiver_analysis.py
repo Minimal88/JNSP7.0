@@ -123,3 +123,20 @@ if(Conf["PLOT_SATTRK"] == '1'):
 
     # Configure plot and call plot generation function
     SatFunctions.plotSatTracks(LosData)
+
+# Plot Satellite Velocity figures
+
+if(Conf["PLOT_SATVEL"] == '1'):
+    # Read the cols we need from LOS file
+    LosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
+    usecols=[LOS_IDX["SOD"],
+    LOS_IDX["PRN"],
+    LOS_IDX["VEL-X[m/s]"],
+    LOS_IDX["VEL-Y[m/s]"],
+    LOS_IDX["VEL-Z[m/s]"],
+    LOS_IDX["ELEV"]])
+    
+    print( 'Plot Satellite Velocities ...')
+
+    # Configure plot and call plot generation function
+    SatFunctions.plotSatVelocities(LosData)
