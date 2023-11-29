@@ -226,3 +226,38 @@ def plotSatVelocities(LosData):
     
     # Generate plot
     generatePlot(PlotConf)
+
+# T2.5 NAV Satellite Clock
+def plotSatClock(LosData):
+    
+    # Loop through each unique sorted PRN
+    for prn in sorted(unique(LosData[LOS_IDX["PRN"]])): 
+        prn_data = LosData[LosData[LOS_IDX["PRN"]] == prn]  # Filter data for the current PRN
+        
+        sat_clock = prn_data[LOS_IDX["SV-CLK[m]"]]  # Extract satellite clock information for the current PRN
+        
+        # Plot settings
+        PlotConf = {}
+
+        PlotConf["Type"] = "Lines"
+        PlotConf["FigSize"] = (16.8, 15.2)
+        PlotConf["Title"] = f"PRN {int(prn)} NAV CLK from TLSA on Year 2015 DoY 006 "
+
+        PlotConf["yLabel"] = "CLK [Km]"
+        PlotConf["xLabel"] = "Hour of DoY 006"
+
+        PlotConf["Grid"] = True
+        PlotConf["Marker"] = '.'
+        PlotConf["LineWidth"] = 1.5
+
+        PlotConf["xData"] = {}
+        PlotConf["yData"] = {}
+
+        Label = 0
+        PlotConf["xData"][Label] = prn_data[LOS_IDX["SOD"]] / GnssConstants.S_IN_H  # Converting to hours
+        PlotConf["yData"][Label] = sat_clock / 1000  # Converting to Km
+
+        PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/SAT/SAT_CLOCKS/' + f'SAT_CLOCK_PRN_{int(prn)}.png'  
+
+        # Generate plot
+        generatePlot(PlotConf)  # Assuming generatePlot function is defined elsewhere

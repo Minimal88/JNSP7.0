@@ -140,3 +140,13 @@ if(Conf["PLOT_SATVEL"] == '1'):
 
     # Configure plot and call plot generation function
     SatFunctions.plotSatVelocities(LosData)
+
+if(Conf["PLOT_SATCLK"] == '1'):
+    # Read the cols we need from LOS file
+    LosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
+    usecols=[LOS_IDX["SOD"],LOS_IDX["SV-CLK[m]"],LOS_IDX["ELEV"],LOS_IDX["PRN"]])
+    
+    print( 'Plot Satellite Velocities ...')
+
+    # Configure plot and call plot generation function
+    SatFunctions.plotSatClock(LosData)
