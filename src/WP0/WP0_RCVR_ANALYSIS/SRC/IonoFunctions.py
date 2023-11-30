@@ -128,3 +128,40 @@ def plotSatIonoVtecTimeElev(LosData):
     
     # Generate plot
     generatePlot(PlotConf) 
+
+# T3. PRN vs TIME (VTEC)
+def plotSatIonoPrnVtec(LosData):
+    vtec = LosData[LOS_IDX["VTEC[m]"]]  # Extracting satellite VTEC information
+    
+    # Plot settings    
+    PlotConf = {}
+    PlotConf["Type"] = "Lines"
+    PlotConf["FigSize"] = (16.8, 15.2)
+    PlotConf["Title"] = "Satellite Visibility vs VTEC from TLSA on Year 2015 DoY 006"
+
+    PlotConf["yLabel"] = "GPS-PRN"
+    PlotConf["xLabel"] = "Hour of Day 006"
+    
+    PlotConf["Grid"] = True
+    PlotConf["Marker"] = '.'
+    PlotConf["LineWidth"] = 1.5
+
+    PlotConf["ColorBar"] = "gnuplot"
+    PlotConf["ColorBarLabel"] = "VTEC [m]"
+    PlotConf["ColorBarMin"] = min(vtec)
+    PlotConf["ColorBarMax"] = max(vtec)
+
+    PlotConf["xData"] = {}
+    PlotConf["yData"] = {}
+    PlotConf["zData"] = {}
+    
+    Label = 0
+    PlotConf["xData"][Label] = LosData[LOS_IDX["SOD"]] / GnssConstants.S_IN_H  # Converting to hours
+    PlotConf["yData"][Label] = LosData[LOS_IDX["PRN"]]  # Elevation data
+    PlotConf["zData"][Label] = vtec  # Using satellite VTEC in m
+    
+    PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/SAT/' + 'IONO_VTEC_vs_PRN_TLSA_D006Y15.png'  # Adjust path as needed
+    
+    # Generate plot
+    generatePlot(PlotConf) 
+    

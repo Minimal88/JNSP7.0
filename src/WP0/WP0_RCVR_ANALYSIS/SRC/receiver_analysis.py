@@ -211,6 +211,15 @@ if(Conf["PLOT_IONO_VTEC_TIME"] == '1'):
 
     # Configure plot and call plot generation function
     IonoFunctions.plotSatIonoVtecTimeElev(LosData)
+    
+if(Conf["PLOT_IONO_PRN_VTEC"] == '1'):
+    # Read the cols we need from LOS file
+    LosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
+    usecols=[LOS_IDX["SOD"],LOS_IDX["VTEC[m]"],LOS_IDX["PRN"]])
+    
+    print( 'Ploting the Satellites PRN vs TIME (VTEC) image ...')
 
+    # Configure plot and call plot generation function
+    IonoFunctions.plotSatIonoPrnVtec(LosData)
 
 
