@@ -92,3 +92,39 @@ def plotSatIonoPrnStec(LosData):
     
     # Generate plot
     generatePlot(PlotConf) 
+
+# T3.3 VTEC vs. Time
+def plotSatIonoVtecTimeElev(LosData):
+    vtec = LosData[LOS_IDX["VTEC[m]"]]  # Extracting satellite VTEC information
+    
+    # Plot settings    
+    PlotConf = {}
+    PlotConf["Type"] = "Lines"
+    PlotConf["FigSize"] = (16.8, 15.2)
+    PlotConf["Title"] = "Ionospheric Klobuchar (VTEC) from TLSA on Year 2015 DoY 006"
+
+    PlotConf["yLabel"] = "VTEC [m]"
+    PlotConf["xLabel"] = "Hour of Day 006"
+    
+    PlotConf["Grid"] = True
+    PlotConf["Marker"] = '.'
+    PlotConf["LineWidth"] = 1.5
+
+    PlotConf["ColorBar"] = "gnuplot"
+    PlotConf["ColorBarLabel"] = "Elevation [deg]"
+    PlotConf["ColorBarMin"] = 0.
+    PlotConf["ColorBarMax"] = 90.
+
+    PlotConf["xData"] = {}
+    PlotConf["yData"] = {}
+    PlotConf["zData"] = {}
+    
+    Label = 0
+    PlotConf["xData"][Label] = LosData[LOS_IDX["SOD"]] / GnssConstants.S_IN_H  # Converting to hours
+    PlotConf["yData"][Label] = vtec  # Using satellite VTEC in m
+    PlotConf["zData"][Label] = LosData[LOS_IDX["ELEV"]]  # Elevation data
+    
+    PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/SAT/' + 'IONO_VTEC_vs_TIME_TLSA_D006Y15.png'  # Adjust path as needed
+    
+    # Generate plot
+    generatePlot(PlotConf) 
