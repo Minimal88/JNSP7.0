@@ -160,3 +160,13 @@ if(Conf["PLOT_SAT_CORRECTEDCLK"] == '1'):
 
     # Configure plot and call plot generation function
     SatFunctions.plotSatCorrectedClock(LosData)
+
+if(Conf["PLOT_SATTGD"] == '1'):
+    # Read the cols we need from LOS file
+    LosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
+    usecols=[LOS_IDX["SOD"],LOS_IDX["TGD[m]"],LOS_IDX["PRN"]])
+    
+    print( 'Plot Satellite TGD ...')
+
+    # Configure plot and call plot generation function
+    SatFunctions.plotSatTGD(LosData)
