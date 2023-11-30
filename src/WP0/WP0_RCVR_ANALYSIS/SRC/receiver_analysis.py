@@ -93,7 +93,7 @@ if(Conf["PLOT_SATVIS"] == '1'):
     LosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
     usecols=[LOS_IDX["SOD"],LOS_IDX["PRN"],LOS_IDX["ELEV"]])
     
-    print( 'Plot Satellite Visibility Periods ...')
+    print( 'Ploting the Satellite Visibility image Periods ...')
 
     # Configure plot and call plot generation function
     SatFunctions.plotSatVisibility(LosData)
@@ -104,7 +104,7 @@ if(Conf["PLOT_SATRNG"] == '1'):
     LosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
     usecols=[LOS_IDX["SOD"],LOS_IDX["RANGE[m]"],LOS_IDX["ELEV"]])
 
-    print( 'Plot Satellite Geometrical Ranges ...')
+    print( 'Ploting the Satellite Geometrical image Ranges ...')
     
     # Configure plot and call plot generation function
     SatFunctions.plotSatGeomRnge(LosData)
@@ -119,7 +119,7 @@ if(Conf["PLOT_SATTRK"] == '1'):
     LOS_IDX["SAT-Z[m]"],
     LOS_IDX["ELEV"]])
     
-    print( 'Plot Satellite Tracks ...')
+    print( 'Ploting the Satellite Tracks image ...')
 
     # Configure plot and call plot generation function
     SatFunctions.plotSatTracks(LosData)
@@ -136,7 +136,7 @@ if(Conf["PLOT_SATVEL"] == '1'):
     LOS_IDX["VEL-Z[m/s]"],
     LOS_IDX["ELEV"]])
     
-    print( 'Plot Satellite Velocities ...')
+    print( 'Ploting the Satellite Velocities image ...')
 
     # Configure plot and call plot generation function
     SatFunctions.plotSatVelocities(LosData)
@@ -146,7 +146,7 @@ if(Conf["PLOT_SATCLK"] == '1'):
     LosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
     usecols=[LOS_IDX["SOD"],LOS_IDX["SV-CLK[m]"],LOS_IDX["ELEV"],LOS_IDX["PRN"]])
     
-    print( 'Plot Satellite Clock ...')
+    print( 'Ploting the Satellite Clock image ...')
 
     # Configure plot and call plot generation function
     SatFunctions.plotSatClock(LosData)
@@ -154,9 +154,9 @@ if(Conf["PLOT_SATCLK"] == '1'):
 if(Conf["PLOT_SAT_CORRECTEDCLK"] == '1'):
     # Read the cols we need from LOS file
     LosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
-    usecols=[LOS_IDX["SOD"],LOS_IDX["SV-CLK[m]"],LOS_IDX["DTR[m]"],LOS_IDX["TGD[m]"],LOS_IDX["ELEV"],LOS_IDX["PRN"]])
+    usecols=[LOS_IDX["SOD"],LOS_IDX["SV-CLK[m]"],LOS_IDX["DTR[m]"],LOS_IDX["TGD[m]"],LOS_IDX["PRN"]])
     
-    print( 'Plot Satellite Corrected Clock ...')
+    print( 'Ploting the Satellite Corrected image Clock ...')
 
     # Configure plot and call plot generation function
     SatFunctions.plotSatCorrectedClock(LosData)
@@ -166,7 +166,17 @@ if(Conf["PLOT_SATTGD"] == '1'):
     LosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
     usecols=[LOS_IDX["SOD"],LOS_IDX["TGD[m]"],LOS_IDX["PRN"]])
     
-    print( 'Plot Satellite TGD ...')
+    print( 'Ploting the Satellite TGD image ...')
 
     # Configure plot and call plot generation function
     SatFunctions.plotSatTGD(LosData)
+
+if(Conf["PLOT_SATDTR"] == '1'):
+    # Read the cols we need from LOS file
+    LosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
+    usecols=[LOS_IDX["SOD"],LOS_IDX["DTR[m]"],LOS_IDX["ELEV"]])
+    
+    print( 'Ploting the Satellite DTR image ...')
+
+    # Configure plot and call plot generation function
+    SatFunctions.plotSatDTR(LosData)

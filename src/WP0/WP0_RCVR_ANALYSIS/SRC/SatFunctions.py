@@ -260,7 +260,7 @@ def plotSatClock(LosData):
         PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/SAT/SAT_CLOCKS/' + f'SAT_CLOCK_PRN_{int(prn)}.png'  
 
         # Generate plot
-        generatePlot(PlotConf)  # Assuming generatePlot function is defined elsewhere
+        generatePlot(PlotConf) 
 
 # T2.6 Satellite Corrected Clock
 def plotSatCorrectedClock(LosData):
@@ -296,12 +296,12 @@ def plotSatCorrectedClock(LosData):
     Label = 0
     PlotConf["xData"][Label] = LosData[LOS_IDX["SOD"]] / GnssConstants.S_IN_H  # Converting to hours
     PlotConf["yData"][Label] = correlated / 1000  # Using correlated satellite clock data in Km
-    PlotConf["zData"][Label] = LosData[LOS_IDX["PRN"]]  # Elevation data
+    PlotConf["zData"][Label] = LosData[LOS_IDX["PRN"]]  # PRN data
     
     PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/SAT/' + 'SAT_CLK_TLSA_D006Y15.png'  # Adjust path as needed
     
     # Generate plot
-    generatePlot(PlotConf)  # Assuming generatePlot function is defined elsewhere
+    generatePlot(PlotConf)  
 
 # T2.7 Satellite TGD
 def plotSatTGD(LosData):
@@ -331,10 +331,46 @@ def plotSatTGD(LosData):
     
     Label = 0
     PlotConf["xData"][Label] = LosData[LOS_IDX["SOD"]] / GnssConstants.S_IN_H  # Converting to hours
-    PlotConf["yData"][Label] = tgd / 1000  # Using satellite TGD in m
-    PlotConf["zData"][Label] = LosData[LOS_IDX["PRN"]]  # Elevation data
+    PlotConf["yData"][Label] = tgd   # Using satellite TGD in m
+    PlotConf["zData"][Label] = LosData[LOS_IDX["PRN"]]  # PRN data
     
     PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/SAT/' + 'SAT_TGD_TLSA_D006Y15.png'  # Adjust path as needed
     
     # Generate plot
-    generatePlot(PlotConf)  # Assuming generatePlot function is defined else where
+    generatePlot(PlotConf)
+
+# T2.8 Satellite DTR
+def plotSatDTR(LosData):
+    dtr = LosData[LOS_IDX["DTR[m]"]]  # Extracting satellite DTR information
+    
+    # Plot settings    
+    PlotConf = {}
+    PlotConf["Type"] = "Lines"
+    PlotConf["FigSize"] = (16.8, 15.2)
+    PlotConf["Title"] = "Satellite DTR from TLSA on Year 2015 DoY 006"
+
+    PlotConf["yLabel"] = "DTR [m]"
+    PlotConf["xLabel"] = "Hour of Day 006"
+    
+    PlotConf["Grid"] = True
+    PlotConf["Marker"] = '.'
+    PlotConf["LineWidth"] = 1.5
+
+    PlotConf["ColorBar"] = "gnuplot"
+    PlotConf["ColorBarLabel"] = "Elevation [deg]"
+    PlotConf["ColorBarMin"] = 0.
+    PlotConf["ColorBarMax"] = 90.
+
+    PlotConf["xData"] = {}
+    PlotConf["yData"] = {}
+    PlotConf["zData"] = {}
+    
+    Label = 0
+    PlotConf["xData"][Label] = LosData[LOS_IDX["SOD"]] / GnssConstants.S_IN_H  # Converting to hours
+    PlotConf["yData"][Label] = dtr  # Using satellite DTR in m
+    PlotConf["zData"][Label] = LosData[LOS_IDX["ELEV"]]  # Elevation data
+    
+    PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/SAT/' + 'SAT_DTR_TLSA_D006Y15.png'  # Adjust path as needed
+    
+    # Generate plot
+    generatePlot(PlotConf) 
