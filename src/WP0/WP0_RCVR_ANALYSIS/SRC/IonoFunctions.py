@@ -56,3 +56,39 @@ def plotSatIonoStecElev(LosData):
     
     # Generate plot
     generatePlot(PlotConf) 
+
+# T3.2 PRN vs TIME (STEC)
+def plotSatIonoPrnStec(LosData):
+    stec = LosData[LOS_IDX["STEC[m]"]]  # Extracting satellite STEC information
+    
+    # Plot settings    
+    PlotConf = {}
+    PlotConf["Type"] = "Lines"
+    PlotConf["FigSize"] = (16.8, 15.2)
+    PlotConf["Title"] = "Satellite Visibility vs STEC from TLSA on Year 2015 DoY 006"
+
+    PlotConf["yLabel"] = "GPS-PRN"
+    PlotConf["xLabel"] = "Hour of Day 006"
+    
+    PlotConf["Grid"] = True
+    PlotConf["Marker"] = '.'
+    PlotConf["LineWidth"] = 1.5
+
+    PlotConf["ColorBar"] = "gnuplot"
+    PlotConf["ColorBarLabel"] = "STEC [m]"
+    PlotConf["ColorBarMin"] = min(stec)
+    PlotConf["ColorBarMax"] = max(stec)
+
+    PlotConf["xData"] = {}
+    PlotConf["yData"] = {}
+    PlotConf["zData"] = {}
+    
+    Label = 0
+    PlotConf["xData"][Label] = LosData[LOS_IDX["SOD"]] / GnssConstants.S_IN_H  # Converting to hours
+    PlotConf["yData"][Label] = LosData[LOS_IDX["PRN"]]  # Elevation data
+    PlotConf["zData"][Label] = stec  # Using satellite STEC in m
+    
+    PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/SAT/' + 'IONO_STEC_vs_PRN_TLSA_D006Y15.png'  # Adjust path as needed
+    
+    # Generate plot
+    generatePlot(PlotConf) 

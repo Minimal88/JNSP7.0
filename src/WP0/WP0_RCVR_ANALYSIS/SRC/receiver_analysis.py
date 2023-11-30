@@ -191,3 +191,14 @@ if(Conf["PLOT_IONO_STEC_ELEV"] == '1'):
 
     # Configure plot and call plot generation function
     IonoFunctions.plotSatIonoStecElev(LosData)
+
+if(Conf["PLOT_IONO_PRN_STEC"] == '1'):
+    # Read the cols we need from LOS file
+    LosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
+    usecols=[LOS_IDX["SOD"],LOS_IDX["STEC[m]"],LOS_IDX["PRN"]])
+    
+    print( 'Ploting the Satellites PRN vs TIME (STEC) image ...')
+
+    # Configure plot and call plot generation function
+    IonoFunctions.plotSatIonoPrnStec(LosData)
+
