@@ -23,6 +23,7 @@ from interfaces import LOS_IDX
 from pandas import read_csv
 from yaml import dump
 import SatFunctions
+import IonoFunctions
 
 #######################################################
 # INTERNAL FUNCTIONS 
@@ -180,3 +181,13 @@ if(Conf["PLOT_SATDTR"] == '1'):
 
     # Configure plot and call plot generation function
     SatFunctions.plotSatDTR(LosData)
+
+if(Conf["PLOT_IONO_STEC_ELEV"] == '1'):
+    # Read the cols we need from LOS file
+    LosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
+    usecols=[LOS_IDX["SOD"],LOS_IDX["STEC[m]"],LOS_IDX["ELEV"]])
+    
+    print( 'Ploting the Satellite STEC vs TIME (ELEV) image ...')
+
+    # Configure plot and call plot generation function
+    IonoFunctions.plotSatIonoStecElev(LosData)
