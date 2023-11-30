@@ -146,7 +146,17 @@ if(Conf["PLOT_SATCLK"] == '1'):
     LosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
     usecols=[LOS_IDX["SOD"],LOS_IDX["SV-CLK[m]"],LOS_IDX["ELEV"],LOS_IDX["PRN"]])
     
-    print( 'Plot Satellite Velocities ...')
+    print( 'Plot Satellite Clock ...')
 
     # Configure plot and call plot generation function
     SatFunctions.plotSatClock(LosData)
+
+if(Conf["PLOT_SAT_CORRECTEDCLK"] == '1'):
+    # Read the cols we need from LOS file
+    LosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
+    usecols=[LOS_IDX["SOD"],LOS_IDX["SV-CLK[m]"],LOS_IDX["DTR[m]"],LOS_IDX["TGD[m]"],LOS_IDX["ELEV"],LOS_IDX["PRN"]])
+    
+    print( 'Plot Satellite Corrected Clock ...')
+
+    # Configure plot and call plot generation function
+    SatFunctions.plotSatCorrectedClock(LosData)

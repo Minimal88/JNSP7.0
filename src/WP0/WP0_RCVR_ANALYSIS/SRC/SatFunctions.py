@@ -261,3 +261,44 @@ def plotSatClock(LosData):
 
         # Generate plot
         generatePlot(PlotConf)  # Assuming generatePlot function is defined elsewhere
+
+# T2.6 Satellite Corrected Clock
+def plotSatCorrectedClock(LosData):
+    sat_clock = LosData[LOS_IDX["SV-CLK[m]"]]  # Extracting satellite clock information
+    dtr = LosData[LOS_IDX["DTR[m]"]]  # Extracting satellite DTR information
+    tgd = LosData[LOS_IDX["TGD[m]"]]  # Extracting satellite TGD information
+
+    correlated = sat_clock - tgd + dtr
+    # Plot settings
+    
+    PlotConf = {}
+
+    PlotConf["Type"] = "Lines"
+    PlotConf["FigSize"] = (16.8, 15.2)
+    PlotConf["Title"] = "Satellite CLK - TGD + DTRon Year 2015 006"
+
+    PlotConf["yLabel"] = "CLK [Km]"
+    PlotConf["xLabel"] = "Hour of Day 006"
+    
+    PlotConf["Grid"] = True
+    PlotConf["Marker"] = '.'
+    PlotConf["LineWidth"] = 1.5
+
+    PlotConf["ColorBar"] = "gnuplot"
+    PlotConf["ColorBarLabel"] = "GPS-PRN"
+    PlotConf["ColorBarMin"] =  min(unique(LosData[LOS_IDX["PRN"]]))
+    PlotConf["ColorBarMax"] = max(unique(LosData[LOS_IDX["PRN"]]))
+
+    PlotConf["xData"] = {}
+    PlotConf["yData"] = {}
+    PlotConf["zData"] = {}
+    
+    Label = 0
+    PlotConf["xData"][Label] = LosData[LOS_IDX["SOD"]] / GnssConstants.S_IN_H  # Converting to hours
+    PlotConf["yData"][Label] = correlated / 1000  # Using correlated satellite clock data in Km
+    PlotConf["zData"][Label] = LosData[LOS_IDX["PRN"]]  # Elevation data
+    
+    PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/SAT/' + 'SAT_CLK_TLSA_D006Y15.png'  # Adjust path as needed
+    
+    # Generate plot
+    generatePlot(PlotConf)  # Assuming generatePlot function is defined elsewhere
