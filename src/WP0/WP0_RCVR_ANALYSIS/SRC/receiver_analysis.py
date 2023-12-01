@@ -24,6 +24,7 @@ from pandas import read_csv
 from yaml import dump
 import SatFunctions
 import IonoFunctions
+import TropoFunctions
 
 #######################################################
 # INTERNAL FUNCTIONS 
@@ -221,5 +222,15 @@ if(Conf["PLOT_IONO_PRN_VTEC"] == '1'):
 
     # Configure plot and call plot generation function
     IonoFunctions.plotSatIonoPrnVtec(LosData)
+
+if(Conf["PLOT_TROPO_STEC_ELEV"] == '1'):
+    # Read the cols we need from LOS file
+    LosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
+    usecols=[LOS_IDX["SOD"],LOS_IDX["TROPO[m]"],LOS_IDX["ELEV"]])
+    
+    print( 'Ploting the Slant Tropospheric Delay (STD) image ...')
+
+    # Configure plot and call plot generation function
+    TropoFunctions.plotSatTropoStecElev(LosData)
 
 
