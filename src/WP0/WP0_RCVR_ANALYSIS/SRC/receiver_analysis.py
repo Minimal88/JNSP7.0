@@ -25,6 +25,7 @@ from yaml import dump
 import SatFunctions
 import IonoFunctions
 import TropoFunctions
+import MeasFunctions
 
 #######################################################
 # INTERNAL FUNCTIONS 
@@ -243,4 +244,15 @@ if(Conf["PLOT_TROPO_ZTD_ELEV"] == '1'): #TODO: Fix this plot
 
     # Configure plot and call plot generation function
     TropoFunctions.plotSatTropoZtdElev(LosData)
+
+if(Conf["PLOT_MSR_PSR_ELEV"] == '1'): #TODO: Fix this plot
+    # Read the cols we need from LOS file
+    LosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
+    usecols=[LOS_IDX["SOD"],LOS_IDX["MEAS[m]"],LOS_IDX["ELEV"]])
+    
+    print( 'Ploting the Psudo-range C1C image ...')
+
+    # Configure plot and call plot generation function
+    MeasFunctions.plotSatMeasPsrElev(LosData)
+
 

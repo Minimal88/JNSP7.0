@@ -52,7 +52,7 @@ def plotSatIonoStecElev(LosData):
     PlotConf["yData"][Label] = stec  # Using satellite STEC in m
     PlotConf["zData"][Label] = LosData[LOS_IDX["ELEV"]]  # Elevation data
     
-    PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/SAT/' + 'IONO_STEC_vs_TIME_TLSA_D006Y15.png'  # Adjust path as needed
+    PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/ION/' + 'IONO_STEC_vs_TIME_TLSA_D006Y15.png'  # Adjust path as needed
     
     # Generate plot
     generatePlot(PlotConf) 
@@ -88,7 +88,7 @@ def plotSatIonoPrnStec(LosData):
     PlotConf["yData"][Label] = LosData[LOS_IDX["PRN"]]  # Elevation data
     PlotConf["zData"][Label] = stec  # Using satellite STEC in m
     
-    PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/SAT/' + 'IONO_STEC_vs_PRN_TLSA_D006Y15.png'  # Adjust path as needed
+    PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/ION/' + 'IONO_STEC_vs_PRN_TLSA_D006Y15.png'  # Adjust path as needed
     
     # Generate plot
     generatePlot(PlotConf) 
@@ -124,7 +124,7 @@ def plotSatIonoVtecTimeElev(LosData):
     PlotConf["yData"][Label] = vtec  # Using satellite VTEC in m
     PlotConf["zData"][Label] = LosData[LOS_IDX["ELEV"]]  # Elevation data
     
-    PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/SAT/' + 'IONO_VTEC_vs_TIME_TLSA_D006Y15.png'  # Adjust path as needed
+    PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/ION/' + 'IONO_VTEC_vs_TIME_TLSA_D006Y15.png'  # Adjust path as needed
     
     # Generate plot
     generatePlot(PlotConf) 
@@ -160,7 +160,7 @@ def plotSatIonoPrnVtec(LosData):
     PlotConf["yData"][Label] = LosData[LOS_IDX["PRN"]]  # Elevation data
     PlotConf["zData"][Label] = vtec  # Using satellite VTEC in m
     
-    PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/SAT/' + 'IONO_VTEC_vs_PRN_TLSA_D006Y15.png'  # Adjust path as needed
+    PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/ION/' + 'IONO_VTEC_vs_PRN_TLSA_D006Y15.png'  # Adjust path as needed
     
     # Generate plot
     generatePlot(PlotConf) 
