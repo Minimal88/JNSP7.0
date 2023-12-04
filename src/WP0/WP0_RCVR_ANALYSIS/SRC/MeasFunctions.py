@@ -21,7 +21,8 @@ import numpy as np
 # from pyproj import Transformer
 from COMMON.Coordinates import xyz2llh
 
-# T5.1 Slant Tropospheric Delay (STD)
+# T5.1 Plot Pseudo-ranges (Code Measurements C1) for all satellites as a
+# function of the hour of the day. Color bar: satellite elevation.
 def plotSatMeasPsrElev(LosData):    
     psr = LosData[LOS_IDX["MEAS[m]"]]  # Extracting satellite MEAS information
     
@@ -57,17 +58,19 @@ def plotSatMeasPsrElev(LosData):
     # Generate plot
     generatePlot(PlotConf) 
 
-# T5.2 def plotSatMEASStdElev(LosData) (Elev)
-def plotSatMeasTauElev(LosData):
-    std = LosData[LOS_IDX["TROPO[m]"]]  # Extracting satellite TROPO information
+# T5.2  Plot Tau = C1C/c for all satellites as a function of the hour of the
+# day. Color bar: satellite elevation.
+def plotSatMeasTauElev(LosData):    
+    psr = LosData[LOS_IDX["MEAS[m]"]]  # Extracting satellite MEAS information
+    tau = psr / GnssConstants.c
     
     # Plot settings    
     PlotConf = {}
     PlotConf["Type"] = "Lines"
     PlotConf["FigSize"] = (16.8, 15.2)
-    PlotConf["Title"] = "Slant Tropospheric Delay (STD) from TLSA on Year 2015 DoY 006"
+    PlotConf["Title"] = "Tau = Rho/c from TLSA on Year 2015 DoY 006"
 
-    PlotConf["yLabel"] = "STD [m]"
+    PlotConf["yLabel"] = "Tau [ms]"
     PlotConf["xLabel"] = "Hour of Day 006"
     
     PlotConf["Grid"] = True
@@ -85,10 +88,10 @@ def plotSatMeasTauElev(LosData):
     
     Label = 0
     PlotConf["xData"][Label] = LosData[LOS_IDX["SOD"]] / GnssConstants.S_IN_H  # Converting to hours
-    PlotConf["yData"][Label] = std  # Using satellite TROPO in m
+    PlotConf["yData"][Label] = tau * 1000  # Using satellite TAU in ms
     PlotConf["zData"][Label] = LosData[LOS_IDX["ELEV"]]  # Elevation data
     
-    PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/SAT/' + 'TROPO_STD_vs_TIME_TLSA_D006Y15.png'  # Adjust path as needed
+    PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/MSR/' + 'TAU_vs_TIME_TLSA_D006Y15.png'  # Adjust path as needed
     
     # Generate plot
-    generatePlot(PlotConf) 
+    generatePlot(PlotConf)

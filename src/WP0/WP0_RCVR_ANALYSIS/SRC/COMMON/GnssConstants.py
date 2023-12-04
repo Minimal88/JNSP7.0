@@ -5,3 +5,6 @@ MaxPrnInConstellation = 32
 
 # Seconds in one hour
 S_IN_H = 3600
+
+# Speed of Light c
+c = 299792458
