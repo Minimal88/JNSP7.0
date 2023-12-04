@@ -349,4 +349,22 @@ if(Conf["PLOT_POS_HVDOPS_NUM_SAT"] == '1'):
     # Configure plot and call plot generation function
     PosFunctions.plotPosHVDOPsNumSats(PosData)
 
+# T6.2 (X)DOPS Plot the PDOP, GDOP, TDOP in order
+if(Conf["PLOT_POS_DOPS"] == '1'):
+    # Read the cols we need from POS file
+    PosData = read_csv(PosFile, delim_whitespace=True, skiprows=1, header=None,\
+    usecols=[POS_IDX["SOD"],POS_IDX["PDOP"],POS_IDX["GDOP"],POS_IDX["TDOP"]])
+    
+    # Configure plot and call plot generation function
+    PosFunctions.plotPosDops(PosData)
+
+# T6.4 Plot the East/North/Up Position Error (EPE, NPE, UPE)
+if(Conf["PLOT_POS_ENU"] == '1'):
+    # Read the cols we need from POS file
+    PosData = read_csv(PosFile, delim_whitespace=True, skiprows=1, header=None,\
+    usecols=[POS_IDX["SOD"],POS_IDX["EPE[m]"],POS_IDX["NPE[m]"], POS_IDX["UPE[m]"]])
+    
+    # Configure plot and call plot generation function
+    PosFunctions.plotPosEnu(PosData)
+
 

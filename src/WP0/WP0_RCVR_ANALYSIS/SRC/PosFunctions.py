@@ -159,3 +159,54 @@ def plotPosHVDOPsNumSats(PosData):
 
     # Generate plot
     generatePlot(PlotConf) 
+
+# T6.4 Plot the East/North/Up Position Error (EPE, NPE, UPE)
+def plotPosEnu(PosData):
+    print( 'Ploting image: Plot the East/North/Up Position Error (EPE, NPE, UPE) ...')    
+
+    # Extract information
+    EPE = PosData[POS_IDX["EPE[m]"]]
+    NPE = PosData[POS_IDX["NPE[m]"]]
+    UPE = PosData[POS_IDX["UPE[m]"]]
+    
+    HoursDoY = PosData[POS_IDX["SOD"]] / GnssConstants.S_IN_H  # Converting to hours
+    
+    # Plot settings
+    PlotConf = {}
+
+    PlotConf["Type"] = "Lines"
+    PlotConf["FigSize"] = (16.8, 15.2)
+    PlotConf["Title"] = "ENU Position Error from TLSA on Year 2015 DoY 006 "
+
+    PlotConf["yLabel"] = "ENU-PE [m]"
+    PlotConf["yTicks"] = range(-8,4)
+    PlotConf["yLim"] = [-8,4]
+
+    PlotConf["xLabel"] = "Hour of DoY 006"
+    PlotConf["xTicks"] = range(0, 25)
+    PlotConf["xLim"] = [0, 24]
+
+    PlotConf["Grid"] = True
+    PlotConf["Marker"] = '-'
+    PlotConf["LineWidth"] = 2
+    PlotConf["ShowLegend"] = True
+
+    PlotConf["xData"] = {}
+    PlotConf["yData"] = {}
+
+    Label = "EPE [m]"
+    PlotConf["xData"][Label] = HoursDoY
+    PlotConf["yData"][Label] = EPE
+
+    Label = "NPE [m]"
+    PlotConf["xData"][Label] = HoursDoY
+    PlotConf["yData"][Label] = NPE
+
+    Label = "UPE [m]"
+    PlotConf["xData"][Label] = HoursDoY
+    PlotConf["yData"][Label] = UPE
+
+    PlotConf["Path"] = sys.argv[1] + '/OUT/POS/POS/' + 'POS_ENU_PE_vs_TIME_TLSA_D006Y15.png'  
+
+    # Generate plot
+    generatePlot(PlotConf) 
