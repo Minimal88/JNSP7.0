@@ -63,6 +63,7 @@ def plotSatMeasPsrElev(LosData):
 # T5.2  Plot Tau = C1C/c for all satellites as a function of the hour of the
 # day. Color bar: satellite elevation.
 def plotSatMeasTauElev(LosData):    
+    print( 'Ploting Tau = C1C/c image ...')
     psr = LosData[LOS_IDX["MEAS[m]"]]  # Extracting satellite MEAS information
     tau = psr / GnssConstants.c_m_s
     
@@ -102,7 +103,7 @@ def plotSatMeasTauElev(LosData):
 # T5.3  Plot Time of Flight (ToF) for all satellites as a function of the hour
 # of the day. Color bar: satellite elevation.
 def plotSatMeasTofElev(LosData):    
-    print( 'Ploting the Plot Time of Flight (ToF) image ...')
+    print( 'Ploting Time of Flight (ToF) image ...')
 
     tof = LosData[LOS_IDX["TOF[ms]"]]  # Extracting satellite TOF information
         
@@ -141,7 +142,7 @@ def plotSatMeasTofElev(LosData):
 # T5.4  Plot Doppler Frequency, fD, in kHz for all satellites as a function of the hour
 # of the day. Color bar: satellite elevation.
 def plotSatMeasDopplerElev(LosData, X_RCVR, Y_RCVR, Z_RCVR):
-    print( 'Ploting the Plot Doppler Frequency (kHz) image ...')
+    print( 'Ploting Doppler Frequency (kHz) image ...')
 
     # Calculate satellite velocity projected in the direction of the Line Of Sight (LOS)
     rSAT_X = LosData[LOS_IDX["SAT-X[m]"]]  # Satellite X-Position
@@ -198,6 +199,61 @@ def plotSatMeasDopplerElev(LosData, X_RCVR, Y_RCVR, Z_RCVR):
     PlotConf["zData"][Label] = LosData[LOS_IDX["ELEV"]]  # Elevation data
     
     PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/MSR/' + 'DOPPLER_FREQ_vs_TIME_TLSA_D006Y15.png'  # Adjust path as needed
+    
+    # Generate plot
+    generatePlot(PlotConf)
+
+
+# T5.5 Plot the PVT filter residuals, correcting the code
+# measurements from all the known information from Navigation
+# message and models
+def plotSatMeasResidualsElev(LosData):    
+    print( 'Ploting the PVT filter Residuals image ...')
+
+    # Extract necessary data
+    prn = LosData[LOS_IDX["PRN"]]  # Satellite PRN information
+    PSRC1 = LosData[LOS_IDX["MEAS[m]"]]  # Code Measurements C1
+    RGE = LosData[LOS_IDX["RANGE[m]"]]  # Satellite Geometrical Range
+    CLKP1P2 = LosData[LOS_IDX["SV-CLK[m]"]]  # Satellite Clock (CLKP1P2)
+    IONO = LosData[LOS_IDX["VTEC[m]"]]  # Vertical Total-Electron-Content
+    TROPO = LosData[LOS_IDX["TROPO[m]"]]  # Slant Tropospheric Delay
+    DTR = LosData[LOS_IDX["DTR[m]"]]  # Satellite Relativistic Effect
+    TGD = LosData[LOS_IDX["TGD[m]"]]  # Total Group Delay Delay
+    
+    # Mono-Freq. clock
+    CLKP1 = CLKP1P2 - TGD + DTR
+
+    # Calculate Residuals for Code Measurements C1    
+    RESC1 = PSRC1 - (RGE - CLKP1 + IONO + TROPO)
+        
+    # Plot settings    
+    PlotConf = {}
+    PlotConf["Type"] = "Lines"
+    PlotConf["FigSize"] = (16.8, 15.2)
+    PlotConf["Title"] = "Residuals C1C vs Time from TLSA on Year 2015 DoY 006"
+
+    PlotConf["yLabel"] = "Residuals [Km]"
+    PlotConf["xLabel"] = "Hour of Day 006"
+    
+    PlotConf["Grid"] = True
+    PlotConf["Marker"] = '.'
+    PlotConf["LineWidth"] = 1.5
+
+    PlotConf["ColorBar"] = "gnuplot"
+    PlotConf["ColorBarLabel"] = "GPS-PRN"
+    PlotConf["ColorBarMin"] = np.min(prn)
+    PlotConf["ColorBarMax"] = np.max(prn)
+
+    PlotConf["xData"] = {}
+    PlotConf["yData"] = {}
+    PlotConf["zData"] = {}
+    
+    Label = 0
+    PlotConf["xData"][Label] = LosData[LOS_IDX["SOD"]] / GnssConstants.S_IN_H  # Converting to hours
+    PlotConf["yData"][Label] = RESC1  # Residuals for Code Measurements C1 data
+    PlotConf["zData"][Label] = prn  # PRN data
+    
+    PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/MSR/' + 'MEAS_RESIDUALS_vs_TIME_TLSA_D006Y15.png'  # Adjust path as needed
     
     # Generate plot
     generatePlot(PlotConf)

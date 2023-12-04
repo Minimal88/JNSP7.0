@@ -253,6 +253,14 @@ if(Conf["PLOT_MSR_PSR_ELEV"] == '1'):
     # Configure plot and call plot generation function
     MeasFunctions.plotSatMeasPsrElev(LosData)
 
+if(Conf["PLOT_MSR_TAU_ELEV"] == '1'): 
+    # Read the cols we need from LOS file
+    LosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
+    usecols=[LOS_IDX["SOD"],LOS_IDX["MEAS[m]"],LOS_IDX["ELEV"]])
+    
+    # Configure plot and call plot generation function
+    MeasFunctions.plotSatMeasTauElev(LosData)
+
 if(Conf["PLOT_MSR_TOF_ELEV"] == '1'): 
     # Read the cols we need from LOS file
     LosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
@@ -281,7 +289,21 @@ if(Conf["PLOT_MSR_DOPPLER_ELEV"] == '1'):
     # Configure plot and call plot generation function
     MeasFunctions.plotSatMeasDopplerElev(LosData, X_RCVR, Y_RCVR, Z_RCVR)
 
-
+if(Conf["PLOT_MSR_RESIDUALS_ELEV"] == '1'): 
+    # Read the cols we need from LOS file
+    LosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
+    usecols=[LOS_IDX["SOD"],
+             LOS_IDX["MEAS[m]"],
+             LOS_IDX["RANGE[m]"],             
+             LOS_IDX["SV-CLK[m]"],
+             LOS_IDX["VTEC[m]"],
+             LOS_IDX["TROPO[m]"],             
+             LOS_IDX["TGD[m]"], 
+             LOS_IDX["DTR[m]"], 
+             LOS_IDX["PRN"]])
+    
+    # Configure plot and call plot generation function
+    MeasFunctions.plotSatMeasResidualsElev(LosData)
 
 
 
