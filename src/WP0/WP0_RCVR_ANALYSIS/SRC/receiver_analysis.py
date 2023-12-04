@@ -376,3 +376,13 @@ if(Conf["PLOT_POS_HPE_VPE"] == '1'):
     # Configure plot and call plot generation function
     PosFunctions.plotPosHpeVpe(PosData)
 
+# T6.6 Plot Horizontal Scatter plot with NPE vs. EPE (North Position Error
+# Y-axis and East Position Error X-axis)
+if(Conf["PLOT_POS_EPE_NPE"] == '1'):
+    # Read the cols we need from POS file
+    PosData = read_csv(PosFile, delim_whitespace=True, skiprows=1, header=None,\
+    usecols=[POS_IDX["SOD"],POS_IDX["EPE[m]"],POS_IDX["NPE[m]"],POS_IDX["HDOP"]])
+    
+    # Configure plot and call plot generation function
+    PosFunctions.plotPosEpeNpe(PosData)
+

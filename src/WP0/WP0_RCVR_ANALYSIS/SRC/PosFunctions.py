@@ -260,3 +260,56 @@ def plotPosHpeVpe(PosData):
 
     # Generate plot
     generatePlot(PlotConf) 
+
+
+# T6.6 Plot Horizontal Scatter plot with NPE vs. EPE (North Position Error
+# Y-axis and East Position Error X-axis)
+def plotPosEpeNpe(PosData):
+    print( 'Ploting image: Plot Horizontal Scatter plot with NPE vs. EPE ...')    
+
+    # Extract information
+    EPE = PosData[POS_IDX["EPE[m]"]]
+    NPE = PosData[POS_IDX["NPE[m]"]]    
+    HDOP = PosData[POS_IDX["HDOP"]]        
+    HoursDoY = PosData[POS_IDX["SOD"]] / GnssConstants.S_IN_H  # Converting to hours
+
+    # Calculate NPE and VPE
+    
+    # Plot settings
+    PlotConf = {}
+
+    PlotConf["Type"] = "Lines"
+    PlotConf["FigSize"] = (16.8, 15.2)
+    PlotConf["Title"] = "EPE vs NPE from TLSA on Year 2015 DoY 006 "
+
+    PlotConf["yLabel"] = "NPE [m]"
+    PlotConf["yTicks"] = range(-3,5)
+    PlotConf["yLim"] = [-3,5]
+
+    PlotConf["xLabel"] = "EPE [m]"
+    PlotConf["xTicks"] = range(-3, 3)
+    PlotConf["xLim"] = [-3, 3]
+
+    PlotConf["Grid"] = True
+    PlotConf["Marker"] = '.'
+    PlotConf["LineWidth"] = 1.5    
+
+    PlotConf["ColorBar"] = "gnuplot"
+    PlotConf["ColorBarLabel"] = "HDOP"
+    PlotConf["ColorBarMin"] = np.min(HDOP)
+    PlotConf["ColorBarMax"] = np.max(HDOP)
+
+
+    PlotConf["xData"] = {}
+    PlotConf["yData"] = {}
+    PlotConf["zData"] = {}
+
+    Label = 0
+    PlotConf["xData"][Label] = EPE
+    PlotConf["yData"][Label] = NPE
+    PlotConf["zData"][Label] = HDOP    
+
+    PlotConf["Path"] = sys.argv[1] + '/OUT/POS/POS/' + 'POS_NPE_vs_EPE_TLSA_D006Y15.png'  
+
+    # Generate plot
+    generatePlot(PlotConf) 
