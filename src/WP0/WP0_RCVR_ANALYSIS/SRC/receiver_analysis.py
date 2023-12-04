@@ -367,4 +367,12 @@ if(Conf["PLOT_POS_ENU"] == '1'):
     # Configure plot and call plot generation function
     PosFunctions.plotPosEnu(PosData)
 
+# T6.5 Plot the Horizontal and Vertical Position Error (HPE) and VPE
+if(Conf["PLOT_POS_HPE_VPE"] == '1'):
+    # Read the cols we need from POS file
+    PosData = read_csv(PosFile, delim_whitespace=True, skiprows=1, header=None,\
+    usecols=[POS_IDX["SOD"],POS_IDX["EPE[m]"],POS_IDX["NPE[m]"], POS_IDX["UPE[m]"]])
+    
+    # Configure plot and call plot generation function
+    PosFunctions.plotPosHpeVpe(PosData)
 

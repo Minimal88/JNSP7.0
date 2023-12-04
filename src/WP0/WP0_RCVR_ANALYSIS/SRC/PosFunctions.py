@@ -23,7 +23,7 @@ from COMMON.Coordinates import xyz2llh
 
 # T6.1 Satellites Used in PVT
 def plotPosNumberOfSats(PosData):
-    print( 'Ploting the Satellites Used in PVT image ...')
+    print( 'Ploting image: Satellites Used in PVT ...')
 
     # Extract number of satellites information
     num_sats = PosData[POS_IDX["NSATS"]]     
@@ -61,7 +61,7 @@ def plotPosNumberOfSats(PosData):
 
 # T6.2 (X)DOPS Plot the PDOP, GDOP, TDOP in order
 def plotPosDops(PosData):
-    print( 'Ploting the PDOP, GDOP, TDOP in order image ...')
+    print( 'Ploting image: the PDOP, GDOP, TDOP in order ...')
 
     # Extract information
     PDOP = PosData[POS_IDX["PDOP"]]
@@ -111,7 +111,7 @@ def plotPosDops(PosData):
 
 # T6.3 H/V-DOPs Plot the HDOP and VDOP together with the number of satellites
 def plotPosHVDOPsNumSats(PosData):
-    print( 'Ploting image: the HDOP and VDOP together with the number of satellites ...')
+    print( 'Ploting image: HDOP and VDOP together with the number of satellites ...')
 
     # Extract information
     HDOP = PosData[POS_IDX["HDOP"]]
@@ -162,7 +162,7 @@ def plotPosHVDOPsNumSats(PosData):
 
 # T6.4 Plot the East/North/Up Position Error (EPE, NPE, UPE)
 def plotPosEnu(PosData):
-    print( 'Ploting image: Plot the East/North/Up Position Error (EPE, NPE, UPE) ...')    
+    print( 'Ploting image: East/North/Up Position Error (EPE, NPE, UPE) ...')    
 
     # Extract information
     EPE = PosData[POS_IDX["EPE[m]"]]
@@ -207,6 +207,56 @@ def plotPosEnu(PosData):
     PlotConf["yData"][Label] = UPE
 
     PlotConf["Path"] = sys.argv[1] + '/OUT/POS/POS/' + 'POS_ENU_PE_vs_TIME_TLSA_D006Y15.png'  
+
+    # Generate plot
+    generatePlot(PlotConf) 
+
+# T6.5 Plot the Horizontal and Vertical Position Error (HPE) and VPE
+def plotPosHpeVpe(PosData):
+    print( 'Ploting image: Horizontal and Vertical Position Error (HPE) and VPE ...')    
+
+    # Extract information
+    EPE = PosData[POS_IDX["EPE[m]"]]
+    NPE = PosData[POS_IDX["NPE[m]"]]
+    UPE = PosData[POS_IDX["UPE[m]"]]
+    HoursDoY = PosData[POS_IDX["SOD"]] / GnssConstants.S_IN_H  # Converting to hours
+
+    # Calculate HPE and VPE
+    HPE = np.sqrt(EPE**2 + NPE**2)
+    VPE = np.abs(UPE)
+    
+    # Plot settings
+    PlotConf = {}
+
+    PlotConf["Type"] = "Lines"
+    PlotConf["FigSize"] = (16.8, 15.2)
+    PlotConf["Title"] = "ENU Position Error from TLSA on Year 2015 DoY 006 "
+
+    PlotConf["yLabel"] = "H/V-PE [m]"
+    PlotConf["yTicks"] = range(0,8)
+    PlotConf["yLim"] = [0,8]
+
+    PlotConf["xLabel"] = "Hour of DoY 006"
+    PlotConf["xTicks"] = range(0, 25)
+    PlotConf["xLim"] = [0, 24]
+
+    PlotConf["Grid"] = True
+    PlotConf["Marker"] = '-'
+    PlotConf["LineWidth"] = 2
+    PlotConf["ShowLegend"] = True
+
+    PlotConf["xData"] = {}
+    PlotConf["yData"] = {}
+
+    Label = "HPE [m]"
+    PlotConf["xData"][Label] = HoursDoY
+    PlotConf["yData"][Label] = HPE
+
+    Label = "VPE [m]"
+    PlotConf["xData"][Label] = HoursDoY
+    PlotConf["yData"][Label] = VPE
+
+    PlotConf["Path"] = sys.argv[1] + '/OUT/POS/POS/' + 'POS_HVPE_vs_TIME_TLSA_D006Y15.png'  
 
     # Generate plot
     generatePlot(PlotConf) 
