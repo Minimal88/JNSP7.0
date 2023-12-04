@@ -151,8 +151,17 @@ def generateLinesPlot(PlotConf):
         else:
             ax.plot(PlotConf["xData"][Label], PlotConf["yData"][Label],
             PlotConf["Marker"],
-            linewidth = LineWidth)
+            linewidth = LineWidth,
+            label = Label)
 
+    if "ShowLegend" in PlotConf:
+         # Create legends for each label
+        handles, labels = ax.get_legend_handles_labels()
+        unique_labels = list(set(labels))
+        legend_handles = [handles[labels.index(label)] for label in unique_labels]
+
+        ax.legend(legend_handles, unique_labels, loc='upper right', fontsize='medium')
+    
     saveFigure(fig, PlotConf["Path"])
 
 def generatePlot(PlotConf):

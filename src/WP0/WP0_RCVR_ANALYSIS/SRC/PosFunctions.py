@@ -22,7 +22,7 @@ import numpy as np
 from COMMON.Coordinates import xyz2llh
 
 # T6.1 Satellites Used in PVT
-def plotNumberOfSats(PosData):
+def plotPosNumberOfSats(PosData):
     print( 'Ploting the Satellites Used in PVT image ...')
 
     # Extract number of satellites information
@@ -44,7 +44,7 @@ def plotNumberOfSats(PosData):
     PlotConf["xLim"] = [0, 24]
 
     PlotConf["Grid"] = True
-    PlotConf["Marker"] = '.'
+    PlotConf["Marker"] = '-'
     PlotConf["LineWidth"] = 2
 
     PlotConf["xData"] = {}
@@ -55,6 +55,56 @@ def plotNumberOfSats(PosData):
     PlotConf["yData"][Label] = num_sats
 
     PlotConf["Path"] = sys.argv[1] + '/OUT/POS/POS/' + 'POS_SATS_vs_TIME_TLSA_D006Y15.png'  
+
+    # Generate plot
+    generatePlot(PlotConf) 
+
+# T6.2 (X)DOPS Plot the PDOP, GDOP, TDOP in order
+def plotPosDops(PosData):
+    print( 'Ploting the PDOP, GDOP, TDOP in order image ...')
+
+    # Extract information
+    PDOP = PosData[POS_IDX["PDOP"]]
+    GDOP = PosData[POS_IDX["GDOP"]]
+    TDOP = PosData[POS_IDX["TDOP"]]
+    HoursDoY = PosData[POS_IDX["SOD"]] / GnssConstants.S_IN_H  # Converting to hours
+    
+    # Plot settings
+    PlotConf = {}
+
+    PlotConf["Type"] = "Lines"
+    PlotConf["FigSize"] = (16.8, 15.2)
+    PlotConf["Title"] = "Dilution of Precision (DOP) from TLSA on Year 2015 DoY 006 "
+
+    PlotConf["yLabel"] = "DOP"
+    PlotConf["yTicks"] = range(0,5)
+    PlotConf["yLim"] = [0,5]
+
+    PlotConf["xLabel"] = "Hour of DoY 006"
+    PlotConf["xTicks"] = range(0, 25)
+    PlotConf["xLim"] = [0, 24]
+
+    PlotConf["Grid"] = True
+    PlotConf["Marker"] = '-'
+    PlotConf["LineWidth"] = 2
+    PlotConf["ShowLegend"] = True
+
+    PlotConf["xData"] = {}
+    PlotConf["yData"] = {}
+
+    Label = "PDOP"
+    PlotConf["xData"][Label] = HoursDoY
+    PlotConf["yData"][Label] = PDOP
+
+    Label = "GDOP"
+    PlotConf["xData"][Label] = HoursDoY
+    PlotConf["yData"][Label] = GDOP
+
+    Label = "TDOP"
+    PlotConf["xData"][Label] = HoursDoY
+    PlotConf["yData"][Label] = TDOP
+
+    PlotConf["Path"] = sys.argv[1] + '/OUT/POS/POS/' + 'POS_DOP_vs_TIME_TLSA_D006Y15.png'  
 
     # Generate plot
     generatePlot(PlotConf) 

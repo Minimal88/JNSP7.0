@@ -323,11 +323,19 @@ if(Conf["PLOT_MSR_RESIDUALS_ELEV"] == '1'):
 
 # T6.1. Satellites Used in PVT
 if(Conf["PLOT_POS_NUM_SAT"] == '1'): #TODO: Fix this plot Configuration
-    # Read the cols we need from LOS file
+    # Read the cols we need from POS file
     PosData = read_csv(PosFile, delim_whitespace=True, skiprows=1, header=None,\
     usecols=[POS_IDX["SOD"],
              POS_IDX["NSATS"]])
     
     # Configure plot and call plot generation function
-    PosFunctions.plotNumberOfSats(PosData)
+    PosFunctions.plotPosNumberOfSats(PosData)
 
+# T6.2 (X)DOPS Plot the PDOP, GDOP, TDOP in order
+if(Conf["PLOT_POS_DOPS"] == '1'):
+    # Read the cols we need from POS file
+    PosData = read_csv(PosFile, delim_whitespace=True, skiprows=1, header=None,\
+    usecols=[POS_IDX["SOD"],POS_IDX["PDOP"],POS_IDX["GDOP"],POS_IDX["TDOP"]])
+    
+    # Configure plot and call plot generation function
+    PosFunctions.plotPosDops(PosData)
