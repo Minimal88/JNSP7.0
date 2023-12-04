@@ -24,6 +24,8 @@ from COMMON.Coordinates import xyz2llh
 # T5.1 Plot Pseudo-ranges (Code Measurements C1) for all satellites as a
 # function of the hour of the day. Color bar: satellite elevation.
 def plotSatMeasPsrElev(LosData):    
+    print( 'Ploting the Psudo-range C1C image ...')
+
     psr = LosData[LOS_IDX["MEAS[m]"]]  # Extracting satellite MEAS information
     
     # Plot settings    
@@ -62,7 +64,7 @@ def plotSatMeasPsrElev(LosData):
 # day. Color bar: satellite elevation.
 def plotSatMeasTauElev(LosData):    
     psr = LosData[LOS_IDX["MEAS[m]"]]  # Extracting satellite MEAS information
-    tau = psr / GnssConstants.c
+    tau = psr / GnssConstants.c_m_s
     
     # Plot settings    
     PlotConf = {}
@@ -100,6 +102,8 @@ def plotSatMeasTauElev(LosData):
 # T5.3  Plot Time of Flight (ToF) for all satellites as a function of the hour
 # of the day. Color bar: satellite elevation.
 def plotSatMeasTofElev(LosData):    
+    print( 'Ploting the Plot Time of Flight (ToF) image ...')
+
     tof = LosData[LOS_IDX["TOF[ms]"]]  # Extracting satellite TOF information
         
     # Plot settings    
@@ -130,6 +134,70 @@ def plotSatMeasTofElev(LosData):
     PlotConf["zData"][Label] = LosData[LOS_IDX["ELEV"]]  # Elevation data
     
     PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/MSR/' + 'TOF_vs_TIME_TLSA_D006Y15.png'  # Adjust path as needed
+    
+    # Generate plot
+    generatePlot(PlotConf)
+
+# T5.4  Plot Doppler Frequency, fD, in kHz for all satellites as a function of the hour
+# of the day. Color bar: satellite elevation.
+def plotSatMeasDopplerElev(LosData, X_RCVR, Y_RCVR, Z_RCVR):
+    print( 'Ploting the Plot Doppler Frequency (kHz) image ...')
+
+    # Calculate satellite velocity projected in the direction of the Line Of Sight (LOS)
+    rSAT_X = LosData[LOS_IDX["SAT-X[m]"]]  # Satellite X-Position
+    rSAT_Y = LosData[LOS_IDX["SAT-Y[m]"]]  # Satellite Y-Position
+    rSAT_Z = LosData[LOS_IDX["SAT-Z[m]"]]  # Satellite Z-Position
+
+    # rLOS = rSAT − rRCVR
+    rLOS_X = rSAT_X - X_RCVR
+    rLOS_Y = rSAT_Y - Y_RCVR
+    rLOS_Z = rSAT_Z - Z_RCVR
+
+    # |rLOS|
+    rLOS = np.column_stack((rLOS_X, rLOS_Y, rLOS_Z))
+    norm_rLOS = np.linalg.norm(rLOS, axis=1)
+
+    # uLOS = rLOS / |rLOS|
+    uLOS = rLOS / norm_rLOS[:, np.newaxis]
+
+    # vLOS = uLOS ∙ vLOS
+    vLOS_X = LosData[LOS_IDX["VEL-X[m/s]"]]  # Satellite X-Velocity
+    vLOS_Y = LosData[LOS_IDX["VEL-Y[m/s]"]]  # Satellite Y-Velocity
+    vLOS_Z = LosData[LOS_IDX["VEL-Z[m/s]"]]  # Satellite Z-Velocity
+
+    vLOS = np.sum(uLOS * np.column_stack((vLOS_X, vLOS_Y, vLOS_Z)), axis=1)
+
+    # Calculate Doppler Frequency (fD) for all satellites
+    fD_KHz = - (vLOS / GnssConstants.c_m_s) * GnssConstants.fL1_Hz / 1000  # Convert to kHz
+        
+    # Plot settings    
+    PlotConf = {}
+    PlotConf["Type"] = "Lines"
+    PlotConf["FigSize"] = (16.8, 15.2)
+    PlotConf["Title"] = "Doppler Frequency from TLSA on Year 2015 DoY 006"
+
+    PlotConf["yLabel"] = "Doppler Frequency [KHz]"
+    PlotConf["xLabel"] = "Hour of Day 006"
+    
+    PlotConf["Grid"] = True
+    PlotConf["Marker"] = '.'
+    PlotConf["LineWidth"] = 1.5
+
+    PlotConf["ColorBar"] = "gnuplot"
+    PlotConf["ColorBarLabel"] = "Elevation [deg]"
+    PlotConf["ColorBarMin"] = 0.
+    PlotConf["ColorBarMax"] = 90.
+
+    PlotConf["xData"] = {}
+    PlotConf["yData"] = {}  
+    PlotConf["zData"] = {}
+    
+    Label = 0
+    PlotConf["xData"][Label] = LosData[LOS_IDX["SOD"]] / GnssConstants.S_IN_H  # Converting to hours
+    PlotConf["yData"][Label] = fD_KHz  # Using Doppler Effect in KHz
+    PlotConf["zData"][Label] = LosData[LOS_IDX["ELEV"]]  # Elevation data
+    
+    PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/MSR/' + 'DOPPLER_FREQ_vs_TIME_TLSA_D006Y15.png'  # Adjust path as needed
     
     # Generate plot
     generatePlot(PlotConf)

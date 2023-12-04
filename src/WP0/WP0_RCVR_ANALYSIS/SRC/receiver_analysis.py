@@ -250,8 +250,6 @@ if(Conf["PLOT_MSR_PSR_ELEV"] == '1'):
     LosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
     usecols=[LOS_IDX["SOD"],LOS_IDX["MEAS[m]"],LOS_IDX["ELEV"]])
     
-    print( 'Ploting the Psudo-range C1C image ...')
-
     # Configure plot and call plot generation function
     MeasFunctions.plotSatMeasPsrElev(LosData)
 
@@ -260,9 +258,30 @@ if(Conf["PLOT_MSR_TOF_ELEV"] == '1'):
     LosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
     usecols=[LOS_IDX["SOD"],LOS_IDX["TOF[ms]"],LOS_IDX["ELEV"]])
     
-    print( 'Ploting the Plot Time of Flight (ToF) image ...')
-
     # Configure plot and call plot generation function
     MeasFunctions.plotSatMeasTofElev(LosData)
+
+if(Conf["PLOT_MSR_DOPPLER_ELEV"] == '1'): 
+    # Read the cols we need from LOS file
+    LosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
+    usecols=[LOS_IDX["SOD"],
+             LOS_IDX["SAT-X[m]"],
+             LOS_IDX["SAT-Y[m]"],
+             LOS_IDX["SAT-Z[m]"],
+             LOS_IDX["VEL-X[m/s]"],
+             LOS_IDX["VEL-Y[m/s]"],
+             LOS_IDX["VEL-Z[m/s]"],
+             LOS_IDX["ELEV"]])
+
+    # Get Receiver coordinates from Configuration file
+    X_RCVR = float(Conf["X_RCVR"])
+    Y_RCVR = float(Conf["Y_RCVR"])
+    Z_RCVR = float(Conf["Z_RCVR"])
+
+    # Configure plot and call plot generation function
+    MeasFunctions.plotSatMeasDopplerElev(LosData, X_RCVR, Y_RCVR, Z_RCVR)
+
+
+
 
 

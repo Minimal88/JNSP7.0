@@ -6,5 +6,8 @@ MaxPrnInConstellation = 32
 # Seconds in one hour
 S_IN_H = 3600
 
-# Speed of Light c
-c = 299792458
+# Speed of Light c in [m/s]
+c_m_s = 299792458
+
+# Frequency fL1 in [Hz]
+fL1_Hz = 1575.42 * 10**6
