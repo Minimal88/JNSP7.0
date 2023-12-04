@@ -60,7 +60,9 @@ def plotSatTropoStdElev(LosData):
 # T4.2 ZTD vs TIME (Elev)
 def plotSatTropoZtdElev(LosData):
     std = LosData[LOS_IDX["TROPO[m]"]]  # Extracting satellite TROPO information
-    mpp = LosData[LOS_IDX["MPP[elev]"]]
+    elev = LosData[LOS_IDX["ELEV"]] # Elevation data
+    
+    mpp = 1.001 / ((0.002001) +  np.sin(elev * np.pi / 180)**2)**0.5 # Elevation in rad
 
     ztd = std / mpp
     
@@ -70,8 +72,11 @@ def plotSatTropoZtdElev(LosData):
     PlotConf["FigSize"] = (16.8, 15.2)
     PlotConf["Title"] = "Zenith Tropo Delay (ZTD) from TLSA on Year 2015 DoY 006"
 
-    PlotConf["yLabel"] = "STD [m]"
+    PlotConf["yLabel"] = "ZTD [m]"
+    
     PlotConf["xLabel"] = "Hour of Day 006"
+    PlotConf["xTicks"] = range(0, 25)
+    PlotConf["xLim"] = [0, 24]
     
     PlotConf["Grid"] = True
     PlotConf["Marker"] = '.'
@@ -89,7 +94,7 @@ def plotSatTropoZtdElev(LosData):
     Label = 0
     PlotConf["xData"][Label] = LosData[LOS_IDX["SOD"]] / GnssConstants.S_IN_H  # Converting to hours
     PlotConf["yData"][Label] = ztd  # Using satellite TROPO in m
-    PlotConf["zData"][Label] = LosData[LOS_IDX["ELEV"]]  # Elevation data
+    PlotConf["zData"][Label] = elev
     
     PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/TRO/' + 'TROPO_ZTD_vs_TIME_TLSA_D006Y15.png'  # Adjust path as needed
     

@@ -23,7 +23,7 @@ LOS_IDX = {
 "STEC[m]":20,
 "VTEC[m]":21,
 "MPP[elev]":22
-},
+}
 
 
 POS_IDX = {

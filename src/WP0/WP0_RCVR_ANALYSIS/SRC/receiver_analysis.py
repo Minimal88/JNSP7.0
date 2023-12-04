@@ -249,7 +249,7 @@ if(Conf["PLOT_TROPO_STD_ELEV"] == '1'):
 if(Conf["PLOT_TROPO_ZTD_ELEV"] == '1'): #TODO: Fix this plot
     # Read the cols we need from LOS file
     PosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
-    usecols=[LOS_IDX["SOD"],LOS_IDX["TROPO[m]"],LOS_IDX["ELEV"],LOS_IDX["MPP[elev]"]])
+    usecols=[LOS_IDX["SOD"],LOS_IDX["TROPO[m]"],LOS_IDX["ELEV"]])
     
     print( 'Ploting the Zenith Tropo Delay (ZTD) image ...')
 
