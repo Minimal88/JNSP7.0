@@ -22,7 +22,7 @@ import numpy as np
 from COMMON.Coordinates import xyz2llh
 
 
-# Plot Satellite Visibility Figures
+# T2.1 Plot Satellite Visibility Figures
 def plotSatVisibility(LosData):
     PlotConf = {}
 
