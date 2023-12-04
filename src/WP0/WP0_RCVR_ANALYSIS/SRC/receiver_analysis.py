@@ -322,11 +322,10 @@ if(Conf["PLOT_MSR_RESIDUALS_ELEV"] == '1'):
     MeasFunctions.plotSatMeasResidualsElev(PosData)
 
 # T6.1. Satellites Used in PVT
-if(Conf["PLOT_POS_NUM_SAT"] == '1'): #TODO: Fix this plot Configuration
+if(Conf["PLOT_POS_NUM_SAT"] == '1'):
     # Read the cols we need from POS file
     PosData = read_csv(PosFile, delim_whitespace=True, skiprows=1, header=None,\
-    usecols=[POS_IDX["SOD"],
-             POS_IDX["NSATS"]])
+    usecols=[POS_IDX["SOD"], POS_IDX["NSATS"]])
     
     # Configure plot and call plot generation function
     PosFunctions.plotPosNumberOfSats(PosData)
@@ -339,3 +338,15 @@ if(Conf["PLOT_POS_DOPS"] == '1'):
     
     # Configure plot and call plot generation function
     PosFunctions.plotPosDops(PosData)
+
+# T6.3 H/V-DOPs Plot the HDOP and VDOP together with the number of satellites
+# TODO: Fix this plot Configuration
+if(Conf["PLOT_POS_HVDOPS_NUM_SAT"] == '1'):
+    # Read the cols we need from POS file
+    PosData = read_csv(PosFile, delim_whitespace=True, skiprows=1, header=None,\
+    usecols=[POS_IDX["SOD"],POS_IDX["HDOP"],POS_IDX["VDOP"], POS_IDX["NSATS"]])
+    
+    # Configure plot and call plot generation function
+    PosFunctions.plotPosHVDOPsNumSats(PosData)
+
+

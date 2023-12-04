@@ -108,3 +108,54 @@ def plotPosDops(PosData):
 
     # Generate plot
     generatePlot(PlotConf) 
+
+# T6.3 H/V-DOPs Plot the HDOP and VDOP together with the number of satellites
+def plotPosHVDOPsNumSats(PosData):
+    print( 'Ploting image: the HDOP and VDOP together with the number of satellites ...')
+
+    # Extract information
+    HDOP = PosData[POS_IDX["HDOP"]]
+    VDOP = PosData[POS_IDX["VDOP"]]
+    NSATS = PosData[POS_IDX["NSATS"]]
+    
+    HoursDoY = PosData[POS_IDX["SOD"]] / GnssConstants.S_IN_H  # Converting to hours
+    
+    # Plot settings
+    PlotConf = {}
+
+    PlotConf["Type"] = "Lines"
+    PlotConf["FigSize"] = (16.8, 15.2)
+    PlotConf["Title"] = "Dilution of Precision (DOP) from TLSA on Year 2015 DoY 006 "
+
+    PlotConf["yLabel"] = "DOP"
+    PlotConf["yTicks"] = range(0,5)
+    PlotConf["yLim"] = [0,5]
+
+    PlotConf["xLabel"] = "Hour of DoY 006"
+    PlotConf["xTicks"] = range(0, 25)
+    PlotConf["xLim"] = [0, 24]
+
+    PlotConf["Grid"] = True
+    PlotConf["Marker"] = '-'
+    PlotConf["LineWidth"] = 2
+    PlotConf["ShowLegend"] = True
+
+    PlotConf["xData"] = {}
+    PlotConf["yData"] = {}
+
+    Label = "HDOP"
+    PlotConf["xData"][Label] = HoursDoY
+    PlotConf["yData"][Label] = HDOP
+
+    Label = "VDOP"
+    PlotConf["xData"][Label] = HoursDoY
+    PlotConf["yData"][Label] = VDOP
+
+    Label = "NSATS"
+    PlotConf["xData"][Label] = HoursDoY
+    PlotConf["yData"][Label] = NSATS
+
+    PlotConf["Path"] = sys.argv[1] + '/OUT/POS/POS/' + 'POS_HVDOP_vs_TIME_TLSA_D006Y15.png'  
+
+    # Generate plot
+    generatePlot(PlotConf) 
