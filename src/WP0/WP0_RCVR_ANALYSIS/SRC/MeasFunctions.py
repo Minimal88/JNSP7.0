@@ -95,3 +95,41 @@ def plotSatMeasTauElev(LosData):
     
     # Generate plot
     generatePlot(PlotConf)
+
+
+# T5.3  Plot Time of Flight (ToF) for all satellites as a function of the hour
+# of the day. Color bar: satellite elevation.
+def plotSatMeasTofElev(LosData):    
+    tof = LosData[LOS_IDX["TOF[ms]"]]  # Extracting satellite TOF information
+        
+    # Plot settings    
+    PlotConf = {}
+    PlotConf["Type"] = "Lines"
+    PlotConf["FigSize"] = (16.8, 15.2)
+    PlotConf["Title"] = "Time of Flight (ToF) from TLSA on Year 2015 DoY 006"
+
+    PlotConf["yLabel"] = "Tau [ms]"
+    PlotConf["xLabel"] = "Hour of Day 006"
+    
+    PlotConf["Grid"] = True
+    PlotConf["Marker"] = '.'
+    PlotConf["LineWidth"] = 1.5
+
+    PlotConf["ColorBar"] = "gnuplot"
+    PlotConf["ColorBarLabel"] = "Elevation [deg]"
+    PlotConf["ColorBarMin"] = 0.
+    PlotConf["ColorBarMax"] = 90.
+
+    PlotConf["xData"] = {}
+    PlotConf["yData"] = {}
+    PlotConf["zData"] = {}
+    
+    Label = 0
+    PlotConf["xData"][Label] = LosData[LOS_IDX["SOD"]] / GnssConstants.S_IN_H  # Converting to hours
+    PlotConf["yData"][Label] = tof  # Using satellite TOF in ms
+    PlotConf["zData"][Label] = LosData[LOS_IDX["ELEV"]]  # Elevation data
+    
+    PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/MSR/' + 'TOF_vs_TIME_TLSA_D006Y15.png'  # Adjust path as needed
+    
+    # Generate plot
+    generatePlot(PlotConf)
