@@ -246,7 +246,7 @@ if(Conf["PLOT_TROPO_STD_ELEV"] == '1'):
     TropoFunctions.plotSatTropoStdElev(PosData)
 
 # T4.2 ZTD vs. Time (Elevation)
-if(Conf["PLOT_TROPO_ZTD_ELEV"] == '1'): #TODO: Fix this plot
+if(Conf["PLOT_TROPO_ZTD_ELEV"] == '1'):
     # Read the cols we need from LOS file
     PosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
     usecols=[LOS_IDX["SOD"],LOS_IDX["TROPO[m]"],LOS_IDX["ELEV"]])
@@ -340,7 +340,6 @@ if(Conf["PLOT_POS_DOPS"] == '1'):
     PosFunctions.plotPosDops(PosData)
 
 # T6.3 H/V-DOPs Plot the HDOP and VDOP together with the number of satellites
-# TODO: Fix this plot Configuration
 if(Conf["PLOT_POS_HVDOPS_NUM_SAT"] == '1'):
     # Read the cols we need from POS file
     PosData = read_csv(PosFile, delim_whitespace=True, skiprows=1, header=None,\
@@ -348,15 +347,6 @@ if(Conf["PLOT_POS_HVDOPS_NUM_SAT"] == '1'):
     
     # Configure plot and call plot generation function
     PosFunctions.plotPosHVDOPsNumSats(PosData)
-
-# T6.2 (X)DOPS Plot the PDOP, GDOP, TDOP in order
-if(Conf["PLOT_POS_DOPS"] == '1'):
-    # Read the cols we need from POS file
-    PosData = read_csv(PosFile, delim_whitespace=True, skiprows=1, header=None,\
-    usecols=[POS_IDX["SOD"],POS_IDX["PDOP"],POS_IDX["GDOP"],POS_IDX["TDOP"]])
-    
-    # Configure plot and call plot generation function
-    PosFunctions.plotPosDops(PosData)
 
 # T6.4 Plot the East/North/Up Position Error (EPE, NPE, UPE)
 if(Conf["PLOT_POS_ENU"] == '1'):

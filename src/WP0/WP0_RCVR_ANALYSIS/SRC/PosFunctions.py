@@ -139,7 +139,7 @@ def plotPosHVDOPsNumSats(PosData):
     PlotConf["Marker"] = '-'
     PlotConf["LineWidth"] = 2
     PlotConf["ShowLegend"] = True
-
+    
     PlotConf["xData"] = {}
     PlotConf["yData"] = {}
 
@@ -151,6 +151,10 @@ def plotPosHVDOPsNumSats(PosData):
     PlotConf["xData"][Label] = HoursDoY
     PlotConf["yData"][Label] = VDOP
 
+    PlotConf["Twin"] = "NSATS"
+    PlotConf["Twin_yTicks"] = range(13)
+    PlotConf["Twin_yLim"] = [-13,13]
+    
     Label = "NSATS"
     PlotConf["xData"][Label] = HoursDoY
     PlotConf["yData"][Label] = NSATS

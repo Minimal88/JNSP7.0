@@ -32,11 +32,15 @@ def saveFigure(fig, Path):
         os.makedirs(Dir)
     except: pass
     fig.savefig(Path, dpi=150., bbox_inches='tight')
+    plt.close('all')
 
 def prepareAxis(PlotConf, ax):
+    ax.get_yaxis().get_major_formatter().set_useOffset(False)
+    ax.get_yaxis().get_major_formatter().set_scientific(False)
+    
     for key in PlotConf:
         if key == "Title":
-            ax.set_title(PlotConf["Title"])
+            ax.set_title(PlotConf["Title"])        
 
         for axis in ["x", "y"]:
             if axis == "x":
@@ -153,6 +157,21 @@ def generateLinesPlot(PlotConf):
             PlotConf["Marker"],
             linewidth = LineWidth,
             label = Label)
+
+            # When Using the 'Twin' configuration, make sure to use the last label
+            if "Twin" in PlotConf:
+                if (PlotConf["Twin"] == Label):
+                    ax2 = ax.twinx()
+                    ax2.plot(PlotConf["xData"][Label], PlotConf["yData"][Label],
+                    PlotConf["Marker"],
+                    linewidth = LineWidth,
+                    label = Label, 
+                    color='green')
+
+                    ax2.set_yticks(PlotConf["Twin_yTicks"])
+                    ax2.set_ylim(PlotConf["Twin_yLim"])
+        
+        # Comprobar PlotConf["label"]
 
     if "ShowLegend" in PlotConf:
          # Create legends for each label
