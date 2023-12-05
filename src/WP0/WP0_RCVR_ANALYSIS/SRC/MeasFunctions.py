@@ -117,7 +117,7 @@ def plotSatMeasTofElev(LosData):
     PlotConf["FigSize"] = (16.8, 15.2)
     PlotConf["Title"] = "Time of Flight (ToF) from TLSA on Year 2015 DoY 006"
 
-    PlotConf["yLabel"] = "Tau [ms]"
+    PlotConf["yLabel"] = "ToF [ms]"
     PlotConf["xLabel"] = "Hour of Day 006"
     PlotConf["xTicks"] = range(0, 25)
     PlotConf["xLim"] = [0, 24]
