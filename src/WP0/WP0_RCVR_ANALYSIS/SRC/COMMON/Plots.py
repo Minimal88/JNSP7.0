@@ -93,10 +93,18 @@ def prepareColorBar(PlotConf, ax, Values):
     # size size% of the plot and gap of pad% from the plot
     color_ax = divider.append_axes("right", size="3%", pad="2%")
     cmap = mpl.cm.get_cmap(PlotConf["ColorBar"])
-    cbar = mpl.colorbar.ColorbarBase(color_ax, 
-    cmap=cmap,
-    norm=mpl.colors.Normalize(vmin=Min, vmax=Max),
-    label=PlotConf["ColorBarLabel"])
+    
+    if "ColorBarTicks" in PlotConf:
+        cbar = mpl.colorbar.ColorbarBase(color_ax, 
+        cmap=cmap,
+        norm=mpl.colors.Normalize(vmin=Min, vmax=Max),
+        label=PlotConf["ColorBarLabel"],
+        ticks=PlotConf["ColorBarTicks"])
+    else: 
+        cbar = mpl.colorbar.ColorbarBase(color_ax, 
+        cmap=cmap,
+        norm=mpl.colors.Normalize(vmin=Min, vmax=Max),
+        label=PlotConf["ColorBarLabel"])
 
     return normalize, cmap
 

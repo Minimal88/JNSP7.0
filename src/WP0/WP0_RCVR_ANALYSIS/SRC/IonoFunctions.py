@@ -23,6 +23,8 @@ from COMMON.Coordinates import xyz2llh
 
 # T3.1 Ionosphere STEC[m] vs ELEV
 def plotSatIonoStecElev(LosData):
+    print( 'Ploting the Satellite STEC vs TIME (ELEV) image ...')
+    
     stec = LosData[LOS_IDX["STEC[m]"]]  # Extracting satellite STEC information
     
     # Plot settings    
@@ -33,6 +35,8 @@ def plotSatIonoStecElev(LosData):
 
     PlotConf["yLabel"] = "STEC [m]"
     PlotConf["xLabel"] = "Hour of Day 006"
+    PlotConf["xTicks"] = range(0, 25)
+    PlotConf["xLim"] = [0, 24]
     
     PlotConf["Grid"] = True
     PlotConf["Marker"] = '.'
@@ -59,7 +63,10 @@ def plotSatIonoStecElev(LosData):
 
 # T3.2 PRN vs TIME (STEC)
 def plotSatIonoPrnStec(LosData):
+    print( 'Ploting the Satellites PRN vs TIME (STEC) image ...')
+    
     stec = LosData[LOS_IDX["STEC[m]"]]  # Extracting satellite STEC information
+    prn = LosData[LOS_IDX["PRN"]]  # Elevation data
     
     # Plot settings    
     PlotConf = {}
@@ -68,7 +75,12 @@ def plotSatIonoPrnStec(LosData):
     PlotConf["Title"] = "Satellite Visibility vs STEC from TLSA on Year 2015 DoY 006"
 
     PlotConf["yLabel"] = "GPS-PRN"
+    PlotConf["yTicks"] = range(max(prn))
+    PlotConf["yLim"] = [0, max(prn)]
+
     PlotConf["xLabel"] = "Hour of Day 006"
+    PlotConf["xTicks"] = range(0, 25)
+    PlotConf["xLim"] = [0, 24]
     
     PlotConf["Grid"] = True
     PlotConf["Marker"] = '.'
@@ -85,7 +97,7 @@ def plotSatIonoPrnStec(LosData):
     
     Label = 0
     PlotConf["xData"][Label] = LosData[LOS_IDX["SOD"]] / GnssConstants.S_IN_H  # Converting to hours
-    PlotConf["yData"][Label] = LosData[LOS_IDX["PRN"]]  # Elevation data
+    PlotConf["yData"][Label] = prn
     PlotConf["zData"][Label] = stec  # Using satellite STEC in m
     
     PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/ION/' + 'IONO_STEC_vs_PRN_TLSA_D006Y15.png'  # Adjust path as needed
@@ -95,6 +107,8 @@ def plotSatIonoPrnStec(LosData):
 
 # T3.3 VTEC vs. Time
 def plotSatIonoVtecTimeElev(LosData):
+    print( 'Ploting the Satellites VTEC vs TIME (Elev) image ...')
+
     vtec = LosData[LOS_IDX["VTEC[m]"]]  # Extracting satellite VTEC information
     
     # Plot settings    
@@ -105,6 +119,8 @@ def plotSatIonoVtecTimeElev(LosData):
 
     PlotConf["yLabel"] = "VTEC [m]"
     PlotConf["xLabel"] = "Hour of Day 006"
+    PlotConf["xTicks"] = range(0, 25)
+    PlotConf["xLim"] = [0, 24]
     
     PlotConf["Grid"] = True
     PlotConf["Marker"] = '.'
@@ -129,9 +145,12 @@ def plotSatIonoVtecTimeElev(LosData):
     # Generate plot
     generatePlot(PlotConf) 
 
-# T3. PRN vs TIME (VTEC)
+# T3.4 PRN vs TIME (VTEC)
 def plotSatIonoPrnVtec(LosData):
+    print( 'Ploting the Satellites PRN vs TIME (VTEC) image ...')
+
     vtec = LosData[LOS_IDX["VTEC[m]"]]  # Extracting satellite VTEC information
+    prn = LosData[LOS_IDX["PRN"]]  # Elevation data
     
     # Plot settings    
     PlotConf = {}
@@ -140,7 +159,12 @@ def plotSatIonoPrnVtec(LosData):
     PlotConf["Title"] = "Satellite Visibility vs VTEC from TLSA on Year 2015 DoY 006"
 
     PlotConf["yLabel"] = "GPS-PRN"
+    PlotConf["yTicks"] = range(max(prn))
+    PlotConf["yLim"] = [0, max(prn)]    
+
     PlotConf["xLabel"] = "Hour of Day 006"
+    PlotConf["xTicks"] = range(0, 25)
+    PlotConf["xLim"] = [0, 24]
     
     PlotConf["Grid"] = True
     PlotConf["Marker"] = '.'
@@ -157,7 +181,7 @@ def plotSatIonoPrnVtec(LosData):
     
     Label = 0
     PlotConf["xData"][Label] = LosData[LOS_IDX["SOD"]] / GnssConstants.S_IN_H  # Converting to hours
-    PlotConf["yData"][Label] = LosData[LOS_IDX["PRN"]]  # Elevation data
+    PlotConf["yData"][Label] = prn
     PlotConf["zData"][Label] = vtec  # Using satellite VTEC in m
     
     PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/ION/' + 'IONO_VTEC_vs_PRN_TLSA_D006Y15.png'  # Adjust path as needed

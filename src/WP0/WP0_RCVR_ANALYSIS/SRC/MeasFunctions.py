@@ -36,6 +36,8 @@ def plotSatMeasPsrElev(LosData):
 
     PlotConf["yLabel"] = "Pseudo-range [Km]"
     PlotConf["xLabel"] = "Hour of Day 006"
+    PlotConf["xTicks"] = range(0, 25)
+    PlotConf["xLim"] = [0, 24]
     
     PlotConf["Grid"] = True
     PlotConf["Marker"] = '.'
@@ -75,6 +77,8 @@ def plotSatMeasTauElev(LosData):
 
     PlotConf["yLabel"] = "Tau [ms]"
     PlotConf["xLabel"] = "Hour of Day 006"
+    PlotConf["xTicks"] = range(0, 25)
+    PlotConf["xLim"] = [0, 24]
     
     PlotConf["Grid"] = True
     PlotConf["Marker"] = '.'
@@ -115,6 +119,8 @@ def plotSatMeasTofElev(LosData):
 
     PlotConf["yLabel"] = "Tau [ms]"
     PlotConf["xLabel"] = "Hour of Day 006"
+    PlotConf["xTicks"] = range(0, 25)
+    PlotConf["xLim"] = [0, 24]
     
     PlotConf["Grid"] = True
     PlotConf["Marker"] = '.'
@@ -179,6 +185,8 @@ def plotSatMeasDopplerElev(LosData, X_RCVR, Y_RCVR, Z_RCVR):
 
     PlotConf["yLabel"] = "Doppler Frequency [KHz]"
     PlotConf["xLabel"] = "Hour of Day 006"
+    PlotConf["xTicks"] = range(0, 25)
+    PlotConf["xLim"] = [0, 24]
     
     PlotConf["Grid"] = True
     PlotConf["Marker"] = '.'
@@ -234,6 +242,8 @@ def plotSatMeasResidualsElev(LosData):
 
     PlotConf["yLabel"] = "Residuals [Km]"
     PlotConf["xLabel"] = "Hour of Day 006"
+    PlotConf["xTicks"] = range(0, 25)
+    PlotConf["xLim"] = [0, 24]
     
     PlotConf["Grid"] = True
     PlotConf["Marker"] = '.'
@@ -241,8 +251,9 @@ def plotSatMeasResidualsElev(LosData):
 
     PlotConf["ColorBar"] = "gnuplot"
     PlotConf["ColorBarLabel"] = "GPS-PRN"
-    PlotConf["ColorBarMin"] = np.min(prn)
-    PlotConf["ColorBarMax"] = np.max(prn)
+    PlotConf["ColorBarMin"] =  min(prn)
+    PlotConf["ColorBarMax"] = max(prn)
+    PlotConf["ColorBarTicks"] = range(max(prn))
 
     PlotConf["xData"] = {}
     PlotConf["yData"] = {}
@@ -250,7 +261,7 @@ def plotSatMeasResidualsElev(LosData):
     
     Label = 0
     PlotConf["xData"][Label] = LosData[LOS_IDX["SOD"]] / GnssConstants.S_IN_H  # Converting to hours
-    PlotConf["yData"][Label] = RESC1  # Residuals for Code Measurements C1 data
+    PlotConf["yData"][Label] = RESC1 / 1000 # Residuals in [Km] for Code Measurements C1 data
     PlotConf["zData"][Label] = prn  # PRN data
     
     PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/MSR/' + 'MEAS_RESIDUALS_vs_TIME_TLSA_D006Y15.png'  # Adjust path as needed

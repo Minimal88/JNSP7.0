@@ -24,6 +24,7 @@ from COMMON.Coordinates import xyz2llh
 
 # T2.1 Plot Satellite Visibility Figures
 def plotSatVisibility(LosData):
+    print( 'Ploting the Satellite Visibility image Periods ...')
     PlotConf = {}
 
     PlotConf["Type"] = "Lines"
@@ -68,6 +69,8 @@ def plotSatVisibility(LosData):
 
 # Plot Satellite Geometrical Range Figures
 def plotSatGeomRnge(LosData):
+    print( 'Ploting the Satellite Geometrical image Ranges ...')
+
     PlotConf = {}
 
     PlotConf["Type"] = "Lines"
@@ -107,6 +110,8 @@ def plotSatGeomRnge(LosData):
 
 # Plot Satellite Tracks Figures
 def plotSatTracks(LosData):
+    print( 'Ploting the Satellite Tracks image ...')
+
     PlotConf = {}
 
     PlotConf["Type"] = "Lines"
@@ -130,8 +135,7 @@ def plotSatTracks(LosData):
     PlotConf["xLim"] = [PlotConf["LonMin"], PlotConf["LonMax"]]
 
     PlotConf["Grid"] = True
-
-    PlotConf["Map"] = False
+    PlotConf["Map"] = True
 
     PlotConf["Marker"] = '.'
     PlotConf["LineWidth"] = 1.5
@@ -195,12 +199,10 @@ def plotSatVelocities(LosData):
     PlotConf["LatStep"] = 10
 
     PlotConf["yLabel"] = "Absolute Velocity (km/s)"
-    # PlotConf["yTicks"] = range(PlotConf["LatMin"],PlotConf["LatMax"]+1,10)
-    # PlotConf["yLim"] = [PlotConf["LatMin"], PlotConf["LatMax"]]
 
     PlotConf["xLabel"] = "Hour of DoY 006"
-    # PlotConf["xTicks"] = range(PlotConf["LonMin"],PlotConf["LonMax"]+1,15)
-    # PlotConf["xLim"] = [PlotConf["LonMin"], PlotConf["LonMax"]]
+    PlotConf["xTicks"] = range(0, 25)
+    PlotConf["xLim"] = [0, 24]
 
     PlotConf["Grid"] = True
 
@@ -229,12 +231,15 @@ def plotSatVelocities(LosData):
 
 # T2.5 NAV Satellite Clock
 def plotSatClock(LosData):
-    
+    print( 'Ploting the Satellite Clock image ...')
+
     # Loop through each unique sorted PRN
     for prn in sorted(unique(LosData[LOS_IDX["PRN"]])): 
         prn_data = LosData[LosData[LOS_IDX["PRN"]] == prn]  # Filter data for the current PRN
         
         sat_clock = prn_data[LOS_IDX["SV-CLK[m]"]]  # Extract satellite clock information for the current PRN
+
+        hours = prn_data[LOS_IDX["SOD"]] / GnssConstants.S_IN_H  # Converting to hours
         
         # Plot settings
         PlotConf = {}
@@ -244,7 +249,14 @@ def plotSatClock(LosData):
         PlotConf["Title"] = f"PRN {int(prn)} NAV CLK from TLSA on Year 2015 DoY 006 "
 
         PlotConf["yLabel"] = "CLK [Km]"
+
+
+        hoursMin = int(np.min(hours))
+        hoursMax = int(np.max(hours))
+
         PlotConf["xLabel"] = "Hour of DoY 006"
+        PlotConf["xTicks"] = range(hoursMin, hoursMax + 1)
+        PlotConf["xLim"] = [hoursMin, hoursMax + 1]
 
         PlotConf["Grid"] = True
         PlotConf["Marker"] = '.'
@@ -254,7 +266,7 @@ def plotSatClock(LosData):
         PlotConf["yData"] = {}
 
         Label = 0
-        PlotConf["xData"][Label] = prn_data[LOS_IDX["SOD"]] / GnssConstants.S_IN_H  # Converting to hours
+        PlotConf["xData"][Label] = hours
         PlotConf["yData"][Label] = sat_clock / 1000  # Converting to Km
 
         PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/SAT/SAT_CLOCKS/' + f'SAT_CLOCK_PRN_{int(prn)}.png'  
@@ -264,13 +276,17 @@ def plotSatClock(LosData):
 
 # T2.6 Satellite Corrected Clock
 def plotSatCorrectedClock(LosData):
+    print( 'Ploting the Satellite Corrected image Clock ...')
+
     sat_clock = LosData[LOS_IDX["SV-CLK[m]"]]  # Extracting satellite clock information
     dtr = LosData[LOS_IDX["DTR[m]"]]  # Extracting satellite DTR information
     tgd = LosData[LOS_IDX["TGD[m]"]]  # Extracting satellite TGD information
 
     correlated = sat_clock - tgd + dtr
-    # Plot settings
-    
+
+    prn = LosData[LOS_IDX["PRN"]]  # PRN data
+
+    # Plot settings    
     PlotConf = {}
 
     PlotConf["Type"] = "Lines"
@@ -279,6 +295,8 @@ def plotSatCorrectedClock(LosData):
 
     PlotConf["yLabel"] = "CLK [Km]"
     PlotConf["xLabel"] = "Hour of Day 006"
+    PlotConf["xTicks"] = range(0, 25)
+    PlotConf["xLim"] = [0, 24]
     
     PlotConf["Grid"] = True
     PlotConf["Marker"] = '.'
@@ -286,9 +304,10 @@ def plotSatCorrectedClock(LosData):
 
     PlotConf["ColorBar"] = "gnuplot"
     PlotConf["ColorBarLabel"] = "GPS-PRN"
-    PlotConf["ColorBarMin"] =  min(unique(LosData[LOS_IDX["PRN"]]))
-    PlotConf["ColorBarMax"] = max(unique(LosData[LOS_IDX["PRN"]]))
-
+    PlotConf["ColorBarMin"] =  min(prn)
+    PlotConf["ColorBarMax"] = max(prn)
+    PlotConf["ColorBarTicks"] = range(max(prn))
+    
     PlotConf["xData"] = {}
     PlotConf["yData"] = {}
     PlotConf["zData"] = {}
@@ -296,7 +315,7 @@ def plotSatCorrectedClock(LosData):
     Label = 0
     PlotConf["xData"][Label] = LosData[LOS_IDX["SOD"]] / GnssConstants.S_IN_H  # Converting to hours
     PlotConf["yData"][Label] = correlated / 1000  # Using correlated satellite clock data in Km
-    PlotConf["zData"][Label] = LosData[LOS_IDX["PRN"]]  # PRN data
+    PlotConf["zData"][Label] = prn
     
     PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/SAT/' + 'SAT_CLK_TLSA_D006Y15.png'  # Adjust path as needed
     
@@ -305,7 +324,10 @@ def plotSatCorrectedClock(LosData):
 
 # T2.7 Satellite TGD
 def plotSatTGD(LosData):
+    print( 'Ploting the Satellite TGD image ...')
     tgd = LosData[LOS_IDX["TGD[m]"]]  # Extracting satellite TGD information
+
+    prn = LosData[LOS_IDX["PRN"]]  # PRN data
     
     # Plot settings    
     PlotConf = {}
@@ -315,6 +337,8 @@ def plotSatTGD(LosData):
 
     PlotConf["yLabel"] = "TGD [m]"
     PlotConf["xLabel"] = "Hour of Day 006"
+    PlotConf["xTicks"] = range(0, 25)
+    PlotConf["xLim"] = [0, 24]
     
     PlotConf["Grid"] = True
     PlotConf["Marker"] = '.'
@@ -322,8 +346,9 @@ def plotSatTGD(LosData):
 
     PlotConf["ColorBar"] = "gnuplot"
     PlotConf["ColorBarLabel"] = "GPS-PRN"
-    PlotConf["ColorBarMin"] =  min(unique(LosData[LOS_IDX["PRN"]]))
-    PlotConf["ColorBarMax"] = max(unique(LosData[LOS_IDX["PRN"]]))
+    PlotConf["ColorBarMin"] =  min(prn)
+    PlotConf["ColorBarMax"] = max(prn)
+    PlotConf["ColorBarTicks"] = range(max(prn))
 
     PlotConf["xData"] = {}
     PlotConf["yData"] = {}
@@ -332,7 +357,7 @@ def plotSatTGD(LosData):
     Label = 0
     PlotConf["xData"][Label] = LosData[LOS_IDX["SOD"]] / GnssConstants.S_IN_H  # Converting to hours
     PlotConf["yData"][Label] = tgd   # Using satellite TGD in m
-    PlotConf["zData"][Label] = LosData[LOS_IDX["PRN"]]  # PRN data
+    PlotConf["zData"][Label] = prn
     
     PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/SAT/' + 'SAT_TGD_TLSA_D006Y15.png'  # Adjust path as needed
     
@@ -341,6 +366,7 @@ def plotSatTGD(LosData):
 
 # T2.8 Satellite DTR
 def plotSatDTR(LosData):
+    print( 'Ploting the Satellite DTR image ...')
     dtr = LosData[LOS_IDX["DTR[m]"]]  # Extracting satellite DTR information
     
     # Plot settings    
@@ -351,6 +377,8 @@ def plotSatDTR(LosData):
 
     PlotConf["yLabel"] = "DTR [m]"
     PlotConf["xLabel"] = "Hour of Day 006"
+    PlotConf["xTicks"] = range(0, 25)
+    PlotConf["xLim"] = [0, 24]
     
     PlotConf["Grid"] = True
     PlotConf["Marker"] = '.'

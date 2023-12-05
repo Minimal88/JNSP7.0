@@ -23,6 +23,8 @@ from COMMON.Coordinates import xyz2llh
 
 # T4.1 Troposphere STD[m] vs Time (Elev)
 def plotSatTropoStdElev(LosData):
+    print( 'Ploting the Slant Tropospheric Delay (STD) image ...')
+    
     std = LosData[LOS_IDX["TROPO[m]"]]  # Extracting satellite TROPO information
     
     # Plot settings    
@@ -33,6 +35,8 @@ def plotSatTropoStdElev(LosData):
 
     PlotConf["yLabel"] = "STD [m]"
     PlotConf["xLabel"] = "Hour of Day 006"
+    PlotConf["xTicks"] = range(0, 25)
+    PlotConf["xLim"] = [0, 24]
     
     PlotConf["Grid"] = True
     PlotConf["Marker"] = '.'
@@ -76,7 +80,7 @@ def plotSatTropoZtdElev(LosData):
     
     PlotConf["xLabel"] = "Hour of Day 006"
     PlotConf["xTicks"] = range(0, 25)
-    PlotConf["xLim"] = [0, 24]
+    PlotConf["xLim"] = [0, 24]    
     
     PlotConf["Grid"] = True
     PlotConf["Marker"] = '.'

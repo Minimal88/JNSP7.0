@@ -98,8 +98,6 @@ if(Conf["PLOT_SATVIS"] == '1'):
     # Read the cols we need from LOS file
     PosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
     usecols=[LOS_IDX["SOD"],LOS_IDX["PRN"],LOS_IDX["ELEV"]])
-    
-    print( 'Ploting the Satellite Visibility image Periods ...')
 
     # Configure plot and call plot generation function
     SatFunctions.plotSatVisibility(PosData)
@@ -108,9 +106,7 @@ if(Conf["PLOT_SATVIS"] == '1'):
 if(Conf["PLOT_SATRNG"] == '1'):
     # Read the cols we need from LOS file
     PosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
-    usecols=[LOS_IDX["SOD"],LOS_IDX["RANGE[m]"],LOS_IDX["ELEV"]])
-
-    print( 'Ploting the Satellite Geometrical image Ranges ...')
+    usecols=[LOS_IDX["SOD"],LOS_IDX["RANGE[m]"],LOS_IDX["ELEV"]])    
     
     # Configure plot and call plot generation function
     SatFunctions.plotSatGeomRnge(PosData)
@@ -124,8 +120,6 @@ if(Conf["PLOT_SATTRK"] == '1'):
     LOS_IDX["SAT-Y[m]"],
     LOS_IDX["SAT-Z[m]"],
     LOS_IDX["ELEV"]])
-    
-    print( 'Ploting the Satellite Tracks image ...')
 
     # Configure plot and call plot generation function
     SatFunctions.plotSatTracks(PosData)
@@ -152,8 +146,6 @@ if(Conf["PLOT_SATCLK"] == '1'):
     PosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
     usecols=[LOS_IDX["SOD"],LOS_IDX["SV-CLK[m]"],LOS_IDX["ELEV"],LOS_IDX["PRN"]])
     
-    print( 'Ploting the Satellite Clock image ...')
-
     # Configure plot and call plot generation function
     SatFunctions.plotSatClock(PosData)
 
@@ -163,8 +155,6 @@ if(Conf["PLOT_SAT_CORRECTEDCLK"] == '1'):
     PosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
     usecols=[LOS_IDX["SOD"],LOS_IDX["SV-CLK[m]"],LOS_IDX["DTR[m]"],LOS_IDX["TGD[m]"],LOS_IDX["PRN"]])
     
-    print( 'Ploting the Satellite Corrected image Clock ...')
-
     # Configure plot and call plot generation function
     SatFunctions.plotSatCorrectedClock(PosData)
 
@@ -174,8 +164,6 @@ if(Conf["PLOT_SATTGD"] == '1'):
     PosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
     usecols=[LOS_IDX["SOD"],LOS_IDX["TGD[m]"],LOS_IDX["PRN"]])
     
-    print( 'Ploting the Satellite TGD image ...')
-
     # Configure plot and call plot generation function
     SatFunctions.plotSatTGD(PosData)
 
@@ -184,8 +172,6 @@ if(Conf["PLOT_SATDTR"] == '1'):
     # Read the cols we need from LOS file
     PosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
     usecols=[LOS_IDX["SOD"],LOS_IDX["DTR[m]"],LOS_IDX["ELEV"]])
-    
-    print( 'Ploting the Satellite DTR image ...')
 
     # Configure plot and call plot generation function
     SatFunctions.plotSatDTR(PosData)
@@ -195,8 +181,6 @@ if(Conf["PLOT_IONO_STEC_ELEV"] == '1'):
     # Read the cols we need from LOS file
     PosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
     usecols=[LOS_IDX["SOD"],LOS_IDX["STEC[m]"],LOS_IDX["ELEV"]])
-    
-    print( 'Ploting the Satellite STEC vs TIME (ELEV) image ...')
 
     # Configure plot and call plot generation function
     IonoFunctions.plotSatIonoStecElev(PosData)
@@ -207,8 +191,6 @@ if(Conf["PLOT_IONO_PRN_STEC"] == '1'):
     PosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
     usecols=[LOS_IDX["SOD"],LOS_IDX["STEC[m]"],LOS_IDX["PRN"]])
     
-    print( 'Ploting the Satellites PRN vs TIME (STEC) image ...')
-
     # Configure plot and call plot generation function
     IonoFunctions.plotSatIonoPrnStec(PosData)
 
@@ -217,8 +199,6 @@ if(Conf["PLOT_IONO_VTEC_TIME"] == '1'):
     # Read the cols we need from LOS file
     PosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
     usecols=[LOS_IDX["SOD"],LOS_IDX["VTEC[m]"],LOS_IDX["ELEV"]])
-    
-    print( 'Ploting the Satellites VTEC vs TIME (Elev) image ...')
 
     # Configure plot and call plot generation function
     IonoFunctions.plotSatIonoVtecTimeElev(PosData)
@@ -229,8 +209,6 @@ if(Conf["PLOT_IONO_PRN_VTEC"] == '1'):
     PosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
     usecols=[LOS_IDX["SOD"],LOS_IDX["VTEC[m]"],LOS_IDX["PRN"]])
     
-    print( 'Ploting the Satellites PRN vs TIME (VTEC) image ...')
-
     # Configure plot and call plot generation function
     IonoFunctions.plotSatIonoPrnVtec(PosData)
 
@@ -239,8 +217,6 @@ if(Conf["PLOT_TROPO_STD_ELEV"] == '1'):
     # Read the cols we need from LOS file
     PosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
     usecols=[LOS_IDX["SOD"],LOS_IDX["TROPO[m]"],LOS_IDX["ELEV"]])
-    
-    print( 'Ploting the Slant Tropospheric Delay (STD) image ...')
 
     # Configure plot and call plot generation function
     TropoFunctions.plotSatTropoStdElev(PosData)
