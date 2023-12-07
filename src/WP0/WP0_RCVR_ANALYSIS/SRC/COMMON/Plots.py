@@ -19,7 +19,11 @@ warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)
 
 def createFigure(PlotConf):
     try:
-        fig, ax = plt.subplots(1, 1, figsize = PlotConf["FigSize"])
+        if "Polar" in PlotConf and PlotConf["Polar"] == True:
+            fig, ax = plt.subplots(figsize=PlotConf["FigSize"],subplot_kw=dict(polar=True))    
+            ax.set_aspect('equal')
+        else:
+            fig, ax = plt.subplots(1, 1, figsize=PlotConf["FigSize"])
     
     except:
         fig, ax = plt.subplots(1, 1)
@@ -40,8 +44,23 @@ def prepareAxis(PlotConf, ax):
     
     for key in PlotConf:
         if key == "Title":
-            ax.set_title(PlotConf["Title"])        
+            ax.set_title(PlotConf["Title"], fontsize=12)     
 
+        if key == "Polar" and PlotConf[key] == True:
+            # Define the radial ticks and limits
+            ax.set_rticks([0, 10, 20, 30, 40, 50, 60, 70, 80, 90])
+            ax.set_rlim(0, 90)            
+
+            ax.set_yticklabels([90, 80, 70, 60, 50, 40, 30, 20, 10, 0], fontsize=10, fontweight='bold')
+            
+            # Define the ticks at 0, 90, 180, 270 degrees
+            xticks = [0, np.pi / 2, np.pi, 3 * np.pi / 2]
+            ax.set_xticks(xticks) 
+            ax.set_xticklabels(['N', 'E', 'S', 'W'], fontsize=10, fontweight='bold')
+            
+            ax.set_theta_zero_location('N')
+            ax.set_theta_direction('clockwise')
+        
         for axis in ["x", "y"]:
             if axis == "x":
                 if key == axis + "Label":
@@ -108,6 +127,42 @@ def prepareColorBar(PlotConf, ax, Values):
 
     return normalize, cmap
 
+def prepareColorPolarBar(PlotConf, ax, Values):
+    try:
+        Min = PlotConf["ColorBarMin"]
+    except:
+        Mins = []
+        for v in Values.values():
+            Mins.append(min(v))
+        Min = min(Mins)
+    try:
+        Max = PlotConf["ColorBarMax"]
+    except:
+        Maxs = []
+        for v in Values.values():
+            Maxs.append(max(v))
+        Max = max(Maxs)
+    normalize = mpl.cm.colors.Normalize(vmin=Min, vmax=Max)
+
+    # Create a separate axis for the color bar outside the polar plot area
+    color_ax = plt.gcf().add_axes([0.95, 0.1, 0.05, 0.8])  # Adjust the position and size as needed
+    cmap = mpl.cm.get_cmap(PlotConf["ColorBar"])
+
+    if "ColorBarTicks" in PlotConf:
+        cbar = mpl.colorbar.ColorbarBase(color_ax,
+                                         cmap=cmap,
+                                         norm=mpl.colors.Normalize(vmin=Min, vmax=Max),
+                                         label=PlotConf["ColorBarLabel"],
+                                         ticks=PlotConf["ColorBarTicks"])
+    else:
+        cbar = mpl.colorbar.ColorbarBase(color_ax,
+                                         cmap=cmap,
+                                         norm=mpl.colors.Normalize(vmin=Min, vmax=Max),
+                                         label=PlotConf["ColorBarLabel"])
+
+    return normalize, cmap
+
+
 def drawMap(PlotConf, ax,):
     Map = Basemap(projection = 'cyl',
     llcrnrlat  = PlotConf["LatMin"]-0,
@@ -148,10 +203,13 @@ def generateLinesPlot(PlotConf):
     for key in PlotConf:
         if key == "LineWidth":
             LineWidth = PlotConf["LineWidth"]
-        if key == "ColorBar":
+        if key == "ColorBar" and "Polar" not in PlotConf:
             normalize, cmap = prepareColorBar(PlotConf, ax, PlotConf["zData"])
+        if key == "ColorBar" and "Polar"  in PlotConf:
+            normalize, cmap = prepareColorPolarBar(PlotConf, ax, PlotConf["zData"])
         if key == "Map" and PlotConf[key] == True:
             drawMap(PlotConf, ax)
+            
 
     for Label in PlotConf["yData"].keys():
         if "ColorBar" in PlotConf:

@@ -352,3 +352,15 @@ if(Conf["PLOT_POS_EPE_NPE"] == '1'):
     # Configure plot and call plot generation function
     PosFunctions.plotPosEpeNpe(PosData)
 
+
+# TXX Plot Satellite Polar View Challenge
+if(Conf["PLOT_SAT_POLAR_CHALLENGE"] == '1'):
+    # Read the cols we need from LOS file
+    PosData = read_csv(LosFile, delim_whitespace=True, skiprows=1, header=None,\
+    usecols=[LOS_IDX["SOD"],
+    LOS_IDX["AZIM"],
+    LOS_IDX["PRN"],
+    LOS_IDX["ELEV"]])
+
+    # Configure plot and call plot generation function
+    SatFunctions.plotSatPolar(PosData)

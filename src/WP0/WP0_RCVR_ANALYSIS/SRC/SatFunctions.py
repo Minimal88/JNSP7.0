@@ -67,7 +67,7 @@ def plotSatVisibility(LosData):
     generatePlot(PlotConf)
 
 
-# Plot Satellite Geometrical Range Figures
+# T2.2 Plot Satellite Geometrical Range Figures
 def plotSatGeomRnge(LosData):
     print( 'Ploting the Satellite Geometrical image Ranges ...')
 
@@ -108,7 +108,7 @@ def plotSatGeomRnge(LosData):
     generatePlot(PlotConf)
 
 
-# Plot Satellite Tracks Figures
+# T2.3 Plot Satellite Tracks Figures
 def plotSatTracks(LosData):
     print( 'Ploting the Satellite Tracks image ...')
 
@@ -401,4 +401,47 @@ def plotSatDTR(LosData):
     PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/SAT/' + 'SAT_DTR_TLSA_D006Y15.png'  # Adjust path as needed
     
     # Generate plot
-    generatePlot(PlotConf) 
+    generatePlot(PlotConf)
+
+# TXX Plot Satellite Polar View Challenge
+def plotSatPolar(LosData):
+    print( 'Ploting the Satellite Tracks Polar View image ...')
+    
+    # Convert azimuth and elevation to rads
+    azimuth_rad = np.deg2rad(LosData[LOS_IDX["AZIM"]])  
+    elevation_rad = 90 - LosData[LOS_IDX["ELEV"]]
+    prn = LosData[LOS_IDX["PRN"]]    
+
+    # Plot Configuration
+    PlotConf = {}
+
+    PlotConf["Type"] = "Lines"
+    PlotConf["FigSize"] = (10,10)
+    PlotConf["Title"] = "Satellite Tracks Polar View from "\
+        "TLSA on Year 2015 DoY 006"
+    
+    PlotConf["Grid"] = True
+    PlotConf["Polar"] = True
+
+    PlotConf["Marker"] = '.'
+    PlotConf["LineWidth"] = 1.0
+
+    PlotConf["ColorBar"] = "gnuplot"
+    PlotConf["ColorBarLabel"] = "GPS-PRN"
+    PlotConf["ColorBarMin"] = np.min(prn)
+    PlotConf["ColorBarMax"] = np.max(prn)
+    PlotConf["ColorBarTicks"] = range(np.max(prn))    
+    
+
+    PlotConf["xData"] = {}
+    PlotConf["yData"] = {}
+    PlotConf["zData"] = {}
+    Label = 0
+    PlotConf["xData"][Label] = azimuth_rad
+    PlotConf["yData"][Label] = elevation_rad
+    PlotConf["zData"][Label] = prn
+
+    PlotConf["Path"] = sys.argv[1] + '/OUT/LOS/SAT/' + 'SAT_TRACKS_POLAR_TLSA_D006Y15.png'
+
+    # Call generatePlot from Plots library
+    generatePlot(PlotConf)
