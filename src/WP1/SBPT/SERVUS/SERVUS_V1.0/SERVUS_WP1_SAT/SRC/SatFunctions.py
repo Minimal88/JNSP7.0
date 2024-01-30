@@ -265,7 +265,7 @@ def computeSatStats(satFile, EntGpsFile, satStatsFile):
         with open(EntGpsFile, 'w') as fEntGps:
 
             # Write Header of Output files
-            fEntGps.write("#SOD \n")
+            fEntGps.write("#SOD\tENT-GPS\n")
 
             # Open Output File Satellite Statistics file
             with open(satStatsFile, 'w') as fOut:
@@ -291,12 +291,13 @@ def computeSatStats(satFile, EntGpsFile, satStatsFile):
                     # If EpochInfor is not Null
                     if EpochInfo != []:
                         # Compute SRE b
-                        # computeSreb(EpochInfo, InterOutputs)
+                        ent_gps = computeSreb(EpochInfo, InterOutputs)
 
                         # Write ENT-GPS Offset file
-                        fEntGps.write("%5s \n" % \
+                        fEntGps.write("%5s %10.4f\n" % \
                             (
                                 EpochInfo[0][SatIdx["SoD"]],
+                                ent_gps,
 
                             ))
 
@@ -346,6 +347,69 @@ def computeSatStats(satFile, EntGpsFile, satStatsFile):
     # End of with open(satFile, 'r') as f:
 
 #End of def computeSatStats(satFile, satStatsFile):
+
+
+def computeSreb(epoch_info, inter_outputs):
+    """
+    Compute SREb (Satellite Residual Error Clock component).
+
+    Parameters:
+    - epoch_info: Information for all satellites in a single epoch.
+    - inter_outputs: Intermediate outputs to store computed values.
+
+    Updates inter_outputs in-place.
+    """
+    
+    # Initialize lists to store radial component of SRE vector for each satellite
+    sre_b_minus_r_list = []
+
+    for sat_info in epoch_info:
+        prn = sat_info[SatIdx["PRN"]]
+        
+        sreStatus = sat_info[SatIdx["SRESTAT"]]
+        
+        # Consider only SRE STATUS == 1
+        if (sreStatus=='0'): 
+            continue
+
+        # Get the SREb1 from the Sat Info file (Satellite Residual Error Clock Bias)
+        sreb1 = float(sat_info[SatIdx["SREb1"]])
+
+        # Store intermediate output
+        inter_outputs[prn]["SREb"] = sreb1
+
+        # Get the Components of the SRE vector
+        sre_x = float(sat_info[SatIdx["SREx"]])
+        sre_y = float(sat_info[SatIdx["SREy"]])
+        sre_z = float(sat_info[SatIdx["SREz"]])
+
+        # Get the Position vector of the satellite
+        sat_x = float(sat_info[SatIdx["SAT-X"]])
+        sat_y = float(sat_info[SatIdx["SAT-Y"]])
+        sat_z = float(sat_info[SatIdx["SAT-Z"]])
+
+        # Calculate the unit vector in the radial direction
+        sat_vector = np.array([sat_x, sat_y, sat_z])
+        sat_magnitude = np.linalg.norm(sat_vector)
+        radial_unit_vector =  sat_vector / sat_magnitude
+
+        # Calculate the radial component of the SRE vector
+        radial_component = np.dot([sre_x, sre_y, sre_z], radial_unit_vector)
+
+        sre_b_minus_r = sreb1 - radial_component 
+        
+        # Append ENT-GPS to the list for later computation
+        sre_b_minus_r_list.append(sre_b_minus_r)
+
+     # Compute ENT-GPS as the median of (SREb1 - RadialComponent) for all satellites
+    ent_gps = np.median(sre_b_minus_r_list)
+
+    return ent_gps
+
+    # Update inter_outputs with computed SREb
+    
+
+
     
 ########################################################################
 #END OF SAT FUNCTIONS MODULE

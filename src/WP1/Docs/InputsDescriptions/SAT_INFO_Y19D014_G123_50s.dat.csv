@@ -1,0 +1,24 @@
+Column,Content,Format,Units,Description
+C1, SOD,%5d,SEC,Second of Day
+C2, DOY,%03d,DAYS,Day of the Year
+C3, PRN,%s%02d,No Units,Satellite PRN for GPS, Galileo or GEO
+C4, SAT-X,%f,KMS,SatelliteNavigationPosition (CURRENT) XComponent
+C5, SAT-Y,%f,KMS,Satellite Navigation Position (CURRENT) YComponent
+C6, SAT-Z,%f,KMS,Satellite Navigation Position (CURRENT) ZComponent
+C7, MONSTAT,%d,No Units,Satellite Monitoring Status (0: NM; 1:M; -1; DU)
+C8, SRESTAT,%d,No Units,Satellite SRE Status (0: NOK 1:OK)
+C9, SREx %f METER Satellite Residual Error X-Component
+C10, SREy %f METER Satellite Residual Error Y-Component
+C11, SREz %f METER Satellite Residual Error Z-Component
+C12, SREb1 %f METER Preliminary Satellite Residual Error Clock Bias Component (containing the ENT-GPS Offset)
+C13, SREW %f METER Satellite Residual Error projected at the Worst User Location (WUL)
+C14, SFLT-W %f METER SigmaFLT/DFC projected at the Worst User Location (WUL)
+C15, UDREI %d Satellite UDREI/DFREI Indicator
+C16, FC %f METER Satellite Clock Fast Corrections
+C17, AF0 %f METER Satellite Clock Long Term Corrections Offset(LTCb=AF0+AF1(t-t0))=AF0 in EGNOS V2
+C18, AF1 %f METER Satellite Clock Long Term Corrections drift This term is NULL in EGNOS V2
+C19, LTCx %f METER Satellite Orbit Long Term Corrections XComponent
+C20, LTCy %f METER Satellite Orbit Long Term Corrections YComponent
+C21, LTCz %f METER Satellite Orbit Long Term Corrections ZComponent
+C22, NRIMS %d - Number of RIMS inside the ECAC that are in view from the satellite over a mask angle for, at least, 10min
+C23, RDOP %f - Radial DOP is the inverse DOP as seen from the Satellite to RIMS projected into the Radial direction
