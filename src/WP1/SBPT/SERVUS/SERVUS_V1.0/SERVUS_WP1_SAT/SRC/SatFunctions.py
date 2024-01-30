@@ -29,36 +29,53 @@ from math import sqrt
 import numpy as np
 
 # Define SAT INFO FILE Columns
-SatIdx = OrderedDict({})
-SatIdx["SoD"]=0
-SatIdx["DOY"]=1
-SatIdx["PRN"]=2
-SatIdx["SAT-X"]=3
-SatIdx["SAT-Y"]=4
-SatIdx["SAT-Z"]=5
-SatIdx["MONSTAT"]=6
-SatIdx["SRESTAT"]=7
-SatIdx["SREx"]=8
-SatIdx["SREy"]=9
-SatIdx["SREz"]=10
-SatIdx["SREb1"]=11
-SatIdx["SREW"]=12
-SatIdx["SFLT-W"]=13
-SatIdx["UDREI"]=14
-SatIdx["FC"]=15
-SatIdx["AF0"]=16
-SatIdx["AF1"]=17
-SatIdx["LTCx"]=18
-SatIdx["LTCy"]=19
-SatIdx["LTCz"]=20
-SatIdx["NRIMS"]=21
-SatIdx["RDOP"]=22
+SatInfoIdx = OrderedDict({})
+SatInfoIdx["SoD"]=0
+SatInfoIdx["DOY"]=1
+SatInfoIdx["PRN"]=2
+SatInfoIdx["SAT-X"]=3
+SatInfoIdx["SAT-Y"]=4
+SatInfoIdx["SAT-Z"]=5
+SatInfoIdx["MONSTAT"]=6
+SatInfoIdx["SRESTAT"]=7
+SatInfoIdx["SREx"]=8
+SatInfoIdx["SREy"]=9
+SatInfoIdx["SREz"]=10
+SatInfoIdx["SREb1"]=11
+SatInfoIdx["SREW"]=12
+SatInfoIdx["SFLT-W"]=13
+SatInfoIdx["UDREI"]=14
+SatInfoIdx["FC"]=15
+SatInfoIdx["AF0"]=16
+SatInfoIdx["AF1"]=17
+SatInfoIdx["LTCx"]=18
+SatInfoIdx["LTCy"]=19
+SatInfoIdx["LTCz"]=20
+SatInfoIdx["NRIMS"]=21
+SatInfoIdx["RDOP"]=22
 
 # Define SAT STATISTICS file Columns
 SatStatsIdx = OrderedDict({})
 SatStatsIdx["PRN"]=0
 SatStatsIdx["MON"]=1
 SatStatsIdx["RIMS-MIN"]=2
+# SatStatsIdx["RIMS-MAX"]=3
+# SatStatsIdx["SREaRMS"]=4
+# SatStatsIdx["SREcRMS"]=5
+# SatStatsIdx["SRErRMS"]=6
+# SatStatsIdx["SREbRMS"]=7
+# SatStatsIdx["SREWRMS"]=8
+# SatStatsIdx["SREWMAX"]=9
+# SatStatsIdx["SFLTMAX"]=10
+# SatStatsIdx["SFLTMIN"]=11
+# SatStatsIdx["SIMAX"]=12
+# SatStatsIdx["FCMAX"]=13
+# SatStatsIdx["LTCbMAX"]=14
+# SatStatsIdx["LTCxMAX"]=15
+# SatStatsIdx["LTCyMAX"]=16
+# SatStatsIdx["LTCzMAX"]=17
+# SatStatsIdx["NMI"]=18
+# SatStatsIdx["NTRANS"]=19
 
 # FUNCTION: Display Message
 #-----------------------------------------------------------------------
@@ -88,7 +105,7 @@ def readSatInfoEpoch(f):
     if(not Line):
         return []
     LineSplit = splitLine(Line)
-    Sod = LineSplit[SatIdx["SoD"]]
+    Sod = LineSplit[SatInfoIdx["SoD"]]
     SodNext = Sod
 
     while SodNext == Sod:
@@ -97,7 +114,7 @@ def readSatInfoEpoch(f):
         Line = f.readline()
         LineSplit = splitLine(Line)
         try: 
-            SodNext = LineSplit[SatIdx["SoD"]]
+            SodNext = LineSplit[SatInfoIdx["SoD"]]
 
         except:
             return EpochInfo
@@ -196,27 +213,27 @@ def computeSreAcr(DeltaT, PosPrev, Pos, Sre):
 def updateEpochStats(SatInfo, InterOutputs, Outputs):
     
     # Extract PRN Column
-    sat = SatInfo[SatIdx["PRN"]]
+    sat = SatInfo[SatInfoIdx["PRN"]]
 
     # Add Number of samples
     InterOutputs[sat]["NSAMPS"] = InterOutputs[sat]["NSAMPS"] + 1
 
     ### IF SATELLITE IS MONITORED:
-    if(SatInfo[SatIdx["MONSTAT"]] == '1'):
+    if(SatInfo[SatInfoIdx["MONSTAT"]] == '1'):
 
         # Add Satellite Monitoring if Satellite is Monitored
         Outputs[sat]["MON"] = Outputs[sat]["MON"] + 1
 
         ### IF SRE_STATUS IS OK:
-        if(SatInfo[SatIdx["SRESTAT"]] == '1'):
+        if(SatInfo[SatInfoIdx["SRESTAT"]] == '1'):
     
             # Update number of samples Monitored & SRE OK
             InterOutputs[sat]["SREWSAMPS"] = InterOutputs[sat]["SREWSAMPS"] + 1
 
 
             # Update the Minimum Number of RIMS in view        
-            if( int(SatInfo[SatIdx["NRIMS"]])<Outputs[sat]["RIMS-MIN"]):
-                Outputs[sat]["RIMS-MIN"] = int(SatInfo[SatIdx["NRIMS"]])
+            if( int(SatInfo[SatInfoIdx["NRIMS"]])<Outputs[sat]["RIMS-MIN"]):
+                Outputs[sat]["RIMS-MIN"] = int(SatInfo[SatInfoIdx["NRIMS"]])
 
 
         #End of if(SatInfo[SatIdx["SRESTAT"]] == '1'):
@@ -226,7 +243,7 @@ def updateEpochStats(SatInfo, InterOutputs, Outputs):
     # KEEP CURRENT INFORMATION FOR NEXT EPOCH
 
     # Keep Current Monitoring Status
-    InterOutputs[sat]["MONPREV"] = int(SatInfo[SatIdx["MONSTAT"]])
+    InterOutputs[sat]["MONPREV"] = int(SatInfo[SatInfoIdx["MONSTAT"]])
 
 
 # END OF FUNCTION: def updateEpochStats(SatInfo, InterOutputs, Outputs):
@@ -291,12 +308,12 @@ def computeSatStats(satFile, EntGpsFile, satStatsFile):
                     # If EpochInfor is not Null
                     if EpochInfo != []:
                         # Compute SRE b
-                        ent_gps = computeSreb(EpochInfo, InterOutputs)
+                        ent_gps = computeENTGPS(EpochInfo, InterOutputs)
 
                         # Write ENT-GPS Offset file
                         fEntGps.write("%5s %10.4f\n" % \
                             (
-                                EpochInfo[0][SatIdx["SoD"]],
+                                EpochInfo[0][SatInfoIdx["SoD"]],
                                 ent_gps,
 
                             ))
@@ -349,9 +366,10 @@ def computeSatStats(satFile, EntGpsFile, satStatsFile):
 #End of def computeSatStats(satFile, satStatsFile):
 
 
-def computeSreb(epoch_info, inter_outputs):
+def computeENTGPS(epoch_info, inter_outputs):
     """
-    Compute SREb (Satellite Residual Error Clock component).
+    Compute the ENT-GPS Offset: estimated from the SRE of the monitored satellites with SRE_STATUS OK 
+    and the SREb (Satellite Residual Error Clock component).
 
     Parameters:
     - epoch_info: Information for all satellites in a single epoch.
@@ -364,37 +382,36 @@ def computeSreb(epoch_info, inter_outputs):
     sre_b_minus_r_list = []
 
     for sat_info in epoch_info:
-        prn = sat_info[SatIdx["PRN"]]
+        prn = sat_info[SatInfoIdx["PRN"]]
         
-        sreStatus = sat_info[SatIdx["SRESTAT"]]
+        sreStatus = sat_info[SatInfoIdx["SRESTAT"]]
         
         # Consider only SRE STATUS == 1
         if (sreStatus=='0'): 
             continue
 
         # Get the SREb1 from the Sat Info file (Satellite Residual Error Clock Bias)
-        sreb1 = float(sat_info[SatIdx["SREb1"]])
+        sreb1 = float(sat_info[SatInfoIdx["SREb1"]])
 
         # Store intermediate output
         inter_outputs[prn]["SREb"] = sreb1
 
         # Get the Components of the SRE vector
-        sre_x = float(sat_info[SatIdx["SREx"]])
-        sre_y = float(sat_info[SatIdx["SREy"]])
-        sre_z = float(sat_info[SatIdx["SREz"]])
+        sre_x = float(sat_info[SatInfoIdx["SREx"]])
+        sre_y = float(sat_info[SatInfoIdx["SREy"]])
+        sre_z = float(sat_info[SatInfoIdx["SREz"]])
 
         # Get the Position vector of the satellite
-        sat_x = float(sat_info[SatIdx["SAT-X"]])
-        sat_y = float(sat_info[SatIdx["SAT-Y"]])
-        sat_z = float(sat_info[SatIdx["SAT-Z"]])
+        sat_x = float(sat_info[SatInfoIdx["SAT-X"]])
+        sat_y = float(sat_info[SatInfoIdx["SAT-Y"]])
+        sat_z = float(sat_info[SatInfoIdx["SAT-Z"]])
 
         # Calculate the unit vector in the radial direction
+        sre_vector = np.array([sre_x, sre_y, sre_z])
         sat_vector = np.array([sat_x, sat_y, sat_z])
-        sat_magnitude = np.linalg.norm(sat_vector)
-        radial_unit_vector =  sat_vector / sat_magnitude
-
-        # Calculate the radial component of the SRE vector
-        radial_component = np.dot([sre_x, sre_y, sre_z], radial_unit_vector)
+        
+        # Calculate the radial component of the SRE vector        
+        radial_component = projectVector(sre_vector, sat_vector)
 
         sre_b_minus_r = sreb1 - radial_component 
         
