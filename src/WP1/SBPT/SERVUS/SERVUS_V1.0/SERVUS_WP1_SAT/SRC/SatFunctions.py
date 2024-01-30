@@ -59,23 +59,27 @@ SatStatsIdx = OrderedDict({})
 SatStatsIdx["PRN"]=0
 SatStatsIdx["MON"]=1
 SatStatsIdx["RIMS-MIN"]=2
-# SatStatsIdx["RIMS-MAX"]=3
-# SatStatsIdx["SREaRMS"]=4
-# SatStatsIdx["SREcRMS"]=5
-# SatStatsIdx["SRErRMS"]=6
-# SatStatsIdx["SREbRMS"]=7
-# SatStatsIdx["SREWRMS"]=8
-# SatStatsIdx["SREWMAX"]=9
-# SatStatsIdx["SFLTMAX"]=10
-# SatStatsIdx["SFLTMIN"]=11
-# SatStatsIdx["SIMAX"]=12
-# SatStatsIdx["FCMAX"]=13
-# SatStatsIdx["LTCbMAX"]=14
-# SatStatsIdx["LTCxMAX"]=15
-# SatStatsIdx["LTCyMAX"]=16
-# SatStatsIdx["LTCzMAX"]=17
-# SatStatsIdx["NMI"]=18
-# SatStatsIdx["NTRANS"]=19
+SatStatsIdx["RIMS-MAX"]=3
+SatStatsIdx["SREaRMS"]=4
+SatStatsIdx["SREcRMS"]=5
+SatStatsIdx["SRErRMS"]=6
+SatStatsIdx["SREbRMS"]=7
+SatStatsIdx["SREWRMS"]=8
+SatStatsIdx["SREWMAX"]=9
+SatStatsIdx["SFLTMAX"]=10
+SatStatsIdx["SFLTMIN"]=11
+SatStatsIdx["SIMAX"]=12
+SatStatsIdx["FCMAX"]=13
+SatStatsIdx["LTCbMAX"]=14
+SatStatsIdx["LTCxMAX"]=15
+SatStatsIdx["LTCyMAX"]=16
+SatStatsIdx["LTCzMAX"]=17
+SatStatsIdx["NMI"]=18
+SatStatsIdx["NTRANS"]=19
+
+# Define Satidistics Output file format list
+StatsOutputFormat = "%s %6.2f %4d %6d %10.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %4d"
+StatsOutputFormatList = StatsOutputFormat.split()
 
 # FUNCTION: Display Message
 #-----------------------------------------------------------------------
@@ -230,10 +234,13 @@ def updateEpochStats(SatInfo, InterOutputs, Outputs):
             # Update number of samples Monitored & SRE OK
             InterOutputs[sat]["SREWSAMPS"] = InterOutputs[sat]["SREWSAMPS"] + 1
 
-
             # Update the Minimum Number of RIMS in view        
             if( int(SatInfo[SatInfoIdx["NRIMS"]])<Outputs[sat]["RIMS-MIN"]):
                 Outputs[sat]["RIMS-MIN"] = int(SatInfo[SatInfoIdx["NRIMS"]])
+            
+            # Update the Maximun Number of RIMS in view        
+            if( int(SatInfo[SatInfoIdx["NRIMS"]])>Outputs[sat]["RIMS-MAX"]):
+                Outputs[sat]["RIMS-MAX"] = int(SatInfo[SatInfoIdx["NRIMS"]])
 
 
         #End of if(SatInfo[SatIdx["SRESTAT"]] == '1'):
@@ -286,10 +293,6 @@ def computeSatStats(satFile, EntGpsFile, satStatsFile):
 
             # Open Output File Satellite Statistics file
             with open(satStatsFile, 'w') as fOut:
-                
-                # Write Header of Output files
-                fOut.write("#PRN  MON minRIMS\n")
-
                 # Define and Initialize Variables            
                 Outputs = OrderedDict({})
                 InterOutputs = OrderedDict({})
@@ -341,10 +344,10 @@ def computeSatStats(satFile, EntGpsFile, satStatsFile):
                 
                 # Write Statistics File
                 # ----------------------------------------------------------
-                
-                # Define Output file format
-                Format = "%s %6.2f %4d "
-                FormatList = Format.split()
+                # Write Header of Output files
+                header_string = "\t".join(SatStatsIdx) + "\n"
+                fOut.write(header_string)
+                #fOut.write("#PRN\tMON\tRIMS-MIN\tRIMS-MAX\n")
 
                 for sat in Outputs.keys():
                     
@@ -352,7 +355,7 @@ def computeSatStats(satFile, EntGpsFile, satStatsFile):
                     if(Outputs[sat]["MON"] != 0):
                         
                         for i, result in enumerate(Outputs[sat]):
-                            fOut.write(((FormatList[i] + " ") % Outputs[sat][result]))
+                            fOut.write(((StatsOutputFormatList[i] + "\t") % Outputs[sat][result]))
 
                         fOut.write("\n")
 
