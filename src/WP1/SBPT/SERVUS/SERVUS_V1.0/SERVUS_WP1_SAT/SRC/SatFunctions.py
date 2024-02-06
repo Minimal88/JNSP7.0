@@ -214,43 +214,46 @@ def computeSreAcr(DeltaT, PosPrev, Pos, Sre):
 # FUNCTION: Update Statistics Information
 #-----------------------------------------------------------------------
 
-def updateEpochStats(SatInfo, InterOutputs, Outputs):
+def updateEpochStats(EpochInfo, InterOutputs, Outputs):
+    # Loop over all Satellites Information in Epoch
+    # --------------------------------------------------
+    for SatInfo in EpochInfo:
     
-    # Extract PRN Column
-    sat = SatInfo[SatInfoIdx["PRN"]]
+        # Extract PRN Column
+        sat = SatInfo[SatInfoIdx["PRN"]]
 
-    # Add Number of samples
-    InterOutputs[sat]["NSAMPS"] = InterOutputs[sat]["NSAMPS"] + 1
+        # Add Number of samples
+        InterOutputs[sat]["NSAMPS"] = InterOutputs[sat]["NSAMPS"] + 1
 
-    ### IF SATELLITE IS MONITORED:
-    if(SatInfo[SatInfoIdx["MONSTAT"]] == '1'):
+        ### IF SATELLITE IS MONITORED:
+        if(SatInfo[SatInfoIdx["MONSTAT"]] == '1'):
 
-        # Add Satellite Monitoring if Satellite is Monitored
-        Outputs[sat]["MON"] = Outputs[sat]["MON"] + 1
+            # Add Satellite Monitoring if Satellite is Monitored
+            Outputs[sat]["MON"] = Outputs[sat]["MON"] + 1
 
-        ### IF SRE_STATUS IS OK:
-        if(SatInfo[SatInfoIdx["SRESTAT"]] == '1'):
-    
-            # Update number of samples Monitored & SRE OK
-            InterOutputs[sat]["SREWSAMPS"] = InterOutputs[sat]["SREWSAMPS"] + 1
+            ### IF SRE_STATUS IS OK:
+            if(SatInfo[SatInfoIdx["SRESTAT"]] == '1'):
+        
+                # Update number of samples Monitored & SRE OK
+                InterOutputs[sat]["SREWSAMPS"] = InterOutputs[sat]["SREWSAMPS"] + 1
 
-            # Update the Minimum Number of RIMS in view        
-            if( int(SatInfo[SatInfoIdx["NRIMS"]])<Outputs[sat]["RIMS-MIN"]):
-                Outputs[sat]["RIMS-MIN"] = int(SatInfo[SatInfoIdx["NRIMS"]])
-            
-            # Update the Maximun Number of RIMS in view        
-            if( int(SatInfo[SatInfoIdx["NRIMS"]])>Outputs[sat]["RIMS-MAX"]):
-                Outputs[sat]["RIMS-MAX"] = int(SatInfo[SatInfoIdx["NRIMS"]])
+                # Update the Minimum Number of RIMS in view        
+                if( int(SatInfo[SatInfoIdx["NRIMS"]])<Outputs[sat]["RIMS-MIN"]):
+                    Outputs[sat]["RIMS-MIN"] = int(SatInfo[SatInfoIdx["NRIMS"]])
+                
+                # Update the Maximun Number of RIMS in view        
+                if( int(SatInfo[SatInfoIdx["NRIMS"]])>Outputs[sat]["RIMS-MAX"]):
+                    Outputs[sat]["RIMS-MAX"] = int(SatInfo[SatInfoIdx["NRIMS"]])
 
 
-        #End of if(SatInfo[SatIdx["SRESTAT"]] == '1'):
+            #End of if(SatInfo[SatIdx["SRESTAT"]] == '1'):
 
-    #End of if(SatInfo[SatIdx["MONSTAT"]] == '1'):
+        #End of if(SatInfo[SatIdx["MONSTAT"]] == '1'):
 
-    # KEEP CURRENT INFORMATION FOR NEXT EPOCH
+        # KEEP CURRENT INFORMATION FOR NEXT EPOCH
 
-    # Keep Current Monitoring Status
-    InterOutputs[sat]["MONPREV"] = int(SatInfo[SatInfoIdx["MONSTAT"]])
+        # Keep Current Monitoring Status
+        InterOutputs[sat]["MONPREV"] = int(SatInfo[SatInfoIdx["MONSTAT"]])
 
 
 # END OF FUNCTION: def updateEpochStats(SatInfo, InterOutputs, Outputs):
@@ -303,8 +306,7 @@ def computeSatStats(satFile, EntGpsFile, satStatsFile):
 
                 # LOOP over all Epochs of SAT INFO file
                 # ----------------------------------------------------------
-                while not EndOfFile:
-                    
+                while not EndOfFile:                    
                     # Read Only One Epoch
                     EpochInfo = readSatInfoEpoch(fsat)
                     
@@ -312,32 +314,17 @@ def computeSatStats(satFile, EntGpsFile, satStatsFile):
                     if EpochInfo != []:
                         # Compute SRE b
                         ent_gps = computeENTGPS(EpochInfo, InterOutputs)
-
+                        sod = EpochInfo[0][SatInfoIdx["SoD"]]
+                        
                         # Write ENT-GPS Offset file
-                        fEntGps.write("%5s %10.4f\n" % \
-                            (
-                                EpochInfo[0][SatInfoIdx["SoD"]],
-                                ent_gps,
-
-                            ))
-
-                        # Loop over all Satellites Information in Epoch
-                        # --------------------------------------------------
-                        for SatInfo in EpochInfo:
-                            
-                            # Update the Output Statistics
-                            updateEpochStats(SatInfo, InterOutputs, Outputs)
-                            
-                        #End of for SatInfo in EpochInfo:
-                                            
-                    # end if EpochInfo != []:
+                        fEntGps.write("%5s %10.4f\n" % (sod,ent_gps))                    
+                        
+                        # Update the Output Statistics
+                        updateEpochStats(EpochInfo, InterOutputs, Outputs)                                            
+                    
                     else:
                         EndOfFile = True
-
-                    #End of if EpochInfo != []:
-                    
-                # End of while not EndOfFile:
-
+                
                 # Compute the final Statistics
                 # ----------------------------------------------------------
                 computeFinalStatistics(InterOutputs, Outputs)
