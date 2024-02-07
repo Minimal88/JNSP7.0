@@ -29,53 +29,61 @@ from math import sqrt
 import numpy as np
 
 # Define SAT INFO FILE Columns
-SatInfoIdx = OrderedDict({})
-SatInfoIdx["SoD"]=0
-SatInfoIdx["DOY"]=1
-SatInfoIdx["PRN"]=2
-SatInfoIdx["SAT-X"]=3
-SatInfoIdx["SAT-Y"]=4
-SatInfoIdx["SAT-Z"]=5
-SatInfoIdx["MONSTAT"]=6
-SatInfoIdx["SRESTAT"]=7
-SatInfoIdx["SREx"]=8
-SatInfoIdx["SREy"]=9
-SatInfoIdx["SREz"]=10
-SatInfoIdx["SREb1"]=11
-SatInfoIdx["SREW"]=12
-SatInfoIdx["SFLT-W"]=13
-SatInfoIdx["UDREI"]=14
-SatInfoIdx["FC"]=15
-SatInfoIdx["AF0"]=16
-SatInfoIdx["AF1"]=17
-SatInfoIdx["LTCx"]=18
-SatInfoIdx["LTCy"]=19
-SatInfoIdx["LTCz"]=20
-SatInfoIdx["NRIMS"]=21
-SatInfoIdx["RDOP"]=22
+"""
+SatStatsIdx is a dictionary that maps the column names of the satellite statistics file to their corresponding indices.
+"""
+SatInfoIdx = dict([
+    ("SoD", 0),
+    ("DOY", 1),
+    ("PRN", 2),
+    ("SAT-X", 3),
+    ("SAT-Y", 4),
+    ("SAT-Z", 5),
+    ("MONSTAT", 6),
+    ("SRESTAT", 7),
+    ("SREx", 8),
+    ("SREy", 9),
+    ("SREz", 10),
+    ("SREb1", 11),
+    ("SREW", 12),
+    ("SFLT-W", 13),
+    ("UDREI", 14),
+    ("FC", 15),
+    ("AF0", 16),
+    ("AF1", 17),
+    ("LTCx", 18),
+    ("LTCy", 19),
+    ("LTCz", 20),
+    ("NRIMS", 21),
+    ("RDOP", 22)
+])
 
 # Define SAT STATISTICS file Columns
-SatStatsIdx = OrderedDict({})
-SatStatsIdx["PRN"]=0
-SatStatsIdx["MON"]=1
-SatStatsIdx["RIMS-MIN"]=2
-SatStatsIdx["RIMS-MAX"]=3
-SatStatsIdx["SREaRMS"]=4
-SatStatsIdx["SREcRMS"]=5
-SatStatsIdx["SRErRMS"]=6
-SatStatsIdx["SREbRMS"]=7
-SatStatsIdx["SREWRMS"]=8
-SatStatsIdx["SREWMAX"]=9
-SatStatsIdx["SFLTMAX"]=10
-SatStatsIdx["SFLTMIN"]=11
-SatStatsIdx["SIMAX"]=12
-SatStatsIdx["FCMAX"]=13
-SatStatsIdx["LTCbMAX"]=14
-SatStatsIdx["LTCxMAX"]=15
-SatStatsIdx["LTCyMAX"]=16
-SatStatsIdx["LTCzMAX"]=17
-SatStatsIdx["NMI"]=18
-SatStatsIdx["NTRANS"]=19
+SatStatsIdx = dict([
+    ("PRN", 0),
+    ("MON", 1),
+    ("RIMS-MIN", 2),
+    ("RIMS-MAX", 3),
+    ("SREaRMS", 4),
+    ("SREcRMS", 5),
+    ("SRErRMS", 6),
+    ("SREbRMS", 7),
+    ("SREWRMS", 8),
+    ("SREWMAX", 9),
+    ("SFLTMAX", 10),
+    ("SFLTMIN", 11),
+    ("SIMAX", 12),
+    ("FCMAX", 13),
+    ("LTCbMAX", 14),
+    ("LTCxMAX", 15),
+    ("LTCyMAX", 16),
+    ("LTCzMAX", 17),
+    ("NMI", 18),
+    ("NTRANS", 19)
+])
+
+# Define Earth's rotation rate (rad/sec)
+OMEGA_EARTH = 7.2921151467e-5
 
 # Define Satidistics Output file format list
 StatsOutputFormat = "%s %6.2f %4d %6d %10.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %4d"
@@ -151,124 +159,275 @@ def initializeOutputs(Outputs):
                 else:
                     Outputs[SatLabel][var] = 0.0
 
-# FUNCTION: Initialize Intermediate Outputs
-#-----------------------------------------------------------------------
-
 def initializeInterOutputs(InterOutputs):
-    
+    """
+    Initialize intermediate outputs for each satellite and ENT-GPS.
+
+    Parameters:
+    - InterOutputs: Intermediate outputs containing information for each satellite.
+
+    This function initializes the structure of InterOutputs for GPS and Galileo satellites
+    along with ENT-GPS.
+    """
     # Loop over GPS and Galileo Satellites
     for Const in ['G', 'E']:
-        
-        for Prn in range(1,33):
-            
+        for Prn in range(1, 33):
             SatLabel = Const + "%02d" % Prn
-            InterOutputs[SatLabel] = OrderedDict({})
-            InterOutputs[SatLabel]["NSAMPS"] = 0
-            InterOutputs[SatLabel]["SODPREV"] = 0
-            InterOutputs[SatLabel]["MONPREV"] = 0
-            InterOutputs[SatLabel]["SREb"] = 0
-            InterOutputs[SatLabel]["SREbSUM2"] = 0
-            InterOutputs[SatLabel]["SREaSUM2"] = 0
-            InterOutputs[SatLabel]["SREcSUM2"] = 0
-            InterOutputs[SatLabel]["SRErSUM2"] = 0
-            InterOutputs[SatLabel]["SREACRSAMPS"] = 0
-            InterOutputs[SatLabel]["SREWSUM2"] = 0
-            InterOutputs[SatLabel]["SREWSAMPS"] = 0
-            InterOutputs[SatLabel]["XPREV"] = 0
-            InterOutputs[SatLabel]["YPREV"] = 0
-            InterOutputs[SatLabel]["ZPREV"] = 0
+            InterOutputs[SatLabel] = {
+                "NSAMPS": 0,
+                "SODPREV": 0,
+                "MONPREV": 0,
+                "SREa": 0,
+                "SREb": 0,
+                "SREc": 0,
+                "SREr": 0,
+                "SREbSUM2": 0,
+                "SREaSUM2": 0,
+                "SREcSUM2": 0,
+                "SRErSUM2": 0,
+                "SREbCOUNT": 0,
+                "SREaCOUNT": 0,
+                "SREcCOUNT": 0,
+                "SRErCOUNT": 0,                
+                "SREACRSAMPS": 0,
+                "SREWSUM2": 0,
+                "SREWSAMPS": 0,
+                "XPREV": 0,
+                "YPREV": 0,
+                "ZPREV": 0
+            }
 
+    # Initialize ENT-GPS
     InterOutputs["ENT-GPS"] = 0
 
     return
 
-# FUNCTION: Project a vector into a given direction
 def projectVector(Vector, Direction):
-    
+    """
+    Project a vector onto a given direction.
+
+    Parameters:
+    - Vector: The vector to be projected.
+    - Direction: The direction onto which the vector is projected.
+
+    Returns:
+    - The projection of the vector onto the given direction.
+    """    
     # Compute the Unitary Vector
     UnitaryVector = Direction / np.linalg.norm(Direction)
 
     return Vector.dot(UnitaryVector)
 
-# FUNCTION: Estimate SRE-Along/Cross/Radial
-#-----------------------------------------------------------------------
+def computeSREaAndSREc(deltaT, prevPosVector, currPosVector, sreVector):    
+    """
+    Estimate the SRE-Along/Cross.
 
-def computeSreAcr(DeltaT, PosPrev, Pos, Sre):
+    Parameters:
+    - deltaT: Time difference between PosPrev and Pos.
+    - prevPosVector: Previous position vector.
+    - currPosVector: Current position vector.
+    - sreVector: Satellite Residual Error vector in XYZ.
 
-    # Compute Velocity computation deriving the position
-    
-    
-    # Add Earth's Rotation Effect on the Reference frame
-    
+    Returns:
+    - SREa: SRE-Along.
+    - SREc: SRE-Cross.    
+    """
+    # Compute the Satellite Velocity deriving the position and 
+    # Adding Earth's Rotation effect on the reference frame
+    satVelVector = ( (currPosVector - prevPosVector) / deltaT) + OMEGA_EARTH * currPosVector
 
-    # Compute unitary vectors
+    # Compute the Satellite Velocity unitary vector
+    Uv = satVelVector / np.linalg.norm(satVelVector)
+
+    # Compute the Radial Unitary Vector
+    Ur = currPosVector / np.linalg.norm(currPosVector)
     
+    # Compute the Cross Track Unitary Vector
+    Uc = np.cross(Ur,Uv)
+
+    # Compute the Along Track Unitary Vector
+    Ua = np.cross(Uc,Ur)
 
     # Compute SRE in ACR frame by projecting the SRE in XYZ
-    SreA = 0.0;
-    SreC = 0.0;
-    SreR = 0.0;
+    SREa = projectVector(sreVector, Ua)  
+    SREc = projectVector(sreVector, Uc)      
 
-    return SreA, SreC, SreR
+    return SREa, SREc
 
-# FUNCTION: Update Statistics Information
-#-----------------------------------------------------------------------
+def updateInterOutputs(InterOutputs, SatLabel, UpdateDict):
+    """
+    Update the intermediate outputs for a specific satellite with the provided tag-value pairs.
 
-def updateEpochStats(EpochInfo, InterOutputs, Outputs):
+    Parameters:
+    - InterOutputs: Intermediate outputs containing information for each satellite.
+    - SatLabel: Label (identifier) for the satellite.
+    - UpdateDict: Dictionary containing tag-value pairs to update in InterOutputs[SatLabel].
+
+    Example:
+    UpdateInterOutputs(InterOutputs, "G01", {"SODPREV": 10, "MONPREV": 1, "XPREV": 100})
+    """
+    # Check if SatLabel exists in InterOutputs
+    if SatLabel not in InterOutputs:
+        InterOutputs[SatLabel] = {}
+
+    # Update or add tag-value pairs in InterOutputs[SatLabel]
+    for tag, value in UpdateDict.items():
+        InterOutputs[SatLabel][tag] = value
+
+def updatePreviousInterOutputsFromCurrentSatInfo(InterOutputs, SatInfo):
+    """
+    Update the previous values in InterOutputs[SatLabel] using the current values from SatInfo.
+    SODPREV -> SoD;    MONPREV -> MONSTAT;    XPREV -> SAT-X;    YPREV -> SAT-X;    ZPREV -> SAT-X
+
+    Parameters:
+    - InterOutputs: Intermediate outputs containing information for each satellite.
+    - SatInfo: Information for a specific satellite, including current values.
+    """
+    # Extract satellite label (PRN) from SatInfo
+    SatLabel = SatInfo[SatInfoIdx["PRN"]]
+
+    # Check if SatLabel exists in InterOutputs
+    if SatLabel in InterOutputs:
+        # Create UpdateDict with tag-value pairs for "PREV" values
+        UpdateDict = {
+            "SODPREV": int(SatInfo[SatInfoIdx["SoD"]]),
+            "MONPREV": int(SatInfo[SatInfoIdx["MONSTAT"]]),
+            "XPREV": float(SatInfo[SatInfoIdx["SAT-X"]]),
+            "YPREV": float(SatInfo[SatInfoIdx["SAT-Y"]]),
+            "ZPREV": float(SatInfo[SatInfoIdx["SAT-Z"]])
+        }
+
+        # Call the UpdateInterOutputs function with the UpdateDict
+        updateInterOutputs(InterOutputs, SatLabel, UpdateDict)
+
+def updateEpochStats(epochInfo, interOutputs, outputs):
+    """
+    Update the satellite statistics for the current epoch based on the provided information.
+
+    Parameters:
+    - epochInfo: Information for all satellites in a single epoch.
+    - interOutputs: Intermediate outputs to store computed values for each satellite.
+    - outputs: Output dictionary containing computed statistics for each satellite.
+
+    For each satellite in the epoch, it calculates and updates the intermediate outputs
+    such as SRE-A, SRE-B, SRE-C, SRE-R, and other relevant parameters. These intermediate
+    outputs are later used to compute the final statistics.
+
+    Additionally, the function updates the overall output statistics, including the percentage
+    of monitored satellites, minimum and maximum number of RIMS in view, and RMS values of
+    satellite residual errors along different components.    
+    """
+
     # Loop over all Satellites Information in Epoch
-    # --------------------------------------------------
-    for SatInfo in EpochInfo:
-    
+    for satInfo in epochInfo:        
+        currSod = int(satInfo[SatInfoIdx["SoD"]])
+        # Reject the first Epoch
+        if ( currSod == 0): 
+            # Update the previous values with the current Values
+            updatePreviousInterOutputsFromCurrentSatInfo(interOutputs, satInfo)
+            continue           
+
+        # Reject if satellite is not MONITORED:
+        if(satInfo[SatInfoIdx["MONSTAT"]] != '1'): continue
+
+        # Reject if SRE_STATUS IS NOT OK:
+        if(satInfo[SatInfoIdx["SRESTAT"]] != '1'): continue
+        
         # Extract PRN Column
-        sat = SatInfo[SatInfoIdx["PRN"]]
+        satLabel = satInfo[SatInfoIdx["PRN"]]
 
         # Add Number of samples
-        InterOutputs[sat]["NSAMPS"] = InterOutputs[sat]["NSAMPS"] + 1
+        interOutputs[satLabel]["NSAMPS"] = interOutputs[satLabel]["NSAMPS"] + 1
 
-        ### IF SATELLITE IS MONITORED:
-        if(SatInfo[SatInfoIdx["MONSTAT"]] == '1'):
+        # Add Satellite Monitoring Output
+        outputs[satLabel]["MON"] = 1
+    
+        # Update number of samples Monitored & SRE OK
+        interOutputs[satLabel]["SREWSAMPS"] = interOutputs[satLabel]["SREWSAMPS"] + 1
 
-            # Add Satellite Monitoring if Satellite is Monitored
-            Outputs[sat]["MON"] = Outputs[sat]["MON"] + 1
-
-            ### IF SRE_STATUS IS OK:
-            if(SatInfo[SatInfoIdx["SRESTAT"]] == '1'):
+        # Update the Minimum Number of RIMS in view        
+        if( int(satInfo[SatInfoIdx["NRIMS"]])<outputs[satLabel]["RIMS-MIN"]):
+            outputs[satLabel]["RIMS-MIN"] = int(satInfo[SatInfoIdx["NRIMS"]])
         
-                # Update number of samples Monitored & SRE OK
-                InterOutputs[sat]["SREWSAMPS"] = InterOutputs[sat]["SREWSAMPS"] + 1
+        # Update the Maximun Number of RIMS in view        
+        if( int(satInfo[SatInfoIdx["NRIMS"]])>outputs[satLabel]["RIMS-MAX"]):
+            outputs[satLabel]["RIMS-MAX"] = int(satInfo[SatInfoIdx["NRIMS"]])        
+        
+        # # Calculate DeltaT (time difference) in seconds        
+        DeltaT = currSod - interOutputs[satLabel]["SODPREV"]
+        
+        CurrPosVector = generateVectorFromSatInfo(satInfo, "SAT-X", "SAT-Y", "SAT-Z")    
+        sreVector = generateVectorFromSatInfo(satInfo, "SREx", "SREy", "SREz")        
+        PrevPosVector = np.array([interOutputs[satLabel]["XPREV"], interOutputs[satLabel]["YPREV"], interOutputs[satLabel]["ZPREV"]])        
 
-                # Update the Minimum Number of RIMS in view        
-                if( int(SatInfo[SatInfoIdx["NRIMS"]])<Outputs[sat]["RIMS-MIN"]):
-                    Outputs[sat]["RIMS-MIN"] = int(SatInfo[SatInfoIdx["NRIMS"]])
-                
-                # Update the Maximun Number of RIMS in view        
-                if( int(SatInfo[SatInfoIdx["NRIMS"]])>Outputs[sat]["RIMS-MAX"]):
-                    Outputs[sat]["RIMS-MAX"] = int(SatInfo[SatInfoIdx["NRIMS"]])
+        # Call computeSREaAndSREc() to compute SRE-Along and SRE-Cross
+        srea, srec = computeSREaAndSREc(DeltaT, PrevPosVector, CurrPosVector, sreVector)   
+        
+        # Update sum of squared SRE values in InterOutputs[SatLabel]
+        interOutputs[satLabel]["SREaSUM2"] += srea**2
+        interOutputs[satLabel]["SREbSUM2"] += interOutputs[satLabel]["SREb"]**2
+        interOutputs[satLabel]["SREcSUM2"] += srec**2
+        interOutputs[satLabel]["SRErSUM2"] += interOutputs[satLabel]["SREr"]**2   
 
+        # Update the Counts        
+        interOutputs[satLabel]["SREaCOUNT"] += 1
+        interOutputs[satLabel]["SREbCOUNT"] += 1
+        interOutputs[satLabel]["SREcCOUNT"] += 1
+        interOutputs[satLabel]["SRErCOUNT"] += 1
 
-            #End of if(SatInfo[SatIdx["SRESTAT"]] == '1'):
-
-        #End of if(SatInfo[SatIdx["MONSTAT"]] == '1'):
-
-        # KEEP CURRENT INFORMATION FOR NEXT EPOCH
-
-        # Keep Current Monitoring Status
-        InterOutputs[sat]["MONPREV"] = int(SatInfo[SatInfoIdx["MONSTAT"]])
+        # Update the previous values with the current SatInfo Values
+        updatePreviousInterOutputsFromCurrentSatInfo(interOutputs, satInfo)
 
 
 # END OF FUNCTION: def updateEpochStats(SatInfo, InterOutputs, Outputs):
+
+def computeSreRmsFromSatLabel(interOutputs, satLabel):
+    """
+    Compute the Root Mean Square of Satellite Orbit Error Components (SRE-A, SRE-B, SRE-C, SRE-R).
+
+    Parameters:
+    - interOutputs: Intermediate outputs containing SRE components for each satellite.    
+    - satLabel: Label (identifier) for the satellite.
+
+    Returns:
+    - rmsSreA: RMS of Satellite Residual Error Along-Track component.
+    - rmsSreB: RMS of Satellite Residual Error Clock component.
+    - rmsSreC: RMS of Satellite Residual Error Cross-Track component.
+    - rmsSreR: RMS of Satellite Residual Error Radial component.
+    """
+    satData = interOutputs[satLabel]
+    # Update sample counts
+    sre_a_samps = satData["SREaCOUNT"]
+    sre_b_samps = satData["SREbCOUNT"]
+    sre_c_samps = satData["SREcCOUNT"]
+    sre_r_samps = satData["SRErCOUNT"]
+
+    # Calculate RMS values
+    rmsSreA = sqrt(satData["SREaSUM2"] / sre_a_samps) if sre_a_samps > 0 else 0
+    rmsSreB = sqrt(satData["SREbSUM2"] / sre_b_samps) if sre_b_samps > 0 else 0
+    rmsSreC = sqrt(satData["SREcSUM2"] / sre_c_samps) if sre_c_samps > 0 else 0
+    rmsSreR = sqrt(satData["SRErSUM2"] / sre_r_samps) if sre_r_samps > 0 else 0
+
+    return rmsSreA, rmsSreB,rmsSreC,rmsSreR
 
 
 # FUNCTION: Compute the final Statistics
 #-----------------------------------------------------------------------
 def computeFinalStatistics(InterOutputs, Outputs):
-    for sat in Outputs.keys():
+    for satLabel in Outputs.keys():
 
         # Estimate the Monitoring Percentage
-        if(InterOutputs[sat]["NSAMPS"] != 0):
+        if(InterOutputs[satLabel]["NSAMPS"] != 0):
 
             # Monitoring percentage = Monitored epochs / Total epochs
-            Outputs[sat]["MON"] = Outputs[sat]["MON"] * 100.0 / InterOutputs[sat]["NSAMPS"]
+            Outputs[satLabel]["MON"] = Outputs[satLabel]["MON"] * 100.0 / InterOutputs[satLabel]["NSAMPS"]
+        
+        # Compute final RMS for all SRE        
+        SREaRMS, SREbRMS,SREcRMS,SRErRMS = computeSreRmsFromSatLabel(InterOutputs, satLabel)
+        Outputs[satLabel]["SREaRMS"] = SREaRMS
+        Outputs[satLabel]["SREbRMS"] = SREbRMS
+        Outputs[satLabel]["SREcRMS"] = SREcRMS
+        Outputs[satLabel]["SRErRMS"] = SRErRMS
 
 # END OF FUNCTION: def computeFinalStatistics(InterOutputs, Outputs):
 
@@ -291,7 +450,7 @@ def computeSatStats(satFile, EntGpsFile, satStatsFile):
         # Open ENT-GPS Offset output file
         with open(EntGpsFile, 'w') as fEntGps:
 
-            # Write Header of Output files
+            # Write Header of Output ENT-GPS file
             fEntGps.write("#SOD\tENT-GPS\n")
 
             # Open Output File Satellite Statistics file
@@ -312,14 +471,14 @@ def computeSatStats(satFile, EntGpsFile, satStatsFile):
                     
                     # If EpochInfor is not Null
                     if EpochInfo != []:
-                        # Compute SRE b
-                        ent_gps = computeENTGPS(EpochInfo, InterOutputs)
+                        # Compute ENT-GPS and All SREs
+                        ent_gps = computeEntGpsAndSREb(EpochInfo, InterOutputs)
                         sod = EpochInfo[0][SatInfoIdx["SoD"]]
                         
                         # Write ENT-GPS Offset file
                         fEntGps.write("%5s %10.4f\n" % (sod,ent_gps))                    
                         
-                        # Update the Output Statistics
+                        # Update the Intermediate Statistics
                         updateEpochStats(EpochInfo, InterOutputs, Outputs)                                            
                     
                     else:
@@ -332,9 +491,9 @@ def computeSatStats(satFile, EntGpsFile, satStatsFile):
                 # Write Statistics File
                 # ----------------------------------------------------------
                 # Write Header of Output files
-                header_string = "\t".join(SatStatsIdx) + "\n"
+                #header_string = "\t".join(SatStatsIdx) + "\n"
+                header_string = "PRN	  MON	 RIMS-MIN	RIMS-MAX SREaRMS   SREcRMS     SRErRMS	   SREbRMS	   SREWRMS	   SREWMAX	   SFLTMAX	   SFLTMIN	   SIMAX	   FCMAX	   LTCbMAX	   LTCxMAX	   LTCyMAX	   LTCzMAX	   NMI	       NTRANS\n"
                 fOut.write(header_string)
-                #fOut.write("#PRN\tMON\tRIMS-MIN\tRIMS-MAX\n")
 
                 for sat in Outputs.keys():
                     
@@ -356,10 +515,38 @@ def computeSatStats(satFile, EntGpsFile, satStatsFile):
 #End of def computeSatStats(satFile, satStatsFile):
 
 
-def computeENTGPS(epoch_info, inter_outputs):
+def generateVectorFromSatInfo(sat_info, ColTagX, ColTagY, ColTagZ):
     """
-    Compute the ENT-GPS Offset: estimated from the SRE of the monitored satellites with SRE_STATUS OK 
-    and the SREb (Satellite Residual Error Clock component).
+    This function generates a vector given the column tags.
+
+    Parameters:
+    sat_info (dict): The dictionary containing satellite information.    
+    ColTagX (str): The column tag for the x-component.
+    ColTagY (str): The column tag for the y-component.
+    ColTagZ (str): The column tag for the z-component.
+
+    Returns:
+    np.array: The generated vector.
+    """
+
+    # Get the components of the vector
+    x = float(sat_info[SatInfoIdx[ColTagX]])
+    y = float(sat_info[SatInfoIdx[ColTagY]])
+    z = float(sat_info[SatInfoIdx[ColTagZ]])
+
+    # Get the vector
+    vector = np.array([x, y, z])
+
+    return vector
+
+def computeEntGpsAndSREb(epochInfo, interOutputs):
+    """
+    This function computes and returns the ENT-GPS Offset: estimated from the SRE of the monitored satellites with SRE_STATUS OK 
+    It also computes and stores in, 'inter_outputs', the SREb (Satellite Residual Error Clock Component).
+
+    - SREa (Satellite Residual Error Along Track Component)
+    - SREc (Satellite Residual Error Cross Track Component)
+    - SREr (Satellite Residual Error Radial Component)
 
     Parameters:
     - epoch_info: Information for all satellites in a single epoch.
@@ -369,50 +556,53 @@ def computeENTGPS(epoch_info, inter_outputs):
     """
     
     # Initialize lists to store radial component of SRE vector for each satellite
-    sre_b_minus_r_list = []
+    SREb1MinusSRErList = []
+    
+    # Initialize variables for DeltaT, PosPrev, and Pos
+    DeltaT = 0
+    PosPrev = np.array([0, 0, 0])  # Assuming initial position is [0, 0, 0]
+    
+    #for sat_info in epoch_info:
+    for satInfo in epochInfo:
+        prn = satInfo[SatInfoIdx["PRN"]]
 
-    for sat_info in epoch_info:
-        prn = sat_info[SatInfoIdx["PRN"]]
+        sreStatus = satInfo[SatInfoIdx["SRESTAT"]]
         
-        sreStatus = sat_info[SatInfoIdx["SRESTAT"]]
-        
-        # Consider only SRE STATUS == 1
-        if (sreStatus=='0'): 
-            continue
+        # Rejects Epoch with SRE STATUS == 0
+        if (sreStatus=='0'): continue            
 
         # Get the SREb1 from the Sat Info file (Satellite Residual Error Clock Bias)
-        sreb1 = float(sat_info[SatInfoIdx["SREb1"]])
+        SREb1 = float(satInfo[SatInfoIdx["SREb1"]])
 
-        # Store intermediate output
-        inter_outputs[prn]["SREb"] = sreb1
-
-        # Get the Components of the SRE vector
-        sre_x = float(sat_info[SatInfoIdx["SREx"]])
-        sre_y = float(sat_info[SatInfoIdx["SREy"]])
-        sre_z = float(sat_info[SatInfoIdx["SREz"]])
-
-        # Get the Position vector of the satellite
-        sat_x = float(sat_info[SatInfoIdx["SAT-X"]])
-        sat_y = float(sat_info[SatInfoIdx["SAT-Y"]])
-        sat_z = float(sat_info[SatInfoIdx["SAT-Z"]])
-
-        # Calculate the unit vector in the radial direction
-        sre_vector = np.array([sre_x, sre_y, sre_z])
-        sat_vector = np.array([sat_x, sat_y, sat_z])
-        
+        # Get the sreVector and satVector
+        sreVector = generateVectorFromSatInfo(satInfo, "SREx", "SREy", "SREz")
+        satVector = generateVectorFromSatInfo(satInfo, "SAT-X", "SAT-Y", "SAT-Z")        
+                
         # Calculate the radial component of the SRE vector        
-        radial_component = projectVector(sre_vector, sat_vector)
+        SREr = projectVector(sreVector, satVector)
 
-        sre_b_minus_r = sreb1 - radial_component 
-        
-        # Append ENT-GPS to the list for later computation
-        sre_b_minus_r_list.append(sre_b_minus_r)
+        # Update interOutputs with computed SREr
+        updateInterOutputs(interOutputs, prn, {"SREr": SREr})
 
-     # Compute ENT-GPS as the median of (SREb1 - RadialComponent) for all satellites
-    ent_gps = np.median(sre_b_minus_r_list)
+        # Append (SREb1 - SREr) to the list for later computation
+        SREb1MinusSRErList.append(SREb1 - SREr)
 
-    return ent_gps
+    # Compute ENT-GPS as the median of (SREb1 - SREr) for all satellites, for this specific epochInfo
+    EntGps = np.median(SREb1MinusSRErList)    
 
+    # Compute SREb = SREb1 - ent-gps, for this specific epochInfo
+    for satInfo in epochInfo:
+        prn = satInfo[SatInfoIdx["PRN"]]
+
+        # Update interOutputs with computed SREb
+        updateInterOutputs(interOutputs, prn, {"SREb": SREb1 - EntGps})        
+
+    return EntGps
+
+
+
+    # Update inter_outputs with computed SREb
+    
     # Update inter_outputs with computed SREb
     
 
