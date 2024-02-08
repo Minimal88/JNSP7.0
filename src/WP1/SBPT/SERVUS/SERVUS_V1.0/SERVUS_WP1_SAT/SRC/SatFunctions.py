@@ -309,16 +309,26 @@ def updateEpochStatsMaxMin(SatInfo, satPrn, InterOutputs, Outputs):
         Outputs[satPrn]["RIMS-MAX"] = int(SatInfo[SatInfoIdx["NRIMS"]])        
 
     # Update the Maximun SREw
-    if( float(SatInfo[SatInfoIdx["SREW"]]) > Outputs[satPrn]["SREWMAX"]):
-        Outputs[satPrn]["SREWMAX"] = float(SatInfo[SatInfoIdx["SREW"]])
+    currSREW = float(SatInfo[SatInfoIdx["SREW"]])
+    if( currSREW > Outputs[satPrn]["SREWMAX"]):
+        Outputs[satPrn]["SREWMAX"] = currSREW
 
     # Update the Maximun SFLT
-    if( float(SatInfo[SatInfoIdx["SFLT-W"]]) > Outputs[satPrn]["SFLTMAX"]):
-        Outputs[satPrn]["SFLTMAX"] = float(SatInfo[SatInfoIdx["SFLT-W"]])
+    currSFLT = float(SatInfo[SatInfoIdx["SFLT-W"]])
+    if( currSFLT > Outputs[satPrn]["SFLTMAX"]):
+        Outputs[satPrn]["SFLTMAX"] = currSFLT
 
     # Update the Minimun SFLT
-    if( float(SatInfo[SatInfoIdx["SFLT-W"]]) < Outputs[satPrn]["SFLTMIN"]):
-        Outputs[satPrn]["SFLTMIN"] = float(SatInfo[SatInfoIdx["SFLT-W"]])
+    if( currSFLT < Outputs[satPrn]["SFLTMIN"]):
+        Outputs[satPrn]["SFLTMIN"] = currSFLT
+    
+    # Compute MAX SIW - Maximum Satellite Safety Index
+    # As the ratio between the SRE and the SigmaFLT at the Worst User Location
+    currSIW = currSREW / (5.33 * currSFLT)
+
+    # Update the Maximum SIMAX
+    if( currSIW > Outputs[satPrn]["SIMAX"]):
+        Outputs[satPrn]["SIMAX"] = currSIW
     
     # Update the Maximun Absolute Value of LTCb
     absAF0 = abs(float(SatInfo[SatInfoIdx["AF0"]]))
@@ -469,7 +479,7 @@ def computeFinalStatistics(InterOutputs, Outputs):
 
         # Estimate the Monitoring percentage = Monitored epochs / Total epochs
         Outputs[satLabel]["MON"] = Outputs[satLabel]["MON"] * 100.0 / InterOutputs[satLabel]["NSAMPS"]
-        
+
         # Compute final RMS for all SRE        
         SREaRMS, SREbRMS,SREcRMS,SRErRMS = computeSatRmsSreAcrFromInterOuputs(InterOutputs, satLabel)
         Outputs[satLabel]["SREaRMS"] = SREaRMS
