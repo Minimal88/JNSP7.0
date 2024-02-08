@@ -145,17 +145,15 @@ def initializeOutputs(Outputs):
         
         # Loop over all satelliteds of each constellation 
         for Prn in range(1,33):
-            SatLabel = Const + "%02d" % Prn
-            
+            SatLabel = Const + "%02d" % Prn            
             Outputs[SatLabel] = OrderedDict({})
-            for var in SatStatsIdx.keys():
-                
+            for var in SatStatsIdx.keys():                
                 if (var == "PRN"):
-                    Outputs[SatLabel][var] = SatLabel
-                
+                    Outputs[SatLabel][var] = SatLabel                
                 elif (var == "RIMS-MIN"):
                     Outputs[SatLabel][var] = 1e12
-
+                elif (var == "SFLTMIN"):
+                    Outputs[SatLabel][var] = 1e12
                 else:
                     Outputs[SatLabel][var] = 0.0
 
@@ -355,6 +353,14 @@ def updateEpochStats(SatInfo, InterOutputs, Outputs):
     # Update the Maximun SREw
     if( float(SatInfo[SatInfoIdx["SREW"]])>Outputs[sat]["SREWMAX"]):
         Outputs[sat]["SREWMAX"] = float(SatInfo[SatInfoIdx["SREW"]])
+
+    # Update the Maximun SFLT
+    if( float(SatInfo[SatInfoIdx["SFLT-W"]])>Outputs[sat]["SFLTMAX"]):
+        Outputs[sat]["SFLTMAX"] = float(SatInfo[SatInfoIdx["SFLT-W"]])
+
+    # Update the Minimun SFLT
+    if( float(SatInfo[SatInfoIdx["SFLT-W"]])<Outputs[sat]["SFLTMIN"]):
+        Outputs[sat]["SFLTMIN"] = float(SatInfo[SatInfoIdx["SFLT-W"]])
 
     currSod = int(SatInfo[SatInfoIdx["SoD"]])
     # Reject the first Epoch
