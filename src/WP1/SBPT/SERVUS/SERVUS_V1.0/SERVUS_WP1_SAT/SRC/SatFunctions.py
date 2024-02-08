@@ -299,6 +299,52 @@ def updatePreviousInterOutputsFromCurrentSatInfo(InterOutputs, SatInfo):
         # Call the UpdateInterOutputs function with the UpdateDict
         updateInterOutputs(InterOutputs, SatLabel, UpdateDict)
 
+def updateEpochStatsMaxMin(SatInfo, satPrn, InterOutputs, Outputs):
+    # Update the Minimum Number of RIMS in view        
+    if( int(SatInfo[SatInfoIdx["NRIMS"]]) < Outputs[satPrn]["RIMS-MIN"]):
+        Outputs[satPrn]["RIMS-MIN"] = int(SatInfo[SatInfoIdx["NRIMS"]])
+    
+    # Update the Maximun Number of RIMS in view        
+    if( int(SatInfo[SatInfoIdx["NRIMS"]]) > Outputs[satPrn]["RIMS-MAX"]):
+        Outputs[satPrn]["RIMS-MAX"] = int(SatInfo[SatInfoIdx["NRIMS"]])        
+
+    # Update the Maximun SREw
+    if( float(SatInfo[SatInfoIdx["SREW"]]) > Outputs[satPrn]["SREWMAX"]):
+        Outputs[satPrn]["SREWMAX"] = float(SatInfo[SatInfoIdx["SREW"]])
+
+    # Update the Maximun SFLT
+    if( float(SatInfo[SatInfoIdx["SFLT-W"]]) > Outputs[satPrn]["SFLTMAX"]):
+        Outputs[satPrn]["SFLTMAX"] = float(SatInfo[SatInfoIdx["SFLT-W"]])
+
+    # Update the Minimun SFLT
+    if( float(SatInfo[SatInfoIdx["SFLT-W"]]) < Outputs[satPrn]["SFLTMIN"]):
+        Outputs[satPrn]["SFLTMIN"] = float(SatInfo[SatInfoIdx["SFLT-W"]])
+    
+    # Update the Maximun Absolute Value of LTCb
+    absAF0 = abs(float(SatInfo[SatInfoIdx["AF0"]]))
+    if(absAF0 > Outputs[satPrn]["LTCbMAX"]):
+        Outputs[satPrn]["LTCbMAX"] = absAF0
+
+    # Update the Maximun Absolute Value of FCMAX
+    absFC = abs(float(SatInfo[SatInfoIdx["FC"]]))
+    if(absFC > Outputs[satPrn]["FCMAX"]):
+        Outputs[satPrn]["FCMAX"] = absFC
+
+    # Update the Maximun Absolute Value of LTCx
+    absLTCx = abs(float(SatInfo[SatInfoIdx["LTCx"]]))
+    if(absLTCx > Outputs[satPrn]["LTCxMAX"]):
+        Outputs[satPrn]["LTCxMAX"] = absLTCx
+
+    # Update the Maximun Absolute Value of LTCy
+    absLTCy = abs(float(SatInfo[SatInfoIdx["LTCy"]]))
+    if(absLTCy > Outputs[satPrn]["LTCyMAX"]):
+        Outputs[satPrn]["LTCyMAX"] = absLTCy
+    
+    # Update the Maximun Absolute Value of LTCz
+    absLTCz = abs(float(SatInfo[SatInfoIdx["LTCz"]]))
+    if(absLTCz > Outputs[satPrn]["LTCzMAX"]):
+        Outputs[satPrn]["LTCzMAX"] = absLTCz
+
 def updateEpochStats(SatInfo, InterOutputs, Outputs):
     """
     Update the satellite statistics for the current epoch based on the provided information.
@@ -315,10 +361,10 @@ def updateEpochStats(SatInfo, InterOutputs, Outputs):
     """
     
     # Extract PRN Column
-    sat = SatInfo[SatInfoIdx["PRN"]]
+    satPrn = SatInfo[SatInfoIdx["PRN"]]
 
     # Add Number of samples
-    InterOutputs[sat]["NSAMPS"] = InterOutputs[sat]["NSAMPS"] + 1
+    InterOutputs[satPrn]["NSAMPS"] = InterOutputs[satPrn]["NSAMPS"] + 1
 
     # Reject if satellite is not MONITORED:
     if(SatInfo[SatInfoIdx["MONSTAT"]] != '1'): 
@@ -329,7 +375,7 @@ def updateEpochStats(SatInfo, InterOutputs, Outputs):
         return
     
     # Add Satellite Monitoring if Satellite is Monitored
-    Outputs[sat]["MON"] = Outputs[sat]["MON"] + 1
+    Outputs[satPrn]["MON"] = Outputs[satPrn]["MON"] + 1
 
     # Reject if SRE_STATUS IS NOT OK:
     if(SatInfo[SatInfoIdx["SRESTAT"]] != '1'): 
@@ -338,30 +384,13 @@ def updateEpochStats(SatInfo, InterOutputs, Outputs):
         logMessage = 'Rejected -> SoD: '+ SatInfo[SatInfoIdx["SoD"]] + ', PRN: ' + SatInfo[SatInfoIdx["PRN"]] + ', SRESTAT: ' + SatInfo[SatInfoIdx["SRESTAT"]] + ' \n'
         open(logFile, 'a').write(logMessage)  if os.path.isfile(logFile) else open(logFile, 'w').write(logMessage)
         return
-
-    # Update number of samples Monitored & SRE OK
-    InterOutputs[sat]["SREWSAMPS"] = InterOutputs[sat]["SREWSAMPS"] + 1
-
-    # Update the Minimum Number of RIMS in view        
-    if( int(SatInfo[SatInfoIdx["NRIMS"]])<Outputs[sat]["RIMS-MIN"]):
-        Outputs[sat]["RIMS-MIN"] = int(SatInfo[SatInfoIdx["NRIMS"]])
     
-    # Update the Maximun Number of RIMS in view        
-    if( int(SatInfo[SatInfoIdx["NRIMS"]])>Outputs[sat]["RIMS-MAX"]):
-        Outputs[sat]["RIMS-MAX"] = int(SatInfo[SatInfoIdx["NRIMS"]])        
+    # Update number of samples Monitored & SRE OK
+    InterOutputs[satPrn]["SREWSAMPS"] = InterOutputs[satPrn]["SREWSAMPS"] + 1
 
-    # Update the Maximun SREw
-    if( float(SatInfo[SatInfoIdx["SREW"]])>Outputs[sat]["SREWMAX"]):
-        Outputs[sat]["SREWMAX"] = float(SatInfo[SatInfoIdx["SREW"]])
+    updateEpochStatsMaxMin(SatInfo, satPrn, InterOutputs, Outputs)
 
-    # Update the Maximun SFLT
-    if( float(SatInfo[SatInfoIdx["SFLT-W"]])>Outputs[sat]["SFLTMAX"]):
-        Outputs[sat]["SFLTMAX"] = float(SatInfo[SatInfoIdx["SFLT-W"]])
-
-    # Update the Minimun SFLT
-    if( float(SatInfo[SatInfoIdx["SFLT-W"]])<Outputs[sat]["SFLTMIN"]):
-        Outputs[sat]["SFLTMIN"] = float(SatInfo[SatInfoIdx["SFLT-W"]])
-
+    # Computes the SREa SREb SREc SREr squeared sum
     currSod = int(SatInfo[SatInfoIdx["SoD"]])
     # Reject the first Epoch
     if ( currSod == 0):         
@@ -372,25 +401,25 @@ def updateEpochStats(SatInfo, InterOutputs, Outputs):
         return           
     
     # Update number of samples Monitored & SRE OK & Not First Epoch
-    InterOutputs[sat]["SREACRSAMPS"] = InterOutputs[sat]["SREACRSAMPS"] + 1        
+    InterOutputs[satPrn]["SREACRSAMPS"] = InterOutputs[satPrn]["SREACRSAMPS"] + 1        
     
     # # Calculate DeltaT (time difference) in seconds        
-    prevSod = InterOutputs[sat]["SODPREV"]
+    prevSod = InterOutputs[satPrn]["SODPREV"]
     DeltaT = currSod - prevSod
     
     CurrPosVector = generateVectorFromSatInfo(SatInfo, "SAT-X", "SAT-Y", "SAT-Z")    
     sreVector = generateVectorFromSatInfo(SatInfo, "SREx", "SREy", "SREz")        
-    PrevPosVector = np.array([InterOutputs[sat]["XPREV"], InterOutputs[sat]["YPREV"], InterOutputs[sat]["ZPREV"]])        
+    PrevPosVector = np.array([InterOutputs[satPrn]["XPREV"], InterOutputs[satPrn]["YPREV"], InterOutputs[satPrn]["ZPREV"]])        
 
     # Call computeSREaAndSREc() to compute SRE-Along and SRE-Cross
     srea, srec = computeSREaAndSREc(DeltaT, PrevPosVector, CurrPosVector, sreVector)   
-    sreb = InterOutputs[sat]["SREb"]
-    srer = InterOutputs[sat]["SREr"]
+    sreb = InterOutputs[satPrn]["SREb"]
+    srer = InterOutputs[satPrn]["SREr"]
     # Update sum of squared SRE values in InterOutputs[SatLabel]
-    InterOutputs[sat]["SREaSUM2"] += srea**2
-    InterOutputs[sat]["SREbSUM2"] += sreb**2
-    InterOutputs[sat]["SREcSUM2"] += srec**2
-    InterOutputs[sat]["SRErSUM2"] += srer**2   
+    InterOutputs[satPrn]["SREaSUM2"] += srea**2
+    InterOutputs[satPrn]["SREbSUM2"] += sreb**2
+    InterOutputs[satPrn]["SREcSUM2"] += srec**2
+    InterOutputs[satPrn]["SRErSUM2"] += srer**2   
 
     # Update the previous values with the current SatInfo Values
     updatePreviousInterOutputsFromCurrentSatInfo(InterOutputs, SatInfo)
