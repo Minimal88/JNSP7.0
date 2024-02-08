@@ -141,7 +141,7 @@ for Jd in range(Conf["INI_DATE_JD"], Conf["END_DATE_JD"] + 1):
     computeSatStats(SatFile, EntGpsFile, SatStatsFile)
 
     # Display Creation message
-    print('2. Created files:', SatStatsFile, EntGpsFile)
+    print('2. Created files:','\n', SatStatsFile,'\n', EntGpsFile)
     
     # Display Reading Message
     print('3. Reading file:', SatStatsFile)

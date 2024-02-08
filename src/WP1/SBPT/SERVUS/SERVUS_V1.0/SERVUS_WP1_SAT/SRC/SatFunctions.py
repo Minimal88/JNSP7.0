@@ -82,9 +82,6 @@ SatStatsIdx = dict([
     ("NTRANS", 19)
 ])
 
-# Define Earth's rotation rate (rad/sec)
-OMEGA_EARTH = 7.2921151467e-5
-
 # Define Satidistics Output file format list
 StatsOutputFormat = "%s %6.2f %4d %6d %10.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %4d"
 StatsOutputFormatList = StatsOutputFormat.split()
@@ -230,7 +227,7 @@ def computeSREaAndSREc(deltaT, prevPosVector, currPosVector, sreVector):
     """
     # Compute the Satellite Velocity deriving the position and 
     # Adding Earth's Rotation effect on the reference frame
-    satVelVector = ( (currPosVector - prevPosVector) / deltaT) + OMEGA_EARTH * currPosVector
+    satVelVector = ( (currPosVector - prevPosVector) / deltaT) + GnssConstants.OMEGA_EARTH * currPosVector
 
     # Compute the Satellite Velocity unitary vector
     Uv = satVelVector / np.linalg.norm(satVelVector)

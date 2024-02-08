@@ -167,3 +167,6 @@ MAX_NUM_USRS = 1000
 
 # Maximum number of Receivers in RCVR (dimensioning constant)
 MAX_NUM_RCVR = 1000
+
+# Define Earth's rotation rate (rad/sec)
+OMEGA_EARTH = 7.2921151467e-5
