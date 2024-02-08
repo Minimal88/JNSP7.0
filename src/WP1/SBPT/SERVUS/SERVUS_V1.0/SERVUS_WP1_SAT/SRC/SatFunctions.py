@@ -210,7 +210,7 @@ def projectVector(Vector, Direction):
     - The projection of the vector onto the given direction.
     """    
     assert any(Direction) == True, "Empty Direction Vector Array"
-    
+
     # Compute the Unitary Vector
     UnitaryVector = Direction / np.linalg.norm(Direction)
 
@@ -351,6 +351,10 @@ def updateEpochStats(SatInfo, InterOutputs, Outputs):
     # Update the Maximun Number of RIMS in view        
     if( int(SatInfo[SatInfoIdx["NRIMS"]])>Outputs[sat]["RIMS-MAX"]):
         Outputs[sat]["RIMS-MAX"] = int(SatInfo[SatInfoIdx["NRIMS"]])        
+
+    # Update the Maximun SREw
+    if( float(SatInfo[SatInfoIdx["SREW"]])>Outputs[sat]["SREWMAX"]):
+        Outputs[sat]["SREWMAX"] = float(SatInfo[SatInfoIdx["SREW"]])
 
     currSod = int(SatInfo[SatInfoIdx["SoD"]])
     # Reject the first Epoch
