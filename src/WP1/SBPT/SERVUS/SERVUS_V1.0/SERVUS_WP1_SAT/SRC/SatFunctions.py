@@ -329,6 +329,10 @@ def updateEpochStatsMaxMin(SatInfo, satPrn, InterOutputs, Outputs):
     # Update the Maximum SIMAX
     if( currSIW > Outputs[satPrn]["SIMAX"]):
         Outputs[satPrn]["SIMAX"] = currSIW
+
+    # Update the Number of Satellite MIs (Misleading Information) - SI > 1
+    if(currSIW > 1):
+        Outputs[satPrn]["NMI"] += 1    
     
     # Update the Maximun Absolute Value of LTCb
     absAF0 = abs(float(SatInfo[SatInfoIdx["AF0"]]))
@@ -376,16 +380,22 @@ def updateEpochStats(SatInfo, InterOutputs, Outputs):
     # Add Number of samples
     InterOutputs[satPrn]["NSAMPS"] = InterOutputs[satPrn]["NSAMPS"] + 1
 
+    # Add NTRANS Monitored to Not Monitored (MtoNM) or to Don't USE (MtoDU)
+    prevMon = InterOutputs[satPrn]["MONPREV"]
+    currMon = int(SatInfo[SatInfoIdx["MONSTAT"]])
+    if(((prevMon == 1) and (currMon == 0)) or ((prevMon == 1) and (currMon == -1))):
+        Outputs[satPrn]["NTRANS"] += 1        
+
     # Reject if satellite is not MONITORED:
-    if(SatInfo[SatInfoIdx["MONSTAT"]] != '1'): 
-        updatePreviousInterOutputsFromCurrentSatInfo(InterOutputs, SatInfo)
+    if(SatInfo[SatInfoIdx["MONSTAT"]] != '1'):         
         logFile = 'MONITORED_updateEpochStats.txt'
-        logMessage = 'Rejected -> SoD: '+ SatInfo[SatInfoIdx["SoD"]] + ', PRN: ' + SatInfo[SatInfoIdx["PRN"]] + ', MONSTAT: ' + SatInfo[SatInfoIdx["MONSTAT"]] + ' \n'
+        logMessage = 'Rejected -> SoD: '+ SatInfo[SatInfoIdx["SoD"]] + ', PRN: ' + SatInfo[SatInfoIdx["PRN"]] + ', MONSTAT: ' + SatInfo[SatInfoIdx["MONSTAT"]] + ', MONPREV: ' + str(InterOutputs[satPrn]["MONPREV"]) + ' \n'        
         open(logFile, 'a').write(logMessage)  if os.path.isfile(logFile) else open(logFile, 'w').write(logMessage)
+        updatePreviousInterOutputsFromCurrentSatInfo(InterOutputs, SatInfo)
         return
     
     # Add Satellite Monitoring if Satellite is Monitored
-    Outputs[satPrn]["MON"] = Outputs[satPrn]["MON"] + 1
+    Outputs[satPrn]["MON"] += 1
 
     # Reject if SRE_STATUS IS NOT OK:
     if(SatInfo[SatInfoIdx["SRESTAT"]] != '1'): 
@@ -396,7 +406,7 @@ def updateEpochStats(SatInfo, InterOutputs, Outputs):
         return
     
     # Update number of samples Monitored & SRE OK
-    InterOutputs[satPrn]["SREWSAMPS"] = InterOutputs[satPrn]["SREWSAMPS"] + 1
+    InterOutputs[satPrn]["SREWSAMPS"] += 1
 
     updateEpochStatsMaxMin(SatInfo, satPrn, InterOutputs, Outputs)
 
@@ -411,7 +421,7 @@ def updateEpochStats(SatInfo, InterOutputs, Outputs):
         return           
     
     # Update number of samples Monitored & SRE OK & Not First Epoch
-    InterOutputs[satPrn]["SREACRSAMPS"] = InterOutputs[satPrn]["SREACRSAMPS"] + 1        
+    InterOutputs[satPrn]["SREACRSAMPS"] += 1        
     
     # # Calculate DeltaT (time difference) in seconds        
     prevSod = InterOutputs[satPrn]["SODPREV"]
