@@ -25,9 +25,7 @@ Common = os.path.dirname(os.path.dirname(
 sys.path.insert(0, Common)
 from collections import OrderedDict
 from COMMON.Plots import generatePlot
-from COMMON import GnssConstants
 import SatStatistics  as stat
-from math import sqrt
 import numpy as np
 import copy
 
@@ -105,8 +103,9 @@ def computeSatStats(satFile, EntGpsFile, satStatsFile):
                 # Write Statistics File
                 # ----------------------------------------------------------
                 # Write Header of Output files
-                #header_string = "\t".join(SatStatsIdx) + "\n"
-                header_string = "PRN	  MON	 RIMS-MIN	RIMS-MAX SREaRMS   SREcRMS     SRErRMS	   SREbRMS	   SREWRMS	   SREWMAX	   SFLTMAX	   SFLTMIN	   SIMAX	   FCMAX	   LTCbMAX	   LTCxMAX	   LTCyMAX	   LTCzMAX	   NMI	       NTRANS\n"
+                delim = " "
+                header_string = delim.join(SatStatsIdx) + "\n"
+                #header_string = "PRN	  MON	 RIMS-MIN	RIMS-MAX SREaRMS   SREcRMS     SRErRMS	   SREbRMS	   SREWRMS	   SREWMAX	   SFLTMAX	   SFLTMIN	   SIMAX	   FCMAX	   LTCbMAX	   LTCxMAX	   LTCyMAX	   LTCzMAX	   NMI	       NTRANS\n"
                 fOut.write(header_string)
 
                 for sat in Outputs.keys():
@@ -115,7 +114,7 @@ def computeSatStats(satFile, EntGpsFile, satStatsFile):
                     if(Outputs[sat]["MON"] != 0):
                         
                         for i, result in enumerate(Outputs[sat]):
-                            fOut.write(((StatsOutputFormatList[i] + "\t") % Outputs[sat][result]))
+                            fOut.write(((StatsOutputFormatList[i] + delim) % Outputs[sat][result]))
 
                         fOut.write("\n")
 

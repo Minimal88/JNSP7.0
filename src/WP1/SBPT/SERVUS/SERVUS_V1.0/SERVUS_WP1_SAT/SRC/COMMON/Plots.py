@@ -34,6 +34,9 @@ def saveFigure(fig, Path):
     fig.savefig(Path, dpi=150., bbox_inches='tight')
 
 def prepareAxis(PlotConf, ax):
+    ax.get_yaxis().get_major_formatter().set_useOffset(False)
+    ax.get_yaxis().get_major_formatter().set_scientific(False)
+
     for key in PlotConf:
         if key == "Title":
             ax.set_title(PlotConf["Title"])
@@ -155,6 +158,50 @@ def generateLinesPlot(PlotConf):
 
     saveFigure(fig, PlotConf["Path"])
 
+def generateVerticalBarPlot(PlotConf):
+    LineWidth = 1.5
+    
+    fig, ax = createFigure(PlotConf)
+
+    prepareAxis(PlotConf, ax)
+
+    for key in PlotConf:
+        if key == "LineWidth":
+            LineWidth = PlotConf["LineWidth"]        
+        if key == "ColorBar":
+            normalize, cmap = prepareColorBar(PlotConf, ax, PlotConf["zData"])
+        if key == "Map" and PlotConf[key] == True:
+            drawMap(PlotConf, ax)
+
+    for Label in PlotConf["yData"].keys():
+        if "ColorBar" in PlotConf:
+            ax.bar(PlotConf["xData"][Label], PlotConf["yData"][Label],
+                   color=cmap(normalize(np.array(PlotConf["zData"][Label]))))
+        else:
+            if "Color" not in PlotConf:
+                Color = 'b'
+            else:
+                Color = PlotConf["Color"][Label]
+
+            ax.bar(
+                PlotConf["xData"][Label], 
+                PlotConf["yData"][Label],                
+                color = Color,
+                linewidth = LineWidth,
+                label = Label)
+    
+    if "ShowLegend" in PlotConf:
+         # Create legends for each label
+        handles, labels = ax.get_legend_handles_labels()
+        unique_labels = list(set(labels))
+        legend_handles = [handles[labels.index(label)] for label in unique_labels]
+        ax.legend(
+            legend_handles, unique_labels, loc=PlotConf["ShowLegend"], fontsize='medium')
+
+    saveFigure(fig, PlotConf["Path"])
+
 def generatePlot(PlotConf):
     if(PlotConf["Type"] == "Lines"):
         generateLinesPlot(PlotConf)
+    elif PlotConf["Type"] == "VerticalBar":
+        generateVerticalBarPlot(PlotConf)
