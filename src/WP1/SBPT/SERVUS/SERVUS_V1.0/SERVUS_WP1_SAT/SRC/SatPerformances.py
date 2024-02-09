@@ -161,7 +161,6 @@ for Jd in range(Conf["INI_DATE_JD"], Conf["END_DATE_JD"] + 1):
     plotSatStats(satStatsData, yearDayText)
 
 
-
 print('------------------------------------')
 print('--> END OF SAT-PERFORMANCE ANALYSIS:')
 print('------------------------------------')

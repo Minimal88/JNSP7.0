@@ -24,7 +24,7 @@ Common = os.path.dirname(os.path.dirname(
     os.path.abspath(sys.argv[0]))) + '/COMMON'
 sys.path.insert(0, Common)
 from collections import OrderedDict
-from COMMON.Plots import generatePlot, generateVerticalBarPlot
+from COMMON.Plots import generateLinesPlot, generatePlot
 from SatStatistics import SatStatsIdx
 from COMMON import GnssConstants
 from pandas import read_csv
@@ -71,6 +71,12 @@ def plotSatStats(satStatsData, yearDayText):
 
     # Plot SIW
     plotSIW(satStatsData, yearDayText)
+    
+    # Plot MAX FC and LTCb
+    plotMaxFcAndLTCb(satStatsData, yearDayText)
+
+    # Plot MAX LTCxyz
+    plotMaxLTCxyz(satStatsData, yearDayText)
 
 
 def readStatsFile(statisticsFilePath, columnNameList):
@@ -114,7 +120,7 @@ def createPlotConfig2DVerticalBars(filepath, title, xData, yDataList, xLabel, yL
         yOffset (list): List of y-axis offsets: [lowerOffset, upperOffset]
     
     Returns:
-        PlotConf(list): Configuration Data Structure for plotting Vertical 2D Bars with generateVerticalBarPlot()
+        PlotConf(list): Configuration Data Structure for plotting Vertical 2D Bars with generatePlot()
     """
     PlotConf = {}
     PlotConf["Type"] = "VerticalBar"
@@ -140,6 +146,52 @@ def createPlotConfig2DVerticalBars(filepath, title, xData, yDataList, xLabel, yL
     
     return PlotConf    
 
+def createPlotConfig2DLinesPoints(filepath, title, xData, yDataList, xLabel, yLabels, colors, markers, legPos, yOffset=[0, 0]):
+    """
+    Creates a new Plot Configuration for plotting 2D lines with points.
+    
+    Parameters:
+        filepath (str): Path to save the plot figure.
+        title (str): Title of the plot figure.
+        xData (list): List of x-axis data.
+        yDataList (list): List of lists containing y-axis data sets.
+        xLabel (str): Label of x-axis data.
+        yLabels (list): List of labels for each y-axis data set.
+        colors (list): List of colors for each y-axis data set.
+        markers (list): List of markers for each y-axis data set.
+        legPos (str): Position of the legend (example: 'upper left').
+        yOffset (list): List of y-axis offsets: [lowerOffset, upperOffset].
+
+    Returns:
+        PlotConf (dict): Configuration Data Structure for plotting 2D lines with points using generateLinesPlot().
+    """
+    PlotConf = {}
+    PlotConf["Type"] = "Lines"
+    PlotConf["FigSize"] = (12, 6)
+    PlotConf["Title"] = title
+    PlotConf["xLabel"] = xLabel
+    PlotConf["xTicks"] = range(0, len(xData))
+    PlotConf["xLim"] = [0, len(xData)-1]
+    minY = min([min(y) for y in yDataList])
+    maxY = max([max(y) for y in yDataList])
+    PlotConf["yLim"] = [minY + yOffset[0], maxY + yOffset[1]]
+    PlotConf["Grid"] = True
+    PlotConf["LineWidth"] = 1
+    if legPos: PlotConf["ShowLegend"] = legPos
+    PlotConf["xData"] = {}
+    PlotConf["yData"] = {}
+    PlotConf["Color"] = {}
+    PlotConf["Marker"] = {}
+    PlotConf["Path"] = filepath
+
+    for yLabel, yData, color, marker in zip(yLabels, yDataList, colors, markers):
+        PlotConf["yData"][yLabel] = yData
+        PlotConf["xData"][yLabel] = xData
+        PlotConf["Color"][yLabel] = color
+        PlotConf["Marker"][yLabel] = marker
+
+    return PlotConf
+
 def plotMonPercentage(StatsData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}SAT_MON_PERCENTAGE_{yearDayText}_G123_50s.png' 
     title = f"Satellite Monitoring Percentage {yearDayText} G123 50s [%]"    
@@ -149,7 +201,7 @@ def plotMonPercentage(StatsData, yearDayText):
     PRN = StatsData[SatStatsIdx["PRN"]]
     MON = StatsData[SatStatsIdx["MON"]]
     
-    generateVerticalBarPlot(createPlotConfig2DVerticalBars(
+    generatePlot(createPlotConfig2DVerticalBars(
         filePath, title, PRN, [MON], "GPS-PRN", ["MON [%]"], ['y'],'upper left' , [-2,6]))
 
 def plotNTRANS(StatsData, yearDayText):
@@ -161,7 +213,7 @@ def plotNTRANS(StatsData, yearDayText):
     PRN = StatsData[SatStatsIdx["PRN"]]
     NTRANS = StatsData[SatStatsIdx["NTRANS"]]
     
-    generateVerticalBarPlot(createPlotConfig2DVerticalBars(
+    generatePlot(createPlotConfig2DVerticalBars(
         filePath, title, PRN, [NTRANS], "GPS-PRN", ["Number of Transitions"], ['y'],'upper right' , [-2,1]))
     
 def plotNRIMS(StatsData, yearDayText):
@@ -174,7 +226,7 @@ def plotNRIMS(StatsData, yearDayText):
     RIMSMIN = StatsData[SatStatsIdx["RIMS-MIN"]]
     RIMSMAX = StatsData[SatStatsIdx["RIMS-MAX"]]    
     
-    generateVerticalBarPlot(createPlotConfig2DVerticalBars(
+    generatePlot(createPlotConfig2DVerticalBars(
         filePath, title, PRN, [RIMSMAX,RIMSMIN], "GPS-PRN", ["MAX-RIMS","MIN-RIMS"], ['y','g'],'upper left', [0,10] ))
 
 def plotRmsSreAcr(StatsData, yearDayText):
@@ -188,7 +240,7 @@ def plotRmsSreAcr(StatsData, yearDayText):
     SREcRMS = StatsData[SatStatsIdx["SREcRMS"]]
     SRErRMS = StatsData[SatStatsIdx["SRErRMS"]]    
     
-    generateVerticalBarPlot(createPlotConfig2DVerticalBars(
+    generatePlot(createPlotConfig2DVerticalBars(
         filePath, title, 
         PRN, [SREaRMS,SREcRMS,SRErRMS], 
         "GPS-PRN", ["RMS SRE-A[m]","RMS SRE-C[m]","RMS SRE-R[m]"], 
@@ -203,7 +255,7 @@ def plotRmsSreb(StatsData, yearDayText):
     PRN = StatsData[SatStatsIdx["PRN"]]
     SREbRMS = StatsData[SatStatsIdx["SREbRMS"]]       
     
-    generateVerticalBarPlot(createPlotConfig2DVerticalBars(
+    generatePlot(createPlotConfig2DVerticalBars(
         filePath, title, 
         PRN, [SREbRMS], 
         "GPS-PRN", ["RMS SRE-B[m]"], 
@@ -219,7 +271,7 @@ def plotSREW(StatsData, yearDayText):
     SREWRMS = StatsData[SatStatsIdx["SREWRMS"]]
     SREWMAX = StatsData[SatStatsIdx["SREWMAX"]]    
     
-    generateVerticalBarPlot(createPlotConfig2DVerticalBars(
+    generatePlot(createPlotConfig2DVerticalBars(
         filePath, title, PRN, [SREWMAX,SREWRMS], "GPS-PRN", ["MAX SREW[m]","RMS SREW[m]"], ['y','b'],'upper left', [0,0.4] ))
 
 def plotSFLT(StatsData, yearDayText):
@@ -232,7 +284,7 @@ def plotSFLT(StatsData, yearDayText):
     SFLTMIN = StatsData[SatStatsIdx["SFLTMIN"]]
     SFLTMAX = StatsData[SatStatsIdx["SFLTMAX"]]    
     
-    generateVerticalBarPlot(createPlotConfig2DVerticalBars(
+    generatePlot(createPlotConfig2DVerticalBars(
         filePath, title, PRN, [SFLTMAX,SFLTMIN], "GPS-PRN", ["MAX SFLT[m]","MIN SFLT[m]"], ['y','b'],'upper left', [0,0.7] ))
 
 def plotSIW(StatsData, yearDayText):
@@ -245,6 +297,41 @@ def plotSIW(StatsData, yearDayText):
     SIMAX = StatsData[SatStatsIdx["SIMAX"]]    
     SILIM = [1 for l in SIMAX]
     
-    generateVerticalBarPlot(createPlotConfig2DVerticalBars(
+    generatePlot(createPlotConfig2DVerticalBars(
         filePath, title, PRN, [SIMAX,SILIM], "GPS-PRN", ["MAX SI[m]","LIMIT"], ['y','b'],'upper left', [0,0.7] ))
+
+def plotMaxFcAndLTCb(StatsData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}SAT_MAX_FC_LTCb_{yearDayText}_G123_50s.png' 
+    title = f"Maximun Satellite Clock Fast and Long Term Corrections {yearDayText} G123 50s [%]"    
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting Target columns
+    PRN = StatsData[SatStatsIdx["PRN"]]    
+    FCMAX = StatsData[SatStatsIdx["FCMAX"]]
+    LTCbMAX = StatsData[SatStatsIdx["LTCbMAX"]]
+    
+    generatePlot(createPlotConfig2DLinesPoints(
+        filePath, title, 
+        PRN, [FCMAX,LTCbMAX], 
+        "GPS-PRN", ["MAX FC[m]","MAX LTCb[m]"], 
+        ['y','b'], ['s','s'],
+        'upper left', [-0.5,0.7] ))
+
+def plotMaxLTCxyz(StatsData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}SAT_MAX_LTCxyz_{yearDayText}_G123_50s.png' 
+    title = f"Maximun Satellite LTC-XYZ {yearDayText} G123 50s [%]"    
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting Target columns
+    PRN = StatsData[SatStatsIdx["PRN"]]    
+    LTCxMAX = StatsData[SatStatsIdx["LTCxMAX"]]
+    LTCyMAX = StatsData[SatStatsIdx["LTCyMAX"]]
+    LTCzMAX = StatsData[SatStatsIdx["LTCzMAX"]]
+    
+    generatePlot(createPlotConfig2DLinesPoints(
+        filePath, title, 
+        PRN, [LTCxMAX,LTCyMAX,LTCzMAX], 
+        "GPS-PRN", ["MAX LTCx[m]","MAX LTCy[m]","MAX LTCz[m]"], 
+        ['y','b','g'], ['s','s','s'],
+        'upper right', [-0.5,0.7] ))
 

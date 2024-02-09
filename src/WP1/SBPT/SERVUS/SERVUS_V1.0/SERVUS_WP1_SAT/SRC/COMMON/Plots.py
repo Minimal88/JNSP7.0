@@ -147,15 +147,25 @@ def generateLinesPlot(PlotConf):
     for Label in PlotConf["yData"].keys():
         if "ColorBar" in PlotConf:
             ax.scatter(PlotConf["xData"][Label], PlotConf["yData"][Label], 
-            marker = PlotConf["Marker"],
+            marker = PlotConf["Marker"][Label],
             linewidth = LineWidth,
             c = cmap(normalize(np.array(PlotConf["zData"][Label]))))
 
         else:
             ax.plot(PlotConf["xData"][Label], PlotConf["yData"][Label],
-            PlotConf["Marker"],
-            linewidth = LineWidth)
+            marker = PlotConf["Marker"][Label],
+            color = PlotConf["Color"][Label],
+            linewidth = LineWidth,
+            label = Label)
 
+    if "ShowLegend" in PlotConf:
+         # Create legends for each label
+        handles, labels = ax.get_legend_handles_labels()
+        unique_labels = list(set(labels))
+        legend_handles = [handles[labels.index(label)] for label in unique_labels]
+        ax.legend(
+            legend_handles, unique_labels, loc=PlotConf["ShowLegend"], fontsize='medium')
+        
     saveFigure(fig, PlotConf["Path"])
 
 def generateVerticalBarPlot(PlotConf):
