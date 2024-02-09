@@ -33,6 +33,44 @@ import numpy as np
 
 # Define relative path
 RelativePath = '/OUT/SAT/FIGURES/'
+# ------------------------------------------------------------------------------------
+# EXTERNAL FUNCTIONS 
+# ------------------------------------------------------------------------------------
+
+def plotSatStats(satStatsData, yearDayText):
+    """
+    Plot various satellite statistics based on the provided satellite statistics data.
+
+    Parameters:
+        satStatsData (DataFrame): DataFrame containing satellite statistics data.
+        yearDayText (str): Year day text for including in plot titles.
+
+    Returns:
+        None
+    """
+    # Plot Satellite Monitoring Percentage
+    plotMonPercentage(satStatsData, yearDayText)
+
+    # Plot Number of Transitions
+    plotNTRANS(satStatsData, yearDayText)
+
+    # Plot Number of RIMS
+    plotNRIMS(satStatsData, yearDayText)
+
+    # Plot RMS SRE ACR
+    plotRmsSreAcr(satStatsData, yearDayText)
+
+    # Plot RMS SREB
+    plotRmsSreb(satStatsData, yearDayText)
+
+    # Plot SREW
+    plotSREW(satStatsData, yearDayText)
+
+    # Plot SFLT
+    plotSFLT(satStatsData, yearDayText)
+
+    # Plot SIW
+    plotSIW(satStatsData, yearDayText)
 
 
 def readStatsFile(statisticsFilePath, columnNameList):
@@ -55,9 +93,14 @@ def readStatsFile(statisticsFilePath, columnNameList):
 
     return StatsData
 
-def plot2DVerticalBars(filepath, title, xData, yDataList, xLabel, yLabels, colors, legPos, yOffset = [0,0]):
+# ------------------------------------------------------------------------------------
+# INTERNAL FUNCTIONS 
+# ------------------------------------------------------------------------------------
+def createPlotConfig2DVerticalBars(filepath, title, xData, yDataList, xLabel, yLabels, colors, legPos, yOffset = [0,0]):
     """
-    Plot vertical 2D bars with specified data.
+    Creates a new Plot Configuration for plotting vertical 2D bars.
+    Y-axis: Multiple sets of data received from lists of lists
+    X-asis: A single set of data from a list
 
     Parameters:
         filepath (str): Path to save the plot figure.
@@ -68,6 +111,10 @@ def plot2DVerticalBars(filepath, title, xData, yDataList, xLabel, yLabels, color
         yLabels (list): List of labels for each y-axis data set.
         colors (list): List of colors for each y-axis data set.
         legPos (str): Position of the legend (example: 'upper left').
+        yOffset (list): List of y-axis offsets: [lowerOffset, upperOffset]
+    
+    Returns:
+        PlotConf(list): Configuration Data Structure for plotting Vertical 2D Bars with generateVerticalBarPlot()
     """
     PlotConf = {}
     PlotConf["Type"] = "VerticalBar"
@@ -91,49 +138,49 @@ def plot2DVerticalBars(filepath, title, xData, yDataList, xLabel, yLabels, color
         PlotConf["xData"][yLabel] = xData
         PlotConf["Color"][yLabel] = color        
     
-    generateVerticalBarPlot(PlotConf)
+    return PlotConf    
 
 def plotMonPercentage(StatsData, yearDayText):
-    figurePath = sys.argv[1] + f'{RelativePath}SAT_MON_PERCENTAGE_{yearDayText}_G123_50s.png' 
+    filePath = sys.argv[1] + f'{RelativePath}SAT_MON_PERCENTAGE_{yearDayText}_G123_50s.png' 
     title = f"Satellite Monitoring Percentage {yearDayText} G123 50s [%]"    
-    print( f'Ploting: {title}\n -> {figurePath}')
+    print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns
     PRN = StatsData[SatStatsIdx["PRN"]]
     MON = StatsData[SatStatsIdx["MON"]]
     
-    plot2DVerticalBars(
-        figurePath, title, PRN, [MON], "GPS-PRN", ["MON [%]"], ['y'],'upper left' , [-2,6])
+    generateVerticalBarPlot(createPlotConfig2DVerticalBars(
+        filePath, title, PRN, [MON], "GPS-PRN", ["MON [%]"], ['y'],'upper left' , [-2,6]))
 
 def plotNTRANS(StatsData, yearDayText):
-    figurePath = sys.argv[1] + f'{RelativePath}SAT_NTRANS_{yearDayText}_G123_50s.png' 
+    filePath = sys.argv[1] + f'{RelativePath}SAT_NTRANS_{yearDayText}_G123_50s.png' 
     title = f"Number of Transitions MtoNM or MtoDU {yearDayText} G123 50s [%]"    
-    print( f'Ploting: {title}\n -> {figurePath}')
+    print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns
     PRN = StatsData[SatStatsIdx["PRN"]]
     NTRANS = StatsData[SatStatsIdx["NTRANS"]]
     
-    plot2DVerticalBars(
-        figurePath, title, PRN, [NTRANS], "GPS-PRN", ["Number of Transitions"], ['y'],'upper right' , [-2,1])
+    generateVerticalBarPlot(createPlotConfig2DVerticalBars(
+        filePath, title, PRN, [NTRANS], "GPS-PRN", ["Number of Transitions"], ['y'],'upper right' , [-2,1]))
     
 def plotNRIMS(StatsData, yearDayText):
-    figurePath = sys.argv[1] + f'{RelativePath}SAT_NRIMS_{yearDayText}_G123_50s.png' 
+    filePath = sys.argv[1] + f'{RelativePath}SAT_NRIMS_{yearDayText}_G123_50s.png' 
     title = f"Minimun and Maximun Number of RIMS in view {yearDayText} G123 50s [%]"    
-    print( f'Ploting: {title}\n -> {figurePath}')
+    print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns
     PRN = StatsData[SatStatsIdx["PRN"]]
     RIMSMIN = StatsData[SatStatsIdx["RIMS-MIN"]]
     RIMSMAX = StatsData[SatStatsIdx["RIMS-MAX"]]    
     
-    plot2DVerticalBars(
-        figurePath, title, PRN, [RIMSMAX,RIMSMIN], "GPS-PRN", ["MAX-RIMS","MIN-RIMS"], ['y','g'],'upper left', [0,10] )
+    generateVerticalBarPlot(createPlotConfig2DVerticalBars(
+        filePath, title, PRN, [RIMSMAX,RIMSMIN], "GPS-PRN", ["MAX-RIMS","MIN-RIMS"], ['y','g'],'upper left', [0,10] ))
 
 def plotRmsSreAcr(StatsData, yearDayText):
-    figurePath = sys.argv[1] + f'{RelativePath}SAT_RMS_SRE_ACR_{yearDayText}_G123_50s.png' 
+    filePath = sys.argv[1] + f'{RelativePath}SAT_RMS_SRE_ACR_{yearDayText}_G123_50s.png' 
     title = f"RMS of SREW Along/Cross/Radial along the day {yearDayText} G123 50s [%]"    
-    print( f'Ploting: {title}\n -> {figurePath}')
+    print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns
     PRN = StatsData[SatStatsIdx["PRN"]]
@@ -141,63 +188,63 @@ def plotRmsSreAcr(StatsData, yearDayText):
     SREcRMS = StatsData[SatStatsIdx["SREcRMS"]]
     SRErRMS = StatsData[SatStatsIdx["SRErRMS"]]    
     
-    plot2DVerticalBars(
-        figurePath, title, 
+    generateVerticalBarPlot(createPlotConfig2DVerticalBars(
+        filePath, title, 
         PRN, [SREaRMS,SREcRMS,SRErRMS], 
         "GPS-PRN", ["RMS SRE-A[m]","RMS SRE-C[m]","RMS SRE-R[m]"], 
-        ['y','g','r'],'upper left',[0,1])
+        ['y','g','r'],'upper left',[0,1]))
 
 def plotRmsSreb(StatsData, yearDayText):
-    figurePath = sys.argv[1] + f'{RelativePath}SAT_RMS_SRE_B_{yearDayText}_G123_50s.png' 
+    filePath = sys.argv[1] + f'{RelativePath}SAT_RMS_SRE_B_{yearDayText}_G123_50s.png' 
     title = f"RMS of SRE-B Clock Error Component {yearDayText} G123 50s [%]"    
-    print( f'Ploting: {title}\n -> {figurePath}')
+    print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns
     PRN = StatsData[SatStatsIdx["PRN"]]
     SREbRMS = StatsData[SatStatsIdx["SREbRMS"]]       
     
-    plot2DVerticalBars(
-        figurePath, title, 
+    generateVerticalBarPlot(createPlotConfig2DVerticalBars(
+        filePath, title, 
         PRN, [SREbRMS], 
         "GPS-PRN", ["RMS SRE-B[m]"], 
-        ['y'],'upper left',[0,0.1])
+        ['y'],'upper left',[0,0.1]))
 
 def plotSREW(StatsData, yearDayText):
-    figurePath = sys.argv[1] + f'{RelativePath}SAT_SREW_{yearDayText}_G123_50s.png' 
+    filePath = sys.argv[1] + f'{RelativePath}SAT_SREW_{yearDayText}_G123_50s.png' 
     title = f"RMS and Maximun Value of SRE at the WUL {yearDayText} G123 50s [%]"    
-    print( f'Ploting: {title}\n -> {figurePath}')
+    print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns
     PRN = StatsData[SatStatsIdx["PRN"]]
     SREWRMS = StatsData[SatStatsIdx["SREWRMS"]]
     SREWMAX = StatsData[SatStatsIdx["SREWMAX"]]    
     
-    plot2DVerticalBars(
-        figurePath, title, PRN, [SREWMAX,SREWRMS], "GPS-PRN", ["MAX SREW[m]","RMS SREW[m]"], ['y','b'],'upper left', [0,0.4] )
+    generateVerticalBarPlot(createPlotConfig2DVerticalBars(
+        filePath, title, PRN, [SREWMAX,SREWRMS], "GPS-PRN", ["MAX SREW[m]","RMS SREW[m]"], ['y','b'],'upper left', [0,0.4] ))
 
 def plotSFLT(StatsData, yearDayText):
-    figurePath = sys.argv[1] + f'{RelativePath}SAT_SFLT_{yearDayText}_G123_50s.png' 
+    filePath = sys.argv[1] + f'{RelativePath}SAT_SFLT_{yearDayText}_G123_50s.png' 
     title = f"Maximun and Minimun SigmaFLT (=SigmaUDRE) {yearDayText} G123 50s [%]"    
-    print( f'Ploting: {title}\n -> {figurePath}')
+    print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns
     PRN = StatsData[SatStatsIdx["PRN"]]
     SFLTMIN = StatsData[SatStatsIdx["SFLTMIN"]]
     SFLTMAX = StatsData[SatStatsIdx["SFLTMAX"]]    
     
-    plot2DVerticalBars(
-        figurePath, title, PRN, [SFLTMAX,SFLTMIN], "GPS-PRN", ["MAX SFLT[m]","MIN SFLT[m]"], ['y','b'],'upper left', [0,0.7] )
+    generateVerticalBarPlot(createPlotConfig2DVerticalBars(
+        filePath, title, PRN, [SFLTMAX,SFLTMIN], "GPS-PRN", ["MAX SFLT[m]","MIN SFLT[m]"], ['y','b'],'upper left', [0,0.7] ))
 
 def plotSIW(StatsData, yearDayText):
-    figurePath = sys.argv[1] + f'{RelativePath}SAT_SIW_{yearDayText}_G123_50s.png' 
+    filePath = sys.argv[1] + f'{RelativePath}SAT_SIW_{yearDayText}_G123_50s.png' 
     title = f"Maximun Satellite Safety Index SI at WUL SREW/5.33UDRE {yearDayText} G123 50s [%]"    
-    print( f'Ploting: {title}\n -> {figurePath}')
+    print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns
     PRN = StatsData[SatStatsIdx["PRN"]]    
     SIMAX = StatsData[SatStatsIdx["SIMAX"]]    
     SILIM = [1 for l in SIMAX]
     
-    plot2DVerticalBars(
-        figurePath, title, PRN, [SIMAX,SILIM], "GPS-PRN", ["MAX SI[m]","LIMIT"], ['y','b'],'upper left', [0,0.7] )
+    generateVerticalBarPlot(createPlotConfig2DVerticalBars(
+        filePath, title, PRN, [SIMAX,SILIM], "GPS-PRN", ["MAX SI[m]","LIMIT"], ['y','b'],'upper left', [0,0.7] ))
 

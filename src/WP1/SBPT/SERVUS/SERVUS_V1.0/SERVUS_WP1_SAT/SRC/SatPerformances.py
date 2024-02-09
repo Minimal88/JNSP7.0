@@ -26,15 +26,16 @@
 
 # Import External and Internal functions and Libraries
 #----------------------------------------------------------------------
-import sys, os
-from collections import OrderedDict
-from yaml import dump
-from SatFunctions import computeSatStats
 from COMMON.Dates import convertYearMonthDay2JulianDay
 from COMMON.Dates import convertJulianDay2YearMonthDay
 from COMMON.Dates import convertYearMonthDay2Doy
+from SatFunctions import computeSatStats
+from SatStatPlots  import plotSatStats, readStatsFile
 from SatStatistics import SatStatsIdx
-import SatStatPlots  as ssPlot
+from collections import OrderedDict
+from yaml import dump
+import sys, os
+
 
 #----------------------------------------------------------------------
 # INTERNAL FUNCTIONS
@@ -151,20 +152,13 @@ for Jd in range(Conf["INI_DATE_JD"], Conf["END_DATE_JD"] + 1):
     
     # Read Statistics file
     columnList = list(SatStatsIdx.keys())    
-    satStatsData = ssPlot.readStatsFile(SatStatsFile, SatStatsIdx.keys())
+    satStatsData = readStatsFile(SatStatsFile, SatStatsIdx.keys())
 
     # Display Generating figures Message
     print('4. Generating Figures...\n')
     
     # Generate Satellite Performances figures
-    ssPlot.plotMonPercentage(satStatsData, yearDayText)
-    ssPlot.plotNTRANS(satStatsData, yearDayText)
-    ssPlot.plotNRIMS(satStatsData, yearDayText)
-    ssPlot.plotRmsSreAcr(satStatsData, yearDayText)
-    ssPlot.plotRmsSreb(satStatsData, yearDayText)
-    ssPlot.plotSREW(satStatsData, yearDayText)
-    ssPlot.plotSFLT(satStatsData, yearDayText)
-    ssPlot.plotSIW(satStatsData, yearDayText)
+    plotSatStats(satStatsData, yearDayText)
 
 
 
