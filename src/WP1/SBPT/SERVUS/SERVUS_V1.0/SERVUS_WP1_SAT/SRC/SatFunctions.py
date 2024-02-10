@@ -195,7 +195,7 @@ def createPlotConfig2DVerticalBars(filepath, title, xData, yDataList, xLabel, yL
     
     return PlotConf
 
-def createPlotConfig2DLinesPoints(filepath, title, xData, yDataList, xLabel, yLabels, colors, markers, legPos, yOffset=[0, 0]):
+def createPlotConfig2DLines(filepath, title, xData, yDataList, xLabel, yLabels, colors, markers, legPos, yOffset=[0, 0]):
     """
     Creates a new Plot Configuration for plotting 2D lines with points.
     

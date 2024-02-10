@@ -94,6 +94,9 @@ def plotSatStatsTime(SatStatsTimeData, yearDayText):
     # Plot the instantaneous number of satellites monitored as a function of the hour of the day 
     plotMON1(SatStatsTimeData, yearDayText)
 
+    #Plot the ENT-GPS Offset along the day
+    plotEntGpsOffset(SatStatsTimeData, yearDayText)
+
 # ------------------------------------------------------------------------------------
 # INTERNAL FUNCTIONS 
 # ------------------------------------------------------------------------------------
@@ -216,7 +219,7 @@ def plotMaxFcAndLTCb(StatsData, yearDayText):
     FCMAX = StatsData[SatStatsIdx["FCMAX"]]
     LTCbMAX = StatsData[SatStatsIdx["LTCbMAX"]]
     
-    generatePlot(sft.createPlotConfig2DLinesPoints(
+    generatePlot(sft.createPlotConfig2DLines(
         filePath, title, 
         PRN, [FCMAX,LTCbMAX], 
         "GPS-PRN", ["MAX FC[m]","MAX LTCb[m]"], 
@@ -234,7 +237,7 @@ def plotMaxLTCxyz(StatsData, yearDayText):
     LTCyMAX = StatsData[SatStatsIdx["LTCyMAX"]]
     LTCzMAX = StatsData[SatStatsIdx["LTCzMAX"]]
     
-    generatePlot(sft.createPlotConfig2DLinesPoints(
+    generatePlot(sft.createPlotConfig2DLines(
         filePath, title, 
         PRN, [LTCxMAX,LTCyMAX,LTCzMAX], 
         "GPS-PRN", ["MAX LTCx[m]","MAX LTCy[m]","MAX LTCz[m]"], 
@@ -250,7 +253,7 @@ def plotNMI(StatsData, yearDayText):
     PRN = StatsData[SatStatsIdx["PRN"]]    
     NMI = StatsData[SatStatsIdx["NMI"]]    
     
-    generatePlot(sft.createPlotConfig2DLinesPoints(
+    generatePlot(sft.createPlotConfig2DLines(
         filePath, title, 
         PRN, [NMI], 
         "GPS-PRN", ["NMIs"], 
@@ -268,7 +271,7 @@ def plotMON1(SatStatsTimeData, yearDayText):
     NMON = SatStatsTimeData[SatStatsTimeIdx["NMON"]]   
     DU = SatStatsTimeData[SatStatsTimeIdx["DU"]]   
     
-    conf = sft.createPlotConfig2DLinesPoints(
+    conf = sft.createPlotConfig2DLines(
         filePath, title, 
         HOD, [MON,NMON,DU], 
         "Hour of Day", ["MON","NOT-MON","DONT USE"], 
@@ -279,3 +282,22 @@ def plotMON1(SatStatsTimeData, yearDayText):
     conf["xLim"] = [0, 24]
     generatePlot(conf)
 
+def plotEntGpsOffset(SatStatsTimeData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}SAT_ENT_GPS_OFFSET_{yearDayText}_G123_50s.png' 
+    title = f"ENT-GPS EGNOS SIS {yearDayText}"    
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting Target columns    
+    HOD = SatStatsTimeData[SatStatsTimeIdx["SoD"]] / GnssConstants.S_IN_H  # Converting to hours
+    ENTGPS = SatStatsTimeData[SatStatsTimeIdx["ENT-GPS"]]        
+    
+    conf = sft.createPlotConfig2DLines(
+        filePath, title, 
+        HOD, [ENTGPS], 
+        "Hour of Day", ["ENT-GPES [m]"], 
+        ['y'], [','],
+        'upper right', [-0.2,0.2] )
+    
+    conf["xTicks"] = range(0, 25)
+    conf["xLim"] = [0, 24]
+    generatePlot(conf)
