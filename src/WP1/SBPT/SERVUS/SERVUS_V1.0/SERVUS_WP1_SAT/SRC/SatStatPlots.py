@@ -23,12 +23,10 @@ import sys, os
 Common = os.path.dirname(os.path.dirname(
     os.path.abspath(sys.argv[0]))) + '/COMMON'
 sys.path.insert(0, Common)
-from collections import OrderedDict
-from COMMON.Plots import generateLinesPlot, generatePlot
-from SatStatistics import SatStatsIdx
+from COMMON.Plots import generatePlot
 from COMMON import GnssConstants
-from pandas import read_csv
-from math import sqrt
+from SatStatistics import SatStatsIdx, SatInfoIdx, SatStatsTimeIdx
+import SatFunctions as sft
 import numpy as np
 
 # Define relative path
@@ -80,120 +78,25 @@ def plotSatStats(satStatsData, yearDayText):
 
     # Plot MAX NMI
     plotNMI(satStatsData, yearDayText)
-
-
-def readStatsFile(statisticsFilePath, columnNameList):
+    
+def plotSatStatsTime(SatStatsTimeData, yearDayText):
     """
-    Read specific columns from a statistics file and return a DataFrame.
+    Plot Satellite Statistics against time.
 
     Parameters:
-    - statisticsFilePath: Path to the statistics file.
-    - columnNameList: List of column names to be read.
+        SatStatsTimeData (DataFrame): DataFrame containing satellite information data.
+        yearDayText (str): Year day text for including in plot titles.
 
     Returns:
-    - StatsData containing the specified columns.
+        None
     """
-    # Read the specified columns from the file
-    #StatsData = read_csv(statisticsFilePath, delim_whitespace=True, skiprows=1, header=None, usecols=fixedColumnList)
-    StatsData = read_csv(statisticsFilePath, delim_whitespace=True, skiprows=1, header=None)
 
-    # Set column names based on the provided columnList    
-    #StatsData.columns = columnNameList
-
-    return StatsData
+    # Plot the instantaneous number of satellites monitored as a function of the hour of the day 
+    plotMON1(SatStatsTimeData, yearDayText)
 
 # ------------------------------------------------------------------------------------
 # INTERNAL FUNCTIONS 
 # ------------------------------------------------------------------------------------
-def createPlotConfig2DVerticalBars(filepath, title, xData, yDataList, xLabel, yLabels, colors, legPos, yOffset = [0,0]):
-    """
-    Creates a new Plot Configuration for plotting vertical 2D bars.
-    Y-axis: Multiple sets of data received from lists of lists
-    X-asis: A single set of data from a list
-
-    Parameters:
-        filepath (str): Path to save the plot figure.
-        title (str): Title of the plot figure.
-        xData (list): List of x-axis data.
-        yDataList (list): List of lists containing y-axis data sets.
-        xLabel (str): Label of x-axis data.
-        yLabels (list): List of labels for each y-axis data set.
-        colors (list): List of colors for each y-axis data set.
-        legPos (str): Position of the legend (example: 'upper left').
-        yOffset (list): List of y-axis offsets: [lowerOffset, upperOffset]
-    
-    Returns:
-        PlotConf(list): Configuration Data Structure for plotting Vertical 2D Bars with generatePlot()
-    """
-    PlotConf = {}
-    PlotConf["Type"] = "VerticalBar"
-    PlotConf["FigSize"] = (12, 6)
-    PlotConf["Title"] = title
-    PlotConf["xLabel"] = xLabel
-    PlotConf["xTicks"] = range(0, len(xData))
-    PlotConf["xLim"] = [-1, len(xData)]
-    minY = min([min(y) for y in yDataList])
-    maxY = max([max(y) for y in yDataList])
-    PlotConf["yLim"] = [minY + yOffset[0], maxY + yOffset[1]]
-    PlotConf["Grid"] = True    
-    PlotConf["LineWidth"] = 1
-    if legPos: PlotConf["ShowLegend"] = legPos
-    PlotConf["xData"] = {}
-    PlotConf["yData"] = {}    
-    PlotConf["Color"] = {}    
-    PlotConf["Path"] = filepath
-    for yLabel, yData, color in zip(yLabels, yDataList, colors):        
-        PlotConf["yData"][yLabel] = yData
-        PlotConf["xData"][yLabel] = xData
-        PlotConf["Color"][yLabel] = color        
-    
-    return PlotConf    
-
-def createPlotConfig2DLinesPoints(filepath, title, xData, yDataList, xLabel, yLabels, colors, markers, legPos, yOffset=[0, 0]):
-    """
-    Creates a new Plot Configuration for plotting 2D lines with points.
-    
-    Parameters:
-        filepath (str): Path to save the plot figure.
-        title (str): Title of the plot figure.
-        xData (list): List of x-axis data.
-        yDataList (list): List of lists containing y-axis data sets.
-        xLabel (str): Label of x-axis data.
-        yLabels (list): List of labels for each y-axis data set.
-        colors (list): List of colors for each y-axis data set.
-        markers (list): List of markers for each y-axis data set.
-        legPos (str): Position of the legend (example: 'upper left').
-        yOffset (list): List of y-axis offsets: [lowerOffset, upperOffset].
-
-    Returns:
-        PlotConf (dict): Configuration Data Structure for plotting 2D lines with points using generateLinesPlot().
-    """
-    PlotConf = {}
-    PlotConf["Type"] = "Lines"
-    PlotConf["FigSize"] = (12, 6)
-    PlotConf["Title"] = title
-    PlotConf["xLabel"] = xLabel
-    PlotConf["xTicks"] = range(0, len(xData))
-    PlotConf["xLim"] = [0, len(xData)-1]
-    minY = min([min(y) for y in yDataList])
-    maxY = max([max(y) for y in yDataList])
-    PlotConf["yLim"] = [minY + yOffset[0], maxY + yOffset[1]]
-    PlotConf["Grid"] = True
-    PlotConf["LineWidth"] = 1
-    if legPos: PlotConf["ShowLegend"] = legPos
-    PlotConf["xData"] = {}
-    PlotConf["yData"] = {}
-    PlotConf["Color"] = {}
-    PlotConf["Marker"] = {}
-    PlotConf["Path"] = filepath
-
-    for yLabel, yData, color, marker in zip(yLabels, yDataList, colors, markers):
-        PlotConf["yData"][yLabel] = yData
-        PlotConf["xData"][yLabel] = xData
-        PlotConf["Color"][yLabel] = color
-        PlotConf["Marker"][yLabel] = marker
-
-    return PlotConf
 
 def plotMonPercentage(StatsData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}SAT_MON_PERCENTAGE_{yearDayText}_G123_50s.png' 
@@ -204,24 +107,24 @@ def plotMonPercentage(StatsData, yearDayText):
     PRN = StatsData[SatStatsIdx["PRN"]]
     MON = StatsData[SatStatsIdx["MON"]]
     
-    generatePlot(createPlotConfig2DVerticalBars(
+    generatePlot(sft.createPlotConfig2DVerticalBars(
         filePath, title, PRN, [MON], "GPS-PRN", ["MON [%]"], ['y'],'upper left' , [-2,6]))
 
 def plotNTRANS(StatsData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}SAT_NTRANS_{yearDayText}_G123_50s.png' 
-    title = f"Number of Transitions MtoNM or MtoDU {yearDayText} G123 50s [%]"    
+    title = f"Number of Transitions MtoNM or MtoDU {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns
     PRN = StatsData[SatStatsIdx["PRN"]]
     NTRANS = StatsData[SatStatsIdx["NTRANS"]]
     
-    generatePlot(createPlotConfig2DVerticalBars(
+    generatePlot(sft.createPlotConfig2DVerticalBars(
         filePath, title, PRN, [NTRANS], "GPS-PRN", ["Number of Transitions"], ['y'],'upper right' , [-2,1]))
     
 def plotNRIMS(StatsData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}SAT_NRIMS_{yearDayText}_G123_50s.png' 
-    title = f"Minimun and Maximun Number of RIMS in view {yearDayText} G123 50s [%]"    
+    title = f"Minimun and Maximun Number of RIMS in view {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns
@@ -229,12 +132,12 @@ def plotNRIMS(StatsData, yearDayText):
     RIMSMIN = StatsData[SatStatsIdx["RIMS-MIN"]]
     RIMSMAX = StatsData[SatStatsIdx["RIMS-MAX"]]    
     
-    generatePlot(createPlotConfig2DVerticalBars(
+    generatePlot(sft.createPlotConfig2DVerticalBars(
         filePath, title, PRN, [RIMSMAX,RIMSMIN], "GPS-PRN", ["MAX-RIMS","MIN-RIMS"], ['y','g'],'upper left', [0,10] ))
 
 def plotRmsSreAcr(StatsData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}SAT_RMS_SRE_ACR_{yearDayText}_G123_50s.png' 
-    title = f"RMS of SREW Along/Cross/Radial along the day {yearDayText} G123 50s [%]"    
+    title = f"RMS of SREW Along/Cross/Radial along the day {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns
@@ -243,7 +146,7 @@ def plotRmsSreAcr(StatsData, yearDayText):
     SREcRMS = StatsData[SatStatsIdx["SREcRMS"]]
     SRErRMS = StatsData[SatStatsIdx["SRErRMS"]]    
     
-    generatePlot(createPlotConfig2DVerticalBars(
+    generatePlot(sft.createPlotConfig2DVerticalBars(
         filePath, title, 
         PRN, [SREaRMS,SREcRMS,SRErRMS], 
         "GPS-PRN", ["RMS SRE-A[m]","RMS SRE-C[m]","RMS SRE-R[m]"], 
@@ -251,14 +154,14 @@ def plotRmsSreAcr(StatsData, yearDayText):
 
 def plotRmsSreb(StatsData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}SAT_RMS_SRE_B_{yearDayText}_G123_50s.png' 
-    title = f"RMS of SRE-B Clock Error Component {yearDayText} G123 50s [%]"    
+    title = f"RMS of SRE-B Clock Error Component {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns
     PRN = StatsData[SatStatsIdx["PRN"]]
     SREbRMS = StatsData[SatStatsIdx["SREbRMS"]]       
     
-    generatePlot(createPlotConfig2DVerticalBars(
+    generatePlot(sft.createPlotConfig2DVerticalBars(
         filePath, title, 
         PRN, [SREbRMS], 
         "GPS-PRN", ["RMS SRE-B[m]"], 
@@ -266,7 +169,7 @@ def plotRmsSreb(StatsData, yearDayText):
 
 def plotSREW(StatsData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}SAT_SREW_{yearDayText}_G123_50s.png' 
-    title = f"RMS and Maximun Value of SRE at the WUL {yearDayText} G123 50s [%]"    
+    title = f"RMS and Maximun Value of SRE at the WUL {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns
@@ -274,12 +177,12 @@ def plotSREW(StatsData, yearDayText):
     SREWRMS = StatsData[SatStatsIdx["SREWRMS"]]
     SREWMAX = StatsData[SatStatsIdx["SREWMAX"]]    
     
-    generatePlot(createPlotConfig2DVerticalBars(
+    generatePlot(sft.createPlotConfig2DVerticalBars(
         filePath, title, PRN, [SREWMAX,SREWRMS], "GPS-PRN", ["MAX SREW[m]","RMS SREW[m]"], ['y','b'],'upper left', [0,0.4] ))
 
 def plotSFLT(StatsData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}SAT_SFLT_{yearDayText}_G123_50s.png' 
-    title = f"Maximun and Minimun SigmaFLT (=SigmaUDRE) {yearDayText} G123 50s [%]"    
+    title = f"Maximun and Minimun SigmaFLT (=SigmaUDRE) {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns
@@ -287,12 +190,12 @@ def plotSFLT(StatsData, yearDayText):
     SFLTMIN = StatsData[SatStatsIdx["SFLTMIN"]]
     SFLTMAX = StatsData[SatStatsIdx["SFLTMAX"]]    
     
-    generatePlot(createPlotConfig2DVerticalBars(
+    generatePlot(sft.createPlotConfig2DVerticalBars(
         filePath, title, PRN, [SFLTMAX,SFLTMIN], "GPS-PRN", ["MAX SFLT[m]","MIN SFLT[m]"], ['y','b'],'upper left', [0,0.7] ))
 
 def plotSIW(StatsData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}SAT_SIW_{yearDayText}_G123_50s.png' 
-    title = f"Maximun Satellite Safety Index SI at WUL SREW/5.33UDRE {yearDayText} G123 50s [%]"    
+    title = f"Maximun Satellite Safety Index SI at WUL SREW/5.33UDRE {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns
@@ -300,12 +203,12 @@ def plotSIW(StatsData, yearDayText):
     SIMAX = StatsData[SatStatsIdx["SIMAX"]]    
     SILIM = [1 for l in SIMAX]
     
-    generatePlot(createPlotConfig2DVerticalBars(
+    generatePlot(sft.createPlotConfig2DVerticalBars(
         filePath, title, PRN, [SIMAX,SILIM], "GPS-PRN", ["MAX SI[m]","LIMIT"], ['y','b'],'upper left', [0,0.7] ))
 
 def plotMaxFcAndLTCb(StatsData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}SAT_MAX_FC_LTCb_{yearDayText}_G123_50s.png' 
-    title = f"Maximun Satellite Clock Fast and Long Term Corrections {yearDayText} G123 50s [%]"    
+    title = f"Maximun Satellite Clock Fast and Long Term Corrections {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns
@@ -313,7 +216,7 @@ def plotMaxFcAndLTCb(StatsData, yearDayText):
     FCMAX = StatsData[SatStatsIdx["FCMAX"]]
     LTCbMAX = StatsData[SatStatsIdx["LTCbMAX"]]
     
-    generatePlot(createPlotConfig2DLinesPoints(
+    generatePlot(sft.createPlotConfig2DLinesPoints(
         filePath, title, 
         PRN, [FCMAX,LTCbMAX], 
         "GPS-PRN", ["MAX FC[m]","MAX LTCb[m]"], 
@@ -322,7 +225,7 @@ def plotMaxFcAndLTCb(StatsData, yearDayText):
 
 def plotMaxLTCxyz(StatsData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}SAT_MAX_LTCxyz_{yearDayText}_G123_50s.png' 
-    title = f"Maximun Satellite LTC-XYZ {yearDayText} G123 50s [%]"    
+    title = f"Maximun Satellite LTC-XYZ {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns
@@ -331,7 +234,7 @@ def plotMaxLTCxyz(StatsData, yearDayText):
     LTCyMAX = StatsData[SatStatsIdx["LTCyMAX"]]
     LTCzMAX = StatsData[SatStatsIdx["LTCzMAX"]]
     
-    generatePlot(createPlotConfig2DLinesPoints(
+    generatePlot(sft.createPlotConfig2DLinesPoints(
         filePath, title, 
         PRN, [LTCxMAX,LTCyMAX,LTCzMAX], 
         "GPS-PRN", ["MAX LTCx[m]","MAX LTCy[m]","MAX LTCz[m]"], 
@@ -340,17 +243,39 @@ def plotMaxLTCxyz(StatsData, yearDayText):
 
 def plotNMI(StatsData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}SAT_NMIs_{yearDayText}_G123_50s.png' 
-    title = f"Number of MIs {yearDayText} G123 50s [%]"    
+    title = f"Number of MIs {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns
     PRN = StatsData[SatStatsIdx["PRN"]]    
     NMI = StatsData[SatStatsIdx["NMI"]]    
     
-    generatePlot(createPlotConfig2DLinesPoints(
+    generatePlot(sft.createPlotConfig2DLinesPoints(
         filePath, title, 
         PRN, [NMI], 
         "GPS-PRN", ["NMIs"], 
         ['y'], ['_'],
         'upper right', [-0.05,1] ))
+
+def plotMON1(SatStatsTimeData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}SAT_MON1_{yearDayText}_G123_50s.png' 
+    title = f"Number of Satellites Monitored EGNOS SIS {yearDayText}"    
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting Target columns    
+    HOD = SatStatsTimeData[SatStatsTimeIdx["SoD"]] / GnssConstants.S_IN_H  # Converting to hours
+    MON = SatStatsTimeData[SatStatsTimeIdx["MON"]]    
+    NMON = SatStatsTimeData[SatStatsTimeIdx["NMON"]]   
+    DU = SatStatsTimeData[SatStatsTimeIdx["DU"]]   
+    
+    conf = sft.createPlotConfig2DLinesPoints(
+        filePath, title, 
+        HOD, [MON,NMON,DU], 
+        "Hour of Day", ["MON","NOT-MON","DONT USE"], 
+        ['y','g','b'], [',',',',','],
+        'upper right', [-0.1,5] )
+    
+    conf["xTicks"] = range(0, 25)
+    conf["xLim"] = [0, 24]
+    generatePlot(conf)
 

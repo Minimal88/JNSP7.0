@@ -19,6 +19,8 @@
 # Import External and Internal functions and Libraries
 #----------------------------------------------------------------------
 import sys, os
+
+from pandas import read_csv
 # Add path to find all modules
 Common = os.path.dirname(os.path.dirname(
     os.path.abspath(sys.argv[0]))) + '/COMMON'
@@ -38,6 +40,8 @@ SatInfoIdx = copy.deepcopy(stat.SatInfoIdx)
 # Define SAT STATISTICS file Columns
 SatStatsIdx = copy.deepcopy(stat.SatStatsIdx)
 
+SatStatsTimeIdx = copy.deepcopy(stat.SatStatsTimeIdx)
+
 # Define Satidistics Output file format list
 StatsOutputFormatList = stat.StatsOutputFormat.split()
 
@@ -49,6 +53,7 @@ def computeSatStats(satFile, EntGpsFile, satStatsFile):
     # Initialize Variables
     EndOfFile = False
     EpochInfo = []
+    delim = " "
 
     # Open SAT INFO file
     with open(satFile, 'r') as fsat:
@@ -58,9 +63,10 @@ def computeSatStats(satFile, EntGpsFile, satStatsFile):
 
         # Open ENT-GPS Offset output file
         with open(EntGpsFile, 'w') as fEntGps:
-
             # Write Header of Output ENT-GPS file
-            fEntGps.write("#SOD\tENT-GPS\n")
+            entGpsHeader = delim.join(SatStatsTimeIdx) + "\n"
+            #fEntGps.write("#SOD\tENT-GPS\tNMON\n")
+            fEntGps.write(entGpsHeader)
 
             # Open Output File Satellite Statistics file
             with open(satStatsFile, 'w') as fOut:
@@ -81,11 +87,13 @@ def computeSatStats(satFile, EntGpsFile, satStatsFile):
                     # If EpochInfor is not Null
                     if EpochInfo != []:
                         # Compute ENT-GPS and All SREs
-                        ent_gps = stat.computeEntGpsAndSREb(EpochInfo, InterOutputs)
+                        entGps = stat.computeEntGpsAndSREb(EpochInfo, InterOutputs)
+                        cntMon, cntNotMon, cntDu = stat.countMonitoredSatsInEpoch(EpochInfo)
+                        
                         sod = EpochInfo[0][SatInfoIdx["SoD"]]
                         
                         # Write ENT-GPS Offset file
-                        fEntGps.write("%5s %10.4f\n" % (sod,ent_gps))                    
+                        fEntGps.write("%5s %10.4f %d %d %d\n" % (sod,entGps,cntMon, cntNotMon, cntDu))                    
                         
                         # Loop over all Satellites Information in Epoch
                         # --------------------------------------------------
@@ -102,8 +110,7 @@ def computeSatStats(satFile, EntGpsFile, satStatsFile):
                 
                 # Write Statistics File
                 # ----------------------------------------------------------
-                # Write Header of Output files
-                delim = " "
+                # Write Header of Output files                
                 header_string = delim.join(SatStatsIdx) + "\n"
                 #header_string = "PRN	  MON	 RIMS-MIN	RIMS-MAX SREaRMS   SREcRMS     SRErRMS	   SREbRMS	   SREWRMS	   SREWMAX	   SFLTMAX	   SFLTMIN	   SIMAX	   FCMAX	   LTCbMAX	   LTCxMAX	   LTCyMAX	   LTCzMAX	   NMI	       NTRANS\n"
                 fOut.write(header_string)
@@ -124,6 +131,115 @@ def computeSatStats(satFile, EntGpsFile, satStatsFile):
             # End of with open(satStatsFile, 'w') as fOut:
         # End of with open(EntGpsFile, 'w') as fEntGps:
     # End of with open(satFile, 'r') as f:
+
+def readDataFile(statisticsFilePath, columnNameList):
+    """
+    Read specific columns from a statistics file and return a DataFrame.
+
+    Parameters:
+    - statisticsFilePath: Path to the statistics file.
+    - columnNameList: List of column names to be read.
+
+    Returns:
+    - FetchedData containing the specified columns.
+    """
+    # Read the specified columns from the file
+    FetchedData = read_csv(statisticsFilePath, delim_whitespace=True, skiprows=1, header=None, usecols=columnNameList)    
+
+    # Set column names based on the provided columnList    
+    #FetchedData.columns = columnNameList
+
+    return FetchedData
+
+def createPlotConfig2DVerticalBars(filepath, title, xData, yDataList, xLabel, yLabels, colors, legPos, yOffset = [0,0]):
+    """
+    Creates a new Plot Configuration for plotting vertical 2D bars.
+    Y-axis: Multiple sets of data received from lists of lists
+    X-asis: A single set of data from a list
+
+    Parameters:
+        filepath (str): Path to save the plot figure.
+        title (str): Title of the plot figure.
+        xData (list): List of x-axis data.
+        yDataList (list): List of lists containing y-axis data sets.
+        xLabel (str): Label of x-axis data.
+        yLabels (list): List of labels for each y-axis data set.
+        colors (list): List of colors for each y-axis data set.
+        legPos (str): Position of the legend (example: 'upper left').
+        yOffset (list): List of y-axis offsets: [lowerOffset, upperOffset]
+    
+    Returns:
+        PlotConf(list): Configuration Data Structure for plotting Vertical 2D Bars with generatePlot()
+    """
+    PlotConf = {}
+    PlotConf["Type"] = "VerticalBar"
+    PlotConf["FigSize"] = (12, 6)
+    PlotConf["Title"] = title
+    PlotConf["xLabel"] = xLabel
+    PlotConf["xTicks"] = range(0, len(xData))
+    PlotConf["xLim"] = [-1, len(xData)]
+    minY = min([min(y) for y in yDataList])
+    maxY = max([max(y) for y in yDataList])
+    PlotConf["yLim"] = [minY + yOffset[0], maxY + yOffset[1]]
+    PlotConf["Grid"] = True    
+    PlotConf["LineWidth"] = 1
+    if legPos: PlotConf["ShowLegend"] = legPos
+    PlotConf["xData"] = {}
+    PlotConf["yData"] = {}    
+    PlotConf["Color"] = {}    
+    PlotConf["Path"] = filepath
+    for yLabel, yData, color in zip(yLabels, yDataList, colors):        
+        PlotConf["yData"][yLabel] = yData
+        PlotConf["xData"][yLabel] = xData
+        PlotConf["Color"][yLabel] = color        
+    
+    return PlotConf
+
+def createPlotConfig2DLinesPoints(filepath, title, xData, yDataList, xLabel, yLabels, colors, markers, legPos, yOffset=[0, 0]):
+    """
+    Creates a new Plot Configuration for plotting 2D lines with points.
+    
+    Parameters:
+        filepath (str): Path to save the plot figure.
+        title (str): Title of the plot figure.
+        xData (list): List of x-axis data.
+        yDataList (list): List of lists containing y-axis data sets.
+        xLabel (str): Label of x-axis data.
+        yLabels (list): List of labels for each y-axis data set.
+        colors (list): List of colors for each y-axis data set.
+        markers (list): List of markers for each y-axis data set.
+        legPos (str): Position of the legend (example: 'upper left').
+        yOffset (list): List of y-axis offsets: [lowerOffset, upperOffset].
+
+    Returns:
+        PlotConf (dict): Configuration Data Structure for plotting 2D lines with points using generateLinesPlot().
+    """
+    PlotConf = {}
+    PlotConf["Type"] = "Lines"
+    PlotConf["FigSize"] = (12, 6)
+    PlotConf["Title"] = title
+    PlotConf["xLabel"] = xLabel
+    PlotConf["xTicks"] = range(0, len(xData))
+    PlotConf["xLim"] = [0, len(xData)-1]
+    minY = min([min(y) for y in yDataList])
+    maxY = max([max(y) for y in yDataList])
+    PlotConf["yLim"] = [minY + yOffset[0], maxY + yOffset[1]]
+    PlotConf["Grid"] = True
+    PlotConf["LineWidth"] = 1
+    if legPos: PlotConf["ShowLegend"] = legPos
+    PlotConf["xData"] = {}
+    PlotConf["yData"] = {}
+    PlotConf["Color"] = {}
+    PlotConf["Marker"] = {}
+    PlotConf["Path"] = filepath
+
+    for yLabel, yData, color, marker in zip(yLabels, yDataList, colors, markers):
+        PlotConf["yData"][yLabel] = yData
+        PlotConf["xData"][yLabel] = xData
+        PlotConf["Color"][yLabel] = color
+        PlotConf["Marker"][yLabel] = marker
+
+    return PlotConf
 
 # ------------------------------------------------------------------------------------
 # INTERNAL FUNCTIONS 

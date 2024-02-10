@@ -83,6 +83,15 @@ SatStatsIdx = dict([
     ("NTRANS", 19)
 ])
 
+# Define STATISTICS TIME file Columns
+SatStatsTimeIdx = dict([
+    ("SoD", 0),
+    ("ENT-GPS", 1),
+    ("MON", 2),         # Monitored
+    ("NMON", 3),        # Not Monitored
+    ("DU", 4),          # Dont Use
+])
+
 # Define Satidistics Output file format list
 StatsOutputFormat = "%s %6.2f %4d %6d %10.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %4d"
 
@@ -199,6 +208,30 @@ def projectVector(Vector, Direction):
     UnitaryVector = Direction / np.linalg.norm(Direction)
 
     return Vector.dot(UnitaryVector)
+
+def generateVectorFromSatInfo(sat_info, ColTagX, ColTagY, ColTagZ):
+    """
+    This function generates a vector given the column tags.
+
+    Parameters:
+    sat_info (dict): The dictionary containing satellite information.    
+    ColTagX (str): The column tag for the x-component.
+    ColTagY (str): The column tag for the y-component.
+    ColTagZ (str): The column tag for the z-component.
+
+    Returns:
+    np.array: The generated vector.
+    """
+
+    # Get the components of the vector
+    x = float(sat_info[SatInfoIdx[ColTagX]])
+    y = float(sat_info[SatInfoIdx[ColTagY]])
+    z = float(sat_info[SatInfoIdx[ColTagZ]])
+
+    # Get the vector
+    vector = np.array([x, y, z])
+
+    return vector
 
 def updateInterOutputs(InterOutputs, SatLabel, UpdateDict):
     """
@@ -338,7 +371,6 @@ def computeEntGpsAndSREb(epochInfo, interOutputs):
     DeltaT = 0
     PosPrev = np.array([0, 0, 0])  # Assuming initial position is [0, 0, 0]
     
-    #for sat_info in epoch_info:
     for satInfo in epochInfo:
         prn = satInfo[SatInfoIdx["PRN"]]
         
@@ -382,27 +414,17 @@ def computeEntGpsAndSREb(epochInfo, interOutputs):
 
     return EntGps  
 
-def generateVectorFromSatInfo(sat_info, ColTagX, ColTagY, ColTagZ):
-    """
-    This function generates a vector given the column tags.
+def countMonitoredSatsInEpoch(epochInfo):
+    cntMon = 0
+    cntNotMon = 0
+    cntDu = 0
+    for satInfo in epochInfo:
+        if(satInfo[SatInfoIdx["MONSTAT"]] == '1'): 
+            cntMon += 1
+        elif (satInfo[SatInfoIdx["MONSTAT"]] == '0'):
+            cntNotMon += 1
+        elif (satInfo[SatInfoIdx["MONSTAT"]] == '-1'):
+            cntDu += 1
 
-    Parameters:
-    sat_info (dict): The dictionary containing satellite information.    
-    ColTagX (str): The column tag for the x-component.
-    ColTagY (str): The column tag for the y-component.
-    ColTagZ (str): The column tag for the z-component.
-
-    Returns:
-    np.array: The generated vector.
-    """
-
-    # Get the components of the vector
-    x = float(sat_info[SatInfoIdx[ColTagX]])
-    y = float(sat_info[SatInfoIdx[ColTagY]])
-    z = float(sat_info[SatInfoIdx[ColTagZ]])
-
-    # Get the vector
-    vector = np.array([x, y, z])
-
-    return vector
     
+    return cntMon, cntNotMon, cntDu

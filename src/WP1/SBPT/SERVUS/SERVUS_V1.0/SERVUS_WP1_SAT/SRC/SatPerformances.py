@@ -29,10 +29,10 @@
 from COMMON.Dates import convertYearMonthDay2JulianDay
 from COMMON.Dates import convertJulianDay2YearMonthDay
 from COMMON.Dates import convertYearMonthDay2Doy
-from SatFunctions import computeSatStats
-from SatStatPlots  import plotSatStats, readStatsFile
-from SatStatistics import SatStatsIdx
+from SatFunctions import computeSatStats, readDataFile
+from SatStatistics import SatStatsIdx, SatStatsTimeIdx, SatInfoIdx
 from collections import OrderedDict
+import SatStatPlots  as ssPlot
 from yaml import dump
 import sys, os
 
@@ -123,42 +123,48 @@ for Jd in range(Conf["INI_DATE_JD"], Conf["END_DATE_JD"] + 1):
     yearDayText = 'Y%02dD%03d' % (Year % 100, Doy)
 
     # Define the full path and name to the SAT INFO file to read
-    SatFile = Scen + \
+    SatInfoFilePath = Scen + \
         '/OUT/SAT/' + 'SAT_INFO_%s_G123_%ss.dat' % \
             (yearDayText, Conf["TSTEP"])
 
     # Define the name of the ENT-GPS instantaneous file
-    EntGpsFile = Scen + \
+    EntGpsFilePath = Scen + \
         '/OUT/SAT/' + 'ENTGPS_%s_G123_%ss.dat' % \
             (yearDayText, Conf["TSTEP"])
 
     # Define the name of the Output file Statistics
-    SatStatsFile = SatFile.replace("INFO", "STAT")
+    SatStatsFile = SatInfoFilePath.replace("INFO", "STAT")
 
     # Display Message
     print('\n*** Processing Day of Year: ', Doy, '...***')
 
     # Display Message
-    print('1. Processing file:', SatFile)
+    print('1. Processing file:', SatInfoFilePath)
     
     # Compute Satellite Statistics  FILE
-    computeSatStats(SatFile, EntGpsFile, SatStatsFile)
+    computeSatStats(SatInfoFilePath, EntGpsFilePath, SatStatsFile)
 
     # Display Creation message
-    print('2. Created files:','\n', SatStatsFile,'\n', EntGpsFile)
+    print('2. Created files:','\n', SatStatsFile,'\n', EntGpsFilePath)
     
     # Display Reading Message
-    print('3. Reading file:', SatStatsFile)
-    
-    # Read Statistics file
-    columnList = list(SatStatsIdx.keys())    
-    satStatsData = readStatsFile(SatStatsFile, SatStatsIdx.keys())
+    print('3. Reading file:', SatStatsFile)    
+    # Read Statistics file    
+    satStatsData = readDataFile(SatStatsFile, SatStatsIdx.values())
+
+    # Display Reading Message
+    print('4. Reading file:', SatInfoFilePath)
+    # Read Sat Info file    
+    satStatsTimeData = readDataFile(EntGpsFilePath, SatStatsTimeIdx.values())
 
     # Display Generating figures Message
-    print('4. Generating Figures...\n')
+    print('5. Generating Figures...\n')
     
-    # Generate Satellite Performances figures
-    plotSatStats(satStatsData, yearDayText)
+    # Generate Satellite Statistics figures
+    ssPlot.plotSatStats(satStatsData, yearDayText)
+    
+    # Generate Satellite Information figures
+    ssPlot.plotSatStatsTime(satStatsTimeData, yearDayText)
 
 
 print('------------------------------------')
