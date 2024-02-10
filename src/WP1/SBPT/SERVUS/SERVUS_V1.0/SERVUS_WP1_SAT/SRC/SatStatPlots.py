@@ -78,6 +78,9 @@ def plotSatStats(satStatsData, yearDayText):
     # Plot MAX LTCxyz
     plotMaxLTCxyz(satStatsData, yearDayText)
 
+    # Plot MAX NMI
+    plotNMI(satStatsData, yearDayText)
+
 
 def readStatsFile(statisticsFilePath, columnNameList):
     """
@@ -334,4 +337,20 @@ def plotMaxLTCxyz(StatsData, yearDayText):
         "GPS-PRN", ["MAX LTCx[m]","MAX LTCy[m]","MAX LTCz[m]"], 
         ['y','b','g'], ['s','s','s'],
         'upper right', [-0.5,0.7] ))
+
+def plotNMI(StatsData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}SAT_NMIs_{yearDayText}_G123_50s.png' 
+    title = f"Number of MIs {yearDayText} G123 50s [%]"    
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting Target columns
+    PRN = StatsData[SatStatsIdx["PRN"]]    
+    NMI = StatsData[SatStatsIdx["NMI"]]    
+    
+    generatePlot(createPlotConfig2DLinesPoints(
+        filePath, title, 
+        PRN, [NMI], 
+        "GPS-PRN", ["NMIs"], 
+        ['y'], ['_'],
+        'upper right', [-0.05,1] ))
 
