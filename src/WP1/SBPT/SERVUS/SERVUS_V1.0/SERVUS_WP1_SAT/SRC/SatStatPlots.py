@@ -23,10 +23,10 @@ import sys, os
 Common = os.path.dirname(os.path.dirname(
     os.path.abspath(sys.argv[0]))) + '/COMMON'
 sys.path.insert(0, Common)
-from COMMON.Plots import generatePlot
+import COMMON.Plots as plt
 from COMMON import GnssConstants
 from SatStatistics import SatStatsIdx, SatInfoIdx, SatStatsTimeIdx
-import SatFunctions as sft
+from SatFunctions import readDataFile
 import numpy as np
 
 # Define relative path
@@ -79,12 +79,13 @@ def plotSatStats(satStatsData, yearDayText):
     # Plot MAX NMI
     plotNMI(satStatsData, yearDayText)
     
-def plotSatStatsTime(SatStatsTimeData, yearDayText):
+def plotSatStatsTime(SatStatsTimeData, SatInfoFilePath, yearDayText):
     """
     Plot Satellite Statistics against time.
 
     Parameters:
         SatStatsTimeData (DataFrame): DataFrame containing satellite information data.
+        SatInfoFilePath (str): File Path
         yearDayText (str): Year day text for including in plot titles.
 
     Returns:
@@ -93,6 +94,14 @@ def plotSatStatsTime(SatStatsTimeData, yearDayText):
 
     # Plot the instantaneous number of satellites monitored as a function of the hour of the day 
     plotMON1(SatStatsTimeData, yearDayText)
+
+    # Plot the satellites monitoring windows as a function of the hour of the day
+    SatInfoData =readDataFile(SatInfoFilePath,[
+        SatInfoIdx["SoD"],
+        SatInfoIdx["PRN"],
+        SatInfoIdx["MONSTAT"],
+        SatInfoIdx["NRIMS"]])
+    plotMON2(SatInfoData, yearDayText)
 
     #Plot the ENT-GPS Offset along the day
     plotEntGpsOffset(SatStatsTimeData, yearDayText)
@@ -110,7 +119,7 @@ def plotMonPercentage(StatsData, yearDayText):
     PRN = StatsData[SatStatsIdx["PRN"]]
     MON = StatsData[SatStatsIdx["MON"]]
     
-    generatePlot(sft.createPlotConfig2DVerticalBars(
+    plt.generatePlot(plt.createPlotConfig2DVerticalBars(
         filePath, title, PRN, [MON], "GPS-PRN", ["MON [%]"], ['y'],'upper left' , [-2,6]))
 
 def plotNTRANS(StatsData, yearDayText):
@@ -122,7 +131,7 @@ def plotNTRANS(StatsData, yearDayText):
     PRN = StatsData[SatStatsIdx["PRN"]]
     NTRANS = StatsData[SatStatsIdx["NTRANS"]]
     
-    generatePlot(sft.createPlotConfig2DVerticalBars(
+    plt.generatePlot(plt.createPlotConfig2DVerticalBars(
         filePath, title, PRN, [NTRANS], "GPS-PRN", ["Number of Transitions"], ['y'],'upper right' , [-2,1]))
     
 def plotNRIMS(StatsData, yearDayText):
@@ -135,7 +144,7 @@ def plotNRIMS(StatsData, yearDayText):
     RIMSMIN = StatsData[SatStatsIdx["RIMS-MIN"]]
     RIMSMAX = StatsData[SatStatsIdx["RIMS-MAX"]]    
     
-    generatePlot(sft.createPlotConfig2DVerticalBars(
+    plt.generatePlot(plt.createPlotConfig2DVerticalBars(
         filePath, title, PRN, [RIMSMAX,RIMSMIN], "GPS-PRN", ["MAX-RIMS","MIN-RIMS"], ['y','g'],'upper left', [0,10] ))
 
 def plotRmsSreAcr(StatsData, yearDayText):
@@ -149,7 +158,7 @@ def plotRmsSreAcr(StatsData, yearDayText):
     SREcRMS = StatsData[SatStatsIdx["SREcRMS"]]
     SRErRMS = StatsData[SatStatsIdx["SRErRMS"]]    
     
-    generatePlot(sft.createPlotConfig2DVerticalBars(
+    plt.generatePlot(plt.createPlotConfig2DVerticalBars(
         filePath, title, 
         PRN, [SREaRMS,SREcRMS,SRErRMS], 
         "GPS-PRN", ["RMS SRE-A[m]","RMS SRE-C[m]","RMS SRE-R[m]"], 
@@ -164,7 +173,7 @@ def plotRmsSreb(StatsData, yearDayText):
     PRN = StatsData[SatStatsIdx["PRN"]]
     SREbRMS = StatsData[SatStatsIdx["SREbRMS"]]       
     
-    generatePlot(sft.createPlotConfig2DVerticalBars(
+    plt.generatePlot(plt.createPlotConfig2DVerticalBars(
         filePath, title, 
         PRN, [SREbRMS], 
         "GPS-PRN", ["RMS SRE-B[m]"], 
@@ -180,7 +189,7 @@ def plotSREW(StatsData, yearDayText):
     SREWRMS = StatsData[SatStatsIdx["SREWRMS"]]
     SREWMAX = StatsData[SatStatsIdx["SREWMAX"]]    
     
-    generatePlot(sft.createPlotConfig2DVerticalBars(
+    plt.generatePlot(plt.createPlotConfig2DVerticalBars(
         filePath, title, PRN, [SREWMAX,SREWRMS], "GPS-PRN", ["MAX SREW[m]","RMS SREW[m]"], ['y','b'],'upper left', [0,0.4] ))
 
 def plotSFLT(StatsData, yearDayText):
@@ -193,7 +202,7 @@ def plotSFLT(StatsData, yearDayText):
     SFLTMIN = StatsData[SatStatsIdx["SFLTMIN"]]
     SFLTMAX = StatsData[SatStatsIdx["SFLTMAX"]]    
     
-    generatePlot(sft.createPlotConfig2DVerticalBars(
+    plt.generatePlot(plt.createPlotConfig2DVerticalBars(
         filePath, title, PRN, [SFLTMAX,SFLTMIN], "GPS-PRN", ["MAX SFLT[m]","MIN SFLT[m]"], ['y','b'],'upper left', [0,0.7] ))
 
 def plotSIW(StatsData, yearDayText):
@@ -206,7 +215,7 @@ def plotSIW(StatsData, yearDayText):
     SIMAX = StatsData[SatStatsIdx["SIMAX"]]    
     SILIM = [1 for l in SIMAX]
     
-    generatePlot(sft.createPlotConfig2DVerticalBars(
+    plt.generatePlot(plt.createPlotConfig2DVerticalBars(
         filePath, title, PRN, [SIMAX,SILIM], "GPS-PRN", ["MAX SI[m]","LIMIT"], ['y','b'],'upper left', [0,0.7] ))
 
 def plotMaxFcAndLTCb(StatsData, yearDayText):
@@ -219,7 +228,7 @@ def plotMaxFcAndLTCb(StatsData, yearDayText):
     FCMAX = StatsData[SatStatsIdx["FCMAX"]]
     LTCbMAX = StatsData[SatStatsIdx["LTCbMAX"]]
     
-    generatePlot(sft.createPlotConfig2DLines(
+    plt.generatePlot(plt.createPlotConfig2DLines(
         filePath, title, 
         PRN, [FCMAX,LTCbMAX], 
         "GPS-PRN", ["MAX FC[m]","MAX LTCb[m]"], 
@@ -237,7 +246,7 @@ def plotMaxLTCxyz(StatsData, yearDayText):
     LTCyMAX = StatsData[SatStatsIdx["LTCyMAX"]]
     LTCzMAX = StatsData[SatStatsIdx["LTCzMAX"]]
     
-    generatePlot(sft.createPlotConfig2DLines(
+    plt.generatePlot(plt.createPlotConfig2DLines(
         filePath, title, 
         PRN, [LTCxMAX,LTCyMAX,LTCzMAX], 
         "GPS-PRN", ["MAX LTCx[m]","MAX LTCy[m]","MAX LTCz[m]"], 
@@ -253,7 +262,7 @@ def plotNMI(StatsData, yearDayText):
     PRN = StatsData[SatStatsIdx["PRN"]]    
     NMI = StatsData[SatStatsIdx["NMI"]]    
     
-    generatePlot(sft.createPlotConfig2DLines(
+    plt.generatePlot(plt.createPlotConfig2DLines(
         filePath, title, 
         PRN, [NMI], 
         "GPS-PRN", ["NMIs"], 
@@ -271,16 +280,45 @@ def plotMON1(SatStatsTimeData, yearDayText):
     NMON = SatStatsTimeData[SatStatsTimeIdx["NMON"]]   
     DU = SatStatsTimeData[SatStatsTimeIdx["DU"]]   
     
-    conf = sft.createPlotConfig2DLines(
+    PlotConf = plt.createPlotConfig2DLines(
         filePath, title, 
         HOD, [MON,NMON,DU], 
         "Hour of Day", ["MON","NOT-MON","DONT USE"], 
         ['y','g','b'], [',',',',','],
         'upper right', [-0.1,5] )
     
-    conf["xTicks"] = range(0, 25)
-    conf["xLim"] = [0, 24]
-    generatePlot(conf)
+    PlotConf["xTicks"] = range(0, 25)
+    PlotConf["xLim"] = [0, 24]
+    plt.generatePlot(PlotConf)
+
+
+# Plot the satellites monitoring windows as a function of the hour of the day
+def plotMON2(SatInfoData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}SAT_MON2_{yearDayText}_G123_50s.png' 
+    title = f"Satellites Monitoring EGNOS SIS {yearDayText}"    
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting Target columns    
+    HOD = SatInfoData[SatInfoIdx["SoD"]] / GnssConstants.S_IN_H  # Converting to hours
+    PRN = SatInfoData[SatInfoIdx["PRN"]]    
+    MONSTAT = SatInfoData[SatInfoIdx["MONSTAT"]]    
+    NRIMS = SatInfoData[SatInfoIdx["NRIMS"]]    
+
+    filtered_nrims = [nrims_value if monstat_value == 1 else -1000 for monstat_value, nrims_value in zip(MONSTAT, NRIMS)]
+
+    
+    PlotConf = plt.createPlotConfig2DLinesColorBar(
+        filePath, title, 
+        HOD, PRN, filtered_nrims,                  # xData, yData, zData 
+        "Hour of Day", "GPS-PRN", "Number of RIMS",     # xLabel, yLabel, zLabel 
+        'y', '.' )  
+    
+    PlotConf["xTicks"] = range(0, 25)
+    PlotConf["xLim"] = [0, 24]
+    PlotConf["yTicks"] = range(32)
+    PlotConf["yLim"] = [0, 31]    
+    
+    plt.generatePlot(PlotConf)
 
 def plotEntGpsOffset(SatStatsTimeData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}SAT_ENT_GPS_OFFSET_{yearDayText}_G123_50s.png' 
@@ -291,13 +329,13 @@ def plotEntGpsOffset(SatStatsTimeData, yearDayText):
     HOD = SatStatsTimeData[SatStatsTimeIdx["SoD"]] / GnssConstants.S_IN_H  # Converting to hours
     ENTGPS = SatStatsTimeData[SatStatsTimeIdx["ENT-GPS"]]        
     
-    conf = sft.createPlotConfig2DLines(
+    PlotConf = plt.createPlotConfig2DLines(
         filePath, title, 
         HOD, [ENTGPS], 
         "Hour of Day", ["ENT-GPES [m]"], 
         ['y'], [','],
         'upper right', [-0.2,0.2] )
     
-    conf["xTicks"] = range(0, 25)
-    conf["xLim"] = [0, 24]
-    generatePlot(conf)
+    PlotConf["xTicks"] = range(0, 25)
+    PlotConf["xLim"] = [0, 24]
+    plt.generatePlot(PlotConf)

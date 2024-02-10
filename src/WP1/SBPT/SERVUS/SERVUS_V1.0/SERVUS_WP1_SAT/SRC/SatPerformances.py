@@ -160,11 +160,11 @@ for Jd in range(Conf["INI_DATE_JD"], Conf["END_DATE_JD"] + 1):
     # Display Generating figures Message
     print('5. Generating Figures...\n')
     
-    # Generate Satellite Statistics figures
+    # Generate Satellite Statistics figures   
     ssPlot.plotSatStats(satStatsData, yearDayText)
     
-    # Generate Satellite Information figures
-    ssPlot.plotSatStatsTime(satStatsTimeData, yearDayText)
+    # Generate Satellite Information figures    
+    ssPlot.plotSatStatsTime(satStatsTimeData, SatInfoFilePath, yearDayText)
 
 
 print('------------------------------------')
