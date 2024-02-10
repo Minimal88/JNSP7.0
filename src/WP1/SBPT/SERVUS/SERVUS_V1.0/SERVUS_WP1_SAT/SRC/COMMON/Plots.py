@@ -310,7 +310,7 @@ def createPlotConfig2DLines(filepath, title, xData, yDataList, xLabel, yLabels, 
         PlotConf["xTicks"] = range(0, len(xData))
         PlotConf["xLim"] = [0, len(xData)-1]
         minY = min([min(y) for y in yDataList])
-        maxY = max([max(y) for y in yDataList])
+        maxY = max([max(y) for y in yDataList])        
         PlotConf["yLim"] = [minY + yOffset[0], maxY + yOffset[1]]    
     PlotConf["Grid"] = True
     PlotConf["LineWidth"] = 1    
@@ -356,7 +356,7 @@ def createPlotConfig2DLinesColorBar(filepath, title, xData, yData, zData, xLabel
         PlotConf["xTicks"] = range(0, len(xData))
         PlotConf["xLim"] = [0, len(xData)-1]
         minY = min([min(y) for y in yData])
-        maxY = max([max(y) for y in yData])
+        maxY = max([max(y) for y in yData])        
         PlotConf["yLim"] = [minY, maxY]    
         
     PlotConf["LineWidth"] = 1.5

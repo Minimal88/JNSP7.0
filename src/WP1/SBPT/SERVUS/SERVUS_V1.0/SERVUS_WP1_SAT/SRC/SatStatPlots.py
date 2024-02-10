@@ -97,21 +97,23 @@ def plotSatStatsTime(SatStatsTimeData, SatInfoFilePath, yearDayText):
 
     SatInfoData = sft.readDataFile(SatInfoFilePath,[
         SatInfoIdx["SoD"], SatInfoIdx["PRN"], SatInfoIdx["MONSTAT"],SatInfoIdx["NRIMS"],
+        SatInfoIdx["SREW"], SatInfoIdx["SFLT-W"],
         SatInfoIdx["SAT-X"],SatInfoIdx["SAT-Y"],SatInfoIdx["SAT-Z"]])        
 
-    # Plot the satellites monitoring windows as a function of the hour of the day
-    # SatInfoData = sft.readDataFile(SatInfoFilePath,[
-    #     SatInfoIdx["SoD"],
-    #     SatInfoIdx["PRN"],
-    #     SatInfoIdx["MONSTAT"],
-    #     SatInfoIdx["NRIMS"]])
+    # Plot the satellites monitoring windows as a function of the hour of the day   
     plotMON2(SatInfoData, yearDayText)
     
     # Plot the satellites ground tracks on a map during monitoring periods    
     plotMON3(SatInfoData, yearDayText)
 
+    # Plot the SREW for all satellites as a function of the hour of the day. PRN in the color bar.
+    plotSREWvsPRN(SatInfoData, yearDayText)
+
+    # Plot the SREW for all satellites as a function of the hour of the day. RIMS in the color bar.
+    plotSREWvsRIMS(SatInfoData, yearDayText)
+
     #Plot the ENT-GPS Offset along the day
-    #plotEntGpsOffset(SatStatsTimeData, yearDayText)
+    plotEntGpsOffset(SatStatsTimeData, yearDayText)
 
 # ------------------------------------------------------------------------------------
 # INTERNAL FUNCTIONS 
@@ -390,6 +392,63 @@ def plotMON3(SatInfoData, yearDayText):
     PlotConf["yLim"] = [PlotConf["LatMin"], PlotConf["LatMax"]]
     
     plt.generatePlot(PlotConf)
+
+# Plot the SREW for all satellites as a function of the hour of the day. PRN in the color bar.
+def plotSREWvsPRN(SatInfoData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}SAT_SREW_PRN_{yearDayText}_G123_50s.png' 
+    title = f"Satellites SREW vs PRN EGNOS SIS {yearDayText}"    
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting Target columns    
+    HOD = SatInfoData[SatInfoIdx["SoD"]] / GnssConstants.S_IN_H  # Converting to hours
+    PRN = SatInfoData[SatInfoIdx["PRN"]]          
+    NRIMS = SatInfoData[SatInfoIdx["NRIMS"]]    
+    SREW = SatInfoData[SatInfoIdx["SREW"]]    
+
+    PRN_NUM = [int(s[1:]) for s in PRN]    
+
+    PlotConf = plt.createPlotConfig2DLinesColorBar(
+        filePath, title, 
+        HOD, SREW, PRN_NUM                ,             # xData, yData, zData 
+        "Hour of Day", "SREW [m]", "GPS-PRN",           # xLabel, yLabel, zLabel 
+        '.' , False)                                    # marker, applyLimits
+    
+    PlotConf["xTicks"] = range(0, 25)
+    PlotConf["xLim"] = [0, 24]
+    minY = min(SREW)
+    maxY = max(SREW)
+    PlotConf["yTicks"] = range(0, int(maxY))
+    PlotConf["yLim"] = [minY, maxY]     
+    
+    plt.generatePlot(PlotConf)
+
+# Plot the SREW for all satellites as a function of the hour of the day. RIMS in the color bar.
+def plotSREWvsRIMS(SatInfoData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}SAT_SREW_RIMS_{yearDayText}_G123_50s.png' 
+    title = f"Satellites SREW vs RIMS EGNOS SIS {yearDayText}"    
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting Target columns    
+    HOD = SatInfoData[SatInfoIdx["SoD"]] / GnssConstants.S_IN_H  # Converting to hours
+    PRN = SatInfoData[SatInfoIdx["PRN"]]          
+    NRIMS = SatInfoData[SatInfoIdx["NRIMS"]]
+    PRN_NUM = [int(s[1:]) for s in PRN]    
+
+    PlotConf = plt.createPlotConfig2DLinesColorBar(
+        filePath, title, 
+        HOD, NRIMS, PRN_NUM                ,            # xData, yData, zData 
+        "Hour of Day", "SREW [m]", "RIMS",              # xLabel, yLabel, zLabel 
+        '.' , False)                                    # marker, applyLimits
+    
+    PlotConf["xTicks"] = range(0, 25)
+    PlotConf["xLim"] = [0, 24]
+    minY = min(NRIMS)
+    maxY = max(NRIMS)
+    PlotConf["yTicks"] = range(0, int(maxY))
+    PlotConf["yLim"] = [minY, maxY]     
+    
+    plt.generatePlot(PlotConf)
+
 
 def plotEntGpsOffset(SatStatsTimeData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}SAT_ENT_GPS_OFFSET_{yearDayText}_G123_50s.png' 
