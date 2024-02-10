@@ -26,7 +26,7 @@ Common = os.path.dirname(os.path.dirname(
     os.path.abspath(sys.argv[0]))) + '/COMMON'
 sys.path.insert(0, Common)
 from collections import OrderedDict
-from COMMON.Plots import generatePlot
+from COMMON.Coordinates import xyz2llh
 import SatStatistics  as stat
 import numpy as np
 import copy
@@ -150,6 +150,41 @@ def readDataFile(dataFilePath, columnNameList):
     #FetchedData.columns = columnNameList
 
     return FetchedData
+
+def ecefToGeodetic(xEcef, yEcef, zEcef):
+    """
+    Transform ECEF (Earth-Centered, Earth-Fixed) coordinates to Geodetic coordinates.
+
+    Parameters:
+    - xEcef, yEcef, zEcef: ECEF coordinates in meters.
+
+    Returns:
+    - Longitude, Latitude, h: Geodetic coordinates (longitude, latitude, height) in degrees and meters.
+    """
+    DataLen = len(xEcef)
+    Longitude = np.zeros(DataLen)
+    Latitude = np.zeros(DataLen)
+    Altitude = np.zeros(DataLen)
+
+    for index in range(DataLen):
+        x = xEcef[index]
+        y = yEcef[index]
+        z = zEcef[index]
+        Longitude[index], Latitude[index], Altitude[index] = xyz2llh(x, y, z)
+
+    return Longitude, Latitude, Altitude
+
+from pyproj import Proj, transform
+
+def ecef_to_geodetic(x_ecef, y_ecef, z_ecef):
+    # Define the ECEF and Geodetic coordinate systems
+    ecef = Proj(proj='geocent', ellps='WGS84', datum='WGS84')
+    geodetic = Proj(proj='latlong', ellps='WGS84', datum='WGS84')
+
+    # Perform the coordinate transformation
+    lon, lat, alt = transform(ecef, geodetic, x_ecef, y_ecef, z_ecef, radians=False)
+
+    return lon, lat, alt
 
 # ------------------------------------------------------------------------------------
 # INTERNAL FUNCTIONS 

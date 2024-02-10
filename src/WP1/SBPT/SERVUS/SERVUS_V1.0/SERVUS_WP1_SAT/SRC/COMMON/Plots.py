@@ -280,7 +280,7 @@ def createPlotConfig2DVerticalBars(filepath, title, xData, yDataList, xLabel, yL
     
     return PlotConf
 
-def createPlotConfig2DLines(filepath, title, xData, yDataList, xLabel, yLabels, colors, markers, legPos, yOffset=[0, 0]):
+def createPlotConfig2DLines(filepath, title, xData, yDataList, xLabel, yLabels, colors, markers, legPos, yOffset=[0, 0], applyLimits = True):
     """
     Creates a new Plot Configuration for plotting 2D lines with points.
     
@@ -293,8 +293,9 @@ def createPlotConfig2DLines(filepath, title, xData, yDataList, xLabel, yLabels, 
         yLabels (list): List of labels for each y-axis data set.
         colors (list): List of colors for each y-axis data set.
         markers (list): List of markers for each y-axis data set.
-        legPos (str): Position of the legend (example: 'upper left').
-        yOffset (list): List of y-axis offsets: [lowerOffset, upperOffset].
+        legPos (str): Position of the legend (example: 'upper left'). // If null or empty the Legend is disabled
+        yOffset (list): List of y-axis offsets: [lowerOffset, upperOffset]. // By default = [0,0] 
+        applyLimits (bool): True for applying the Limits of x-axis and y-axis. // By Default = True
 
     Returns:
         PlotConf (dict): Configuration Data Structure for plotting 2D lines with points using generateLinesPlot().
@@ -304,20 +305,20 @@ def createPlotConfig2DLines(filepath, title, xData, yDataList, xLabel, yLabels, 
     PlotConf["FigSize"] = (12, 6)
     PlotConf["Title"] = title
     PlotConf["xLabel"] = xLabel
-    PlotConf["xTicks"] = range(0, len(xData))
-    PlotConf["xLim"] = [0, len(xData)-1]
-    minY = min([min(y) for y in yDataList])
-    maxY = max([max(y) for y in yDataList])
-    PlotConf["yLim"] = [minY + yOffset[0], maxY + yOffset[1]]
-    PlotConf["Grid"] = True
-    PlotConf["LineWidth"] = 1
     if legPos: PlotConf["ShowLegend"] = legPos
+    if applyLimits:
+        PlotConf["xTicks"] = range(0, len(xData))
+        PlotConf["xLim"] = [0, len(xData)-1]
+        minY = min([min(y) for y in yDataList])
+        maxY = max([max(y) for y in yDataList])
+        PlotConf["yLim"] = [minY + yOffset[0], maxY + yOffset[1]]    
+    PlotConf["Grid"] = True
+    PlotConf["LineWidth"] = 1    
     PlotConf["xData"] = {}
     PlotConf["yData"] = {}
     PlotConf["Color"] = {}
     PlotConf["Marker"] = {}
     PlotConf["Path"] = filepath
-
     for yLabel, yData, color, marker in zip(yLabels, yDataList, colors, markers):
         PlotConf["yData"][yLabel] = yData
         PlotConf["xData"][yLabel] = xData
@@ -326,7 +327,7 @@ def createPlotConfig2DLines(filepath, title, xData, yDataList, xLabel, yLabels, 
 
     return PlotConf
 
-def createPlotConfig2DLinesColorBar(filepath, title, xData, yData, zData, xLabel, yLabel, zLabel, colors, marker):
+def createPlotConfig2DLinesColorBar(filepath, title, xData, yData, zData, xLabel, yLabel, zLabel,  marker, applyLimits = True):
     """
     Creates a new Plot Configuration for plotting 2D lines with a color bar.
 
@@ -338,9 +339,9 @@ def createPlotConfig2DLinesColorBar(filepath, title, xData, yData, zData, xLabel
         zData (list): List of z-axis data for color mapping.
         xLabel (str): Label of x-axis data.
         yLabel (str): Label of y-axis data.
-        zLabel (str): Label of z-axis data.
-        colors (list): List of colors for the plot.
+        zLabel (str): Label of z-axis data.        
         marker (str): Marker for the plot.
+        applyLimits (bool): True for applying the Limits of x-axis and y-axis. // By Default = True
 
     Returns:
         PlotConf (dict): Configuration Data Structure for plotting 2D lines with a color bar using generateLinesPlot().
@@ -350,13 +351,16 @@ def createPlotConfig2DLinesColorBar(filepath, title, xData, yData, zData, xLabel
     PlotConf["FigSize"] = (16.8, 15.2)
     PlotConf["Title"] = title
     PlotConf["yLabel"] = yLabel
-    #PlotConf["yTicks"] = list(range(max(map(int, yData))))
-    #PlotConf["yLim"] = [0, max(yData)]
     PlotConf["xLabel"] = xLabel
-    #PlotConf["xTicks"] = range(0, int(max(xData)))
-    #PlotConf["xLim"] = [0, max(xData)-1]
+    if applyLimits:
+        PlotConf["xTicks"] = range(0, len(xData))
+        PlotConf["xLim"] = [0, len(xData)-1]
+        minY = min([min(y) for y in yData])
+        maxY = max([max(y) for y in yData])
+        PlotConf["yLim"] = [minY, maxY]    
+        
     PlotConf["LineWidth"] = 1.5
-    #PlotConf["Grid"] = True    
+    PlotConf["Grid"] = True    
     PlotConf["xData"] = {}
     PlotConf["yData"] = {}
     PlotConf["zData"] = {}

@@ -26,7 +26,8 @@ sys.path.insert(0, Common)
 import COMMON.Plots as plt
 from COMMON import GnssConstants
 from SatStatistics import SatStatsIdx, SatInfoIdx, SatStatsTimeIdx
-from SatFunctions import readDataFile
+from COMMON.Coordinates import xyz2llh
+import SatFunctions as sft
 import numpy as np
 
 # Define relative path
@@ -91,20 +92,26 @@ def plotSatStatsTime(SatStatsTimeData, SatInfoFilePath, yearDayText):
     Returns:
         None
     """
-
     # Plot the instantaneous number of satellites monitored as a function of the hour of the day 
     plotMON1(SatStatsTimeData, yearDayText)
 
+    SatInfoData = sft.readDataFile(SatInfoFilePath,[
+        SatInfoIdx["SoD"], SatInfoIdx["PRN"], SatInfoIdx["MONSTAT"],SatInfoIdx["NRIMS"],
+        SatInfoIdx["SAT-X"],SatInfoIdx["SAT-Y"],SatInfoIdx["SAT-Z"]])        
+
     # Plot the satellites monitoring windows as a function of the hour of the day
-    SatInfoData =readDataFile(SatInfoFilePath,[
-        SatInfoIdx["SoD"],
-        SatInfoIdx["PRN"],
-        SatInfoIdx["MONSTAT"],
-        SatInfoIdx["NRIMS"]])
+    # SatInfoData = sft.readDataFile(SatInfoFilePath,[
+    #     SatInfoIdx["SoD"],
+    #     SatInfoIdx["PRN"],
+    #     SatInfoIdx["MONSTAT"],
+    #     SatInfoIdx["NRIMS"]])
     plotMON2(SatInfoData, yearDayText)
+    
+    # Plot the satellites ground tracks on a map during monitoring periods    
+    plotMON3(SatInfoData, yearDayText)
 
     #Plot the ENT-GPS Offset along the day
-    plotEntGpsOffset(SatStatsTimeData, yearDayText)
+    #plotEntGpsOffset(SatStatsTimeData, yearDayText)
 
 # ------------------------------------------------------------------------------------
 # INTERNAL FUNCTIONS 
@@ -304,19 +311,83 @@ def plotMON2(SatInfoData, yearDayText):
     MONSTAT = SatInfoData[SatInfoIdx["MONSTAT"]]    
     NRIMS = SatInfoData[SatInfoIdx["NRIMS"]]    
 
-    filtered_nrims = [nrims_value if monstat_value == 1 else -1000 for monstat_value, nrims_value in zip(MONSTAT, NRIMS)]
+    NRIMS_FILT = np.array([])
+    HOD_FILT = np.array([])
+    PRN_FILT = np.array([])
+
+    for index in range(len(SatInfoData[SatInfoIdx["SAT-X"]])):
+        mon = MONSTAT[index]
+        if (mon != 1): # Discard data where monstat is not good
+            continue         
+        HOD_FILT = np.append(HOD_FILT, HOD[index])
+        PRN_FILT = np.append(PRN_FILT, PRN[index])   
+        NRIMS_FILT = np.append(NRIMS_FILT, NRIMS[index])
+        
+
+    #filtered_nrims = [nrims_value if monstat_value == 1 else -1000 for monstat_value, nrims_value in zip(MONSTAT, NRIMS)]
 
     
     PlotConf = plt.createPlotConfig2DLinesColorBar(
         filePath, title, 
-        HOD, PRN, filtered_nrims,                  # xData, yData, zData 
+        HOD_FILT, PRN_FILT, NRIMS_FILT,                 # xData, yData, zData 
         "Hour of Day", "GPS-PRN", "Number of RIMS",     # xLabel, yLabel, zLabel 
-        'y', '.' )  
+        '.' , False)                                    # marker, applyLimits
     
     PlotConf["xTicks"] = range(0, 25)
     PlotConf["xLim"] = [0, 24]
     PlotConf["yTicks"] = range(32)
     PlotConf["yLim"] = [0, 31]    
+    
+    plt.generatePlot(PlotConf)
+
+# Plot the satellites ground tracks on a map during monitoring periods
+def plotMON3(SatInfoData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}SAT_MON3_{yearDayText}_G123_50s.png' 
+    title = f"Satellites Tracks during Monitoring Periods EGNOS SIS {yearDayText}"    
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting Target columns    
+    MONSTAT = SatInfoData[SatInfoIdx["MONSTAT"]]    
+    NRIMS = SatInfoData[SatInfoIdx["NRIMS"]]
+
+    # Transform ECEF to Geodetic
+    SatInfoData[SatInfoIdx["SAT-X"]].to_numpy()                       
+    SatInfoData[SatInfoIdx["SAT-Y"]].to_numpy()
+    SatInfoData[SatInfoIdx["SAT-Z"]].to_numpy()
+
+    LONG = np.array([])
+    LAT = np.array([])
+    NRIMS_FILT = np.array([])
+
+    for index in range(len(SatInfoData[SatInfoIdx["SAT-X"]])):
+        mon = MONSTAT[index]
+        if (mon != 1): # Discard data where monstat is not good
+            continue            
+        x = SatInfoData[SatInfoIdx["SAT-X"]][index]
+        y = SatInfoData[SatInfoIdx["SAT-Y"]][index]
+        z = SatInfoData[SatInfoIdx["SAT-Z"]][index]
+        long, lat, alt = sft.ecef_to_geodetic(x, y, z)
+        #long, lat, alt = xyz2llh(x, y, z)
+        LONG = np.append(LONG, long)
+        LAT = np.append(LAT, lat)
+        NRIMS_FILT = np.append(NRIMS_FILT, NRIMS[index])
+    
+    PlotConf = plt.createPlotConfig2DLinesColorBar(filePath, title, 
+        LONG, LAT, NRIMS_FILT,                                  # xData, yData, zData 
+        "LON [deg]", "LAT [deg]", "Number of RIMS",             # xLabel, yLabel, zLabel 
+        '.' , False)                                       # marker, applyLimits
+    
+    PlotConf["Map"] = True    
+    PlotConf["LonMin"] = -135
+    PlotConf["LonMax"] = 135
+    PlotConf["LatMin"] = -70
+    PlotConf["LatMax"] = 90
+    PlotConf["LonStep"] = 15
+    PlotConf["LatStep"] = 10
+    PlotConf["xTicks"] = range(PlotConf["LonMin"],PlotConf["LonMax"]+1,15)
+    PlotConf["xLim"] = [PlotConf["LonMin"], PlotConf["LonMax"]]
+    PlotConf["yTicks"] = range(PlotConf["LatMin"],PlotConf["LatMax"]+1,10)
+    PlotConf["yLim"] = [PlotConf["LatMin"], PlotConf["LatMax"]]
     
     plt.generatePlot(PlotConf)
 
