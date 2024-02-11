@@ -87,10 +87,9 @@ def computeSatStats(satFile, EntGpsFile, satStatsFile):
                     # If EpochInfor is not Null
                     if EpochInfo != []:
                         # Compute ENT-GPS and All SREs
-                        entGps = stat.computeEntGpsAndSREb(EpochInfo, InterOutputs)
-                        cntMon, cntNotMon, cntDu = stat.countMonitoredSatsInEpoch(EpochInfo)
-                        
                         sod = EpochInfo[0][SatInfoIdx["SoD"]]
+                        entGps = stat.computeEntGpsAndSREb(EpochInfo, InterOutputs)
+                        cntMon, cntNotMon, cntDu = stat.countMonitoredSatsInEpoch(EpochInfo)                        
                         
                         # Write ENT-GPS Offset file
                         fEntGps.write("%5s %10.4f %d %d %d\n" % (sod,entGps,cntMon, cntNotMon, cntDu))                    

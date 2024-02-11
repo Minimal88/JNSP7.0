@@ -97,7 +97,7 @@ def plotSatStatsTime(SatStatsTimeData, SatInfoFilePath, yearDayText):
 
     SatInfoData = sft.readDataFile(SatInfoFilePath,[
         SatInfoIdx["SoD"], SatInfoIdx["PRN"], SatInfoIdx["MONSTAT"],SatInfoIdx["NRIMS"],
-        SatInfoIdx["SREW"], SatInfoIdx["SFLT-W"], SatInfoIdx["RDOP"],
+        SatInfoIdx["SREW"], SatInfoIdx["SFLT-W"], SatInfoIdx["RDOP"], SatInfoIdx["SRESTAT"],
         SatInfoIdx["SAT-X"],SatInfoIdx["SAT-Y"],SatInfoIdx["SAT-Z"]])        
 
     # Plot the satellites monitoring windows as a function of the hour of the day   
@@ -117,6 +117,9 @@ def plotSatStatsTime(SatStatsTimeData, SatInfoFilePath, yearDayText):
 
     # Plot the SigmaFLT for all satellites as a function of the hour of the day. Number of RIMS in the color bar
     plotSigmaFLTvsNRIMS(SatInfoData, yearDayText)
+
+    # Plot the SI for all satellites as a function of the hour of the day. PRN in the color bar.
+    plotSIvsPRN(SatInfoData, yearDayText)
 
     #Plot the ENT-GPS Offset along the day
     plotEntGpsOffset(SatStatsTimeData, yearDayText)
@@ -420,10 +423,6 @@ def plotSREWvsPRN(SatInfoData, yearDayText):
     
     PlotConf["xTicks"] = range(0, 25)
     PlotConf["xLim"] = [0, 24]
-    # minY = min(SREW)
-    # maxY = max(SREW)
-    # PlotConf["yTicks"] = range(0, int(maxY))
-    # PlotConf["yLim"] = [minY, maxY]     
     PlotConf["ColorBarTicks"] = range(max(PRN_NUM))
     
     plt.generatePlot(PlotConf)
@@ -498,6 +497,45 @@ def plotSigmaFLTvsNRIMS(SatInfoData, yearDayText):
     
     plt.generatePlot(PlotConf)
 
+# Plot the SI for all satellites as a function of the hour of the day. PRN in the color bar.
+def plotSIvsPRN(SatInfoData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}SAT_SI_PRN_{yearDayText}_G123_50s.png' 
+    title = f"Satellites SREW/5.33S igmaFLT at WUL EGNOS SIS {yearDayText}"    
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting Target columns    
+    HOD = SatInfoData[SatInfoIdx["SoD"]] / GnssConstants.S_IN_H  # Converting to hours
+    PRN = SatInfoData[SatInfoIdx["PRN"]]  
+    SREW = SatInfoData[SatInfoIdx["SREW"]]    
+    SFLT = SatInfoData[SatInfoIdx["SFLT-W"]]    
+    SRESTAT = SatInfoData[SatInfoIdx["SRESTAT"]]    
+
+    SI = np.array([])
+    HOD_FILT = np.array([])
+    PRN_FILT = np.array([])
+
+    for i in range (len(SREW)):
+        # Reject if satellite is not MONITORED:
+        mon  = SRESTAT[i]
+        if(mon != 1):
+            continue
+        HOD_FILT = np.append(HOD_FILT, HOD[i])
+        PRN_FILT = np.append(PRN_FILT, PRN[i])        
+        SI = np.append(SI, SREW[i] / (SFLT[i]*5.33))
+
+    PRN_NUM = [int(s[1:]) for s in PRN_FILT]
+
+    PlotConf = plt.createPlotConfig2DLinesColorBar(
+        filePath, title, 
+        HOD_FILT, SI, PRN_NUM  ,                             # xData, yData, zData 
+        "Hour of Day", "SI", "GPS-PRN",                 # xLabel, yLabel, zLabel 
+        '.' , False)                                    # marker, applyLimits
+    
+    PlotConf["xTicks"] = range(0, 25)
+    PlotConf["xLim"] = [0, 24]      
+    PlotConf["ColorBarTicks"] = range(max(PRN_NUM))
+    
+    plt.generatePlot(PlotConf)
 
 def plotEntGpsOffset(SatStatsTimeData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}SAT_ENT_GPS_OFFSET_{yearDayText}_G123_50s.png' 
