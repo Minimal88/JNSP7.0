@@ -32,7 +32,7 @@ from COMMON.Dates import convertYearMonthDay2Doy
 from SatFunctions import computeSatStats, readDataFile
 from SatStatistics import SatStatsIdx, SatStatsTimeIdx, SatInfoIdx
 from collections import OrderedDict
-import SatStatPlots  as ssPlot
+import WP1Plots  as wp1Plot
 from yaml import dump
 import sys, os
 
@@ -131,6 +131,11 @@ for Jd in range(Conf["INI_DATE_JD"], Conf["END_DATE_JD"] + 1):
     EntGpsFilePath = Scen + \
         '/OUT/SAT/' + 'ENTGPS_%s_G123_%ss.dat' % \
             (yearDayText, Conf["TSTEP"])
+    
+    # Define the name of the RIMS file
+    RimsFilePath = Scen + \
+        '/INP/RIMS/' + 'RIMS_REF_POSITIONS_%s.dat' % \
+            (Year)
 
     # Define the name of the Output file Statistics
     SatStatsFile = SatInfoFilePath.replace("INFO", "STAT")
@@ -141,7 +146,7 @@ for Jd in range(Conf["INI_DATE_JD"], Conf["END_DATE_JD"] + 1):
     # Display Message
     print('1. Processing file:', SatInfoFilePath)
     
-    # Compute Satellite Statistics  FILE
+    # T3. Compute Satellite Statistics  FILE
     computeSatStats(SatInfoFilePath, EntGpsFilePath, SatStatsFile)
 
     # Display Creation message
@@ -160,11 +165,14 @@ for Jd in range(Conf["INI_DATE_JD"], Conf["END_DATE_JD"] + 1):
     # Display Generating figures Message
     print('5. Generating Figures...\n')
     
-    # Generate Satellite Statistics figures   
-    ssPlot.plotSatStats(satStatsData, yearDayText)
+    # T4. Generate Satellite RIMS figures   
+    wp1Plot.plotRims(RimsFilePath, yearDayText)
     
-    # Generate Satellite Information figures    
-    ssPlot.plotSatStatsTime(satStatsTimeData, SatInfoFilePath, yearDayText)
+    # T5. Generate Satellite Statistics figures   
+    wp1Plot.plotSatStats(satStatsData, yearDayText)
+    
+    # T6. Generate Satellite Time and Info figures    
+    wp1Plot.plotSatStatsTime(satStatsTimeData, SatInfoFilePath, yearDayText)
 
 
 print('------------------------------------')

@@ -83,13 +83,27 @@ SatStatsIdx = dict([
     ("NTRANS", 19)
 ])
 
-# Define STATISTICS TIME file Columns
+# Define STATISTICS TIME file Columns (ENT-GPS)
 SatStatsTimeIdx = dict([
-    ("SoD", 0),
-    ("ENT-GPS", 1),
+    ("SoD", 0),         # SOD
+    ("ENT-GPS", 1),     # ENT-GPS
     ("MON", 2),         # Monitored
     ("NMON", 3),        # Not Monitored
     ("DU", 4),          # Dont Use
+])
+
+# Define RIMS file Columns 
+RimsIdx = dict([
+    ("SF", 0),          # Selection flag [0:OFF/1:ON]
+    ("SNA", 1),         # Station Name Acronym [%4s]
+    ("SID", 2),         # Station Number ID [%2d]
+    ("LON", 3),         # Longitude [deg]
+    ("LAT", 4),         # Latitude [deg]
+    ("HEI", 5),         # Height [meters]
+    ("MA", 6),          # Mask Angle [deg]
+    ("AT", 7),          # Acquisition Time [minutes]
+    ("SITE", 8),        # Site [%s] 
+    ("COUNTRY", 9)      # Country [%s]
 ])
 
 # Define Satidistics Output file format list
