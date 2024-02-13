@@ -1,6 +1,8 @@
 
 import sys, os
 import matplotlib as mpl
+from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
@@ -37,6 +39,7 @@ def saveFigure(fig, Path):
         os.makedirs(Dir)
     except: pass
     fig.savefig(Path, dpi=150., bbox_inches='tight')
+    plt.close(fig)  # Close the figure to release memory
 
 def prepareAxis(PlotConf, ax):
     ax.get_yaxis().get_major_formatter().set_useOffset(False)
@@ -49,7 +52,7 @@ def prepareAxis(PlotConf, ax):
         for axis in ["x", "y"]:
             if axis == "x":
                 if key == axis + "Label":
-                    ax.set_xlabel(PlotConf[axis + "Label"])
+                    ax.set_xlabel(PlotConf[axis + "Label"], labelpad=20)
 
                 if key == axis + "Ticks":
                     ax.set_xticks(PlotConf[axis + "Ticks"])
@@ -62,7 +65,7 @@ def prepareAxis(PlotConf, ax):
 
             if axis == "y":
                 if key == axis + "Label":
-                    ax.set_ylabel(PlotConf[axis + "Label"])
+                    ax.set_ylabel(PlotConf[axis + "Label"], labelpad=20)
 
                 if key == axis + "Ticks":
                     ax.set_yticks(PlotConf[axis + "Ticks"])
@@ -158,18 +161,59 @@ def generateLinesPlot(PlotConf):
             drawMap(PlotConf, ax)
 
     for Label in PlotConf["yData"].keys():
+        if "Twin" in PlotConf:
+            if (PlotConf["Twin"]["Label"] == Label):
+                ax2 = ax.twinx()
+                ax2.plot(PlotConf["xData"][Label], PlotConf["yData"][Label],                
+                PlotConf["Marker"][Label],
+                linewidth = LineWidth,
+                label = Label, 
+                color=PlotConf["Color"][Label])
+                #ax2.set_yticks(PlotConf["Twin_yTicks"])
+                ax2.set_ylim(PlotConf["Twin"]["yLim"])
+                continue
+
         if "ColorBar" in PlotConf:
             ax.scatter(PlotConf["xData"][Label], PlotConf["yData"][Label], 
             marker = PlotConf["Marker"][Label],
             linewidth = LineWidth,
             c = cmap(normalize(np.array(PlotConf["zData"][Label]))))
 
+        elif "Text" in PlotConf:
+            # Use scatter instead of plot for marker-based plot without connecting lines
+            ax.scatter(PlotConf["xData"][Label], PlotConf["yData"][Label],
+                            marker=PlotConf["Marker"][Label],
+                            color=PlotConf["Color"][Label],
+                            linewidth=LineWidth,
+                            edgecolors='none',  # No visible marker edges
+                            label=Label)
+            
+            # Add text to each point
+            for i, txt in enumerate(PlotConf["Text"][Label]):
+                ax.text(PlotConf["xData"][Label][i], PlotConf["yData"][Label][i], txt,
+                        ha='right', va='bottom', fontsize=8)
+        
         else:
             ax.plot(PlotConf["xData"][Label], PlotConf["yData"][Label],
             marker = PlotConf["Marker"][Label],
             color = PlotConf["Color"][Label],
             linewidth = LineWidth,
             label = Label)
+
+            # When Using the 'Twin' configuration, make sure to use the last label
+            if "Twin" in PlotConf:
+                if (PlotConf["Twin"] == Label):
+                    ax2 = ax.twinx()
+                    ax2.plot(PlotConf["xData"][Label], PlotConf["yData"][Label],
+                    PlotConf["Marker"],
+                    linewidth = LineWidth,
+                    label = Label, 
+                    color='green')
+
+                    #ax2.set_yticks(PlotConf["Twin_yTicks"])
+                    ax2.set_ylim(PlotConf["Twin_yLim"])
+
+        
 
     if "ShowLegend" in PlotConf:
          # Create legends for each label
@@ -186,6 +230,8 @@ def generateVerticalBarPlot(PlotConf):
     
     fig, ax = createFigure(PlotConf)
 
+    Labels = PlotConf["yData"].keys()
+
     prepareAxis(PlotConf, ax)
 
     for key in PlotConf:
@@ -196,33 +242,60 @@ def generateVerticalBarPlot(PlotConf):
         if key == "Map" and PlotConf[key] == True:
             drawMap(PlotConf, ax)
 
-    for Label in PlotConf["yData"].keys():
+    legend_handles = []  # Collect handles for the legend
+    
+    for Label in Labels:
+        if "Twin" in PlotConf:
+            if (PlotConf["Twin"]["Label"] == Label):
+                ax2 = ax.twinx()
+                line = ax2.plot(PlotConf["xData"][Label], PlotConf["yData"][Label],
+                "-", # Marker,
+                linewidth = LineWidth,
+                label = Label, 
+                color=PlotConf["Color"][Label])
+                #ax2.set_yticks(PlotConf["Twin_yTicks"])
+                ax2.set_ylim(PlotConf["Twin"]["yLim"])[0]  
+                # Extract the line object from the returned list
+                legend_handles.append(Line2D([0], [0], color=PlotConf["Color"][Label], label=Label))
+                continue
+
         if "ColorBar" in PlotConf:
-            ax.bar(PlotConf["xData"][Label], PlotConf["yData"][Label],
-                   color=cmap(normalize(np.array(PlotConf["zData"][Label]))))
+            bar = ax.bar(
+                PlotConf["xData"][Label], 
+                PlotConf["yData"][Label],
+                color=cmap(normalize(np.array(PlotConf["zData"][Label])))
+            )
+            legend_handles.append(Patch(color=bar[0].get_facecolor(), label=Label))
         else:
             if "Color" not in PlotConf:
                 Color = 'b'
             else:
                 Color = PlotConf["Color"][Label]
 
-            ax.bar(
+            bar = ax.bar(
                 PlotConf["xData"][Label], 
                 PlotConf["yData"][Label],                
-                color = Color,
-                linewidth = LineWidth,
-                label = Label)
+                color=Color,
+                linewidth=LineWidth,
+                label=Label
+            )
+            legend_handles.append(Patch(color=bar[0].get_facecolor(), label=Label))
+
     
     if "ShowLegend" in PlotConf:
-         # Create legends for each label
-        handles, labels = ax.get_legend_handles_labels()
-        unique_labels = list(set(labels))
-        legend_handles = [handles[labels.index(label)] for label in unique_labels]
-        ax.legend(
-            legend_handles, unique_labels, loc=PlotConf["ShowLegend"], fontsize='medium')
+        # Create legends for each label         
+        unique_labels = list(Labels)
+        ax.legend(legend_handles, unique_labels, loc=PlotConf["ShowLegend"], fontsize='medium')
+
+
+        # handles, labels = ax.get_legend_handles_labels()        
+        # unique_labels = list(Labels)
+
+        # legend_handles = [handles[labels.index(label)] for label in unique_labels]
+        # ax.legend(
+        #     legend_handles, unique_labels, loc=PlotConf["ShowLegend"], fontsize='medium')
 
     saveFigure(fig, PlotConf["Path"])
-
 
 
 # ------------------------------------------------------------------------------------
@@ -314,16 +387,19 @@ def createPlotConfig2DLines(filepath, title, xData, yDataList, xLabel, yLabels, 
         PlotConf["yLim"] = [minY + yOffset[0], maxY + yOffset[1]]    
     PlotConf["Grid"] = True
     PlotConf["LineWidth"] = 1    
+    if (len(yLabels) == 1): PlotConf["yLabel"] = yLabels[0]
+    else: PlotConf["yLabel"] = {}
     PlotConf["xData"] = {}
     PlotConf["yData"] = {}
     PlotConf["Color"] = {}
     PlotConf["Marker"] = {}
     PlotConf["Path"] = filepath
     for yLabel, yData, color, marker in zip(yLabels, yDataList, colors, markers):
+        if (len(yLabels) > 1): PlotConf["yLabel"][yLabel] = yLabel        
         PlotConf["yData"][yLabel] = yData
         PlotConf["xData"][yLabel] = xData
         PlotConf["Color"][yLabel] = color
-        PlotConf["Marker"][yLabel] = marker
+        PlotConf["Marker"][yLabel] = marker        
 
     return PlotConf
 
