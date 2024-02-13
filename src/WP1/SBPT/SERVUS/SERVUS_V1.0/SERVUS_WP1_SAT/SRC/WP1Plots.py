@@ -197,7 +197,7 @@ def plotNTRANS(StatsData, yearDayText):
     
 def plotNRIMS(StatsData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}SAT_NRIMS_{yearDayText}_G123_50s.png' 
-    title = f"Minimun and Maximum Number of RIMS in view {yearDayText} G123 50s"    
+    title = f"Minimun and Maximumgit  Number of RIMS in view {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns
@@ -242,7 +242,7 @@ def plotRmsSreb(StatsData, yearDayText):
 
 def plotMaxAndRmsSREW(StatsData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}SAT_MAX_RMS_SREW_{yearDayText}_G123_50s.png' 
-    title = f"RMS and Maximum Value of SRE at the WUL {yearDayText} G123 50s"    
+    title = f"RMS and Maximumgit  Value of SRE at the WUL {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns
@@ -255,7 +255,7 @@ def plotMaxAndRmsSREW(StatsData, yearDayText):
 
 def plotMaxMinSFLT(StatsData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}SAT_MAX_MIN_SigmaFLT_{yearDayText}_G123_50s.png' 
-    title = f"Maximum and Minimun SigmaFLT (=SigmaUDRE) {yearDayText} G123 50s"    
+    title = f"Maximumgit  and Minimun SigmaFLT (=SigmaUDRE) {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns
@@ -268,7 +268,7 @@ def plotMaxMinSFLT(StatsData, yearDayText):
 
 def plotMaxSIW(StatsData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}SAT_MAX_SIW_{yearDayText}_G123_50s.png' 
-    title = f"Maximum Satellite Safety Index SI at WUL SREW/5.33UDRE {yearDayText} G123 50s"    
+    title = f"Maximumgit  Satellite Safety Index SI at WUL SREW/5.33UDRE {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
     
     # Extracting Target columns
@@ -290,7 +290,7 @@ def plotMaxSIW(StatsData, yearDayText):
 
 def plotMaxFcAndLTCb(StatsData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}SAT_MAX_FC_LTCb_{yearDayText}_G123_50s.png' 
-    title = f"Maximum Satellite Clock Fast and Long Term Corrections {yearDayText} G123 50s"    
+    title = f"Maximumgit  Satellite Clock Fast and Long Term Corrections {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns
@@ -307,7 +307,7 @@ def plotMaxFcAndLTCb(StatsData, yearDayText):
 
 def plotMaxLTCxyz(StatsData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}SAT_MAX_LTCxyz_{yearDayText}_G123_50s.png' 
-    title = f"Maximum Satellite LTC-XYZ {yearDayText} G123 50s"    
+    title = f"Maximumgit  Satellite LTC-XYZ {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns
