@@ -310,18 +310,18 @@ def computeSatRmsSreAcrFromInterOuputs(interOutputs, satLabel):
     satData = interOutputs[satLabel]
     
     # Update sample counts
-    #srewSamps = satData["SREWSAMPS"]
+    srewSamps = satData["SREWSAMPS"]
     sreacrSamps = satData["SREACRSAMPS"]
-    #nSamps = satData["NSAMPS"]
-    #assert sreacrSamps == srewSamps, "Samples are equal"
+    assert sreacrSamps == srewSamps, "Samples are not equal"
 
     # Calculate RMS values
     rmsSreA = sqrt(satData["SREaSUM2"] / (sreacrSamps))
     rmsSreB = sqrt(satData["SREbSUM2"] / (sreacrSamps))
     rmsSreC = sqrt(satData["SREcSUM2"] / (sreacrSamps))
     rmsSreR = sqrt(satData["SRErSUM2"] / (sreacrSamps))
+    rmsSreW = sqrt(satData["SREWSUM2"] / (srewSamps))
 
-    return rmsSreA, rmsSreB,rmsSreC,rmsSreR
+    return rmsSreA, rmsSreB,rmsSreC,rmsSreR,rmsSreW
 
 def computeSREaAndSREc(deltaT, prevPosVector, currPosVector, sreVector): 
     """
@@ -339,7 +339,8 @@ def computeSREaAndSREc(deltaT, prevPosVector, currPosVector, sreVector):
     """
     # Compute the Satellite Velocity deriving the position and 
     # Adding Earth's Rotation effect on the reference frame
-    satVelVector = ( (currPosVector - prevPosVector) / deltaT) + GnssConstants.OMEGA_EARTH * currPosVector
+    omega_vector = np.array([0,0,GnssConstants.OMEGA_EARTH])
+    satVelVector = ( (currPosVector - prevPosVector) / deltaT) +  np.cross(omega_vector, currPosVector)
 
     # Compute the Satellite Velocity unitary vector
     Uv = satVelVector / np.linalg.norm(satVelVector)
@@ -365,7 +366,7 @@ def computeSREaAndSREc(deltaT, prevPosVector, currPosVector, sreVector):
 def computeEntGpsAndSREb(epochInfo, interOutputs):
     """
     This function computes and returns the ENT-GPS Offset: estimated from the SRE of the monitored satellites with SRE_STATUS OK 
-    It also computes and stores in, 'inter_outputs', the SREb (Satellite Residual Error Clock Component).
+    It also computes and stores in, 'interOutputs', the SREb (Satellite Residual Error Clock Component).
 
     - SREa (Satellite Residual Error Along Track Component)
     - SREc (Satellite Residual Error Cross Track Component)
@@ -373,9 +374,9 @@ def computeEntGpsAndSREb(epochInfo, interOutputs):
 
     Parameters:
     - epoch_info: Information for all satellites in a single epoch.
-    - inter_outputs: Intermediate outputs to store computed values.
+    - interOutputs: Intermediate outputs to store computed values.
 
-    Updates inter_outputs in-place.
+    Updates interOutputs in-place.
     """
     
     # Initialize lists to store radial component of SRE vector for each satellite
@@ -389,11 +390,7 @@ def computeEntGpsAndSREb(epochInfo, interOutputs):
         prn = satInfo[SatInfoIdx["PRN"]]
         
         # Rejects Epoch with SRESTAT != 1
-        if(satInfo[SatInfoIdx["SRESTAT"]] != '1'): 
-            logFile = 'SRESTAT_computeEntGpsAndSREb.txt'
-            logMessage = 'Rejected -> SoD: '+ satInfo[SatInfoIdx["SoD"]] + ', PRN: ' + satInfo[SatInfoIdx["PRN"]] + ', SRESTAT: ' + satInfo[SatInfoIdx["SRESTAT"]] + ' \n'
-            open(logFile, 'a').write(logMessage)  if os.path.isfile(logFile) else open(logFile, 'w').write(logMessage)
-            continue            
+        if(satInfo[SatInfoIdx["SRESTAT"]] != '1'): continue            
 
         # Get the SREb1 from the Sat Info file (Satellite Residual Error Clock Bias)
         SREb1 = float(satInfo[SatInfoIdx["SREb1"]])
@@ -417,14 +414,11 @@ def computeEntGpsAndSREb(epochInfo, interOutputs):
     # Compute SREb = SREb1 - ent-gps, for this specific epochInfo
     for satInfo in epochInfo:        
         # Reject if SRE_STATUS IS NOT OK:
-        if(satInfo[SatInfoIdx["SRESTAT"]] != '1'): 
-            logFile = 'SRESTAT_updateEpochStats_2.txt'
-            logMessage = 'Rejected -> SoD: '+ satInfo[SatInfoIdx["SoD"]] + ', PRN: ' + satInfo[SatInfoIdx["PRN"]] + ', SRESTAT: ' + satInfo[SatInfoIdx["SRESTAT"]] + ' \n'
-            open(logFile, 'a').write(logMessage)  if os.path.isfile(logFile) else open(logFile, 'w').write(logMessage)
-            continue
+        if(satInfo[SatInfoIdx["SRESTAT"]] != '1'): continue
         
+        SREb1 = float(satInfo[SatInfoIdx["SREb1"]])
         # Update interOutputs with computed SREb
-        updateInterOutputs(interOutputs, satInfo[SatInfoIdx["PRN"]], {"SREb": SREb1 - EntGps})        
+        updateInterOutputs(interOutputs, satInfo[SatInfoIdx["PRN"]], {"SREb": SREb1 - EntGps})                
 
     return EntGps  
 

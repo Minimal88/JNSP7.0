@@ -58,9 +58,6 @@ def plotSatStats(satStatsData, yearDayText):
     # Plot Satellite Monitoring Percentage
     plotMonPercentage(satStatsData, yearDayText)
 
-    # Plot Number of Transitions
-    plotNTRANS(satStatsData, yearDayText)
-
     # Plot Number of RIMS
     plotNRIMS(satStatsData, yearDayText)
 
@@ -70,14 +67,14 @@ def plotSatStats(satStatsData, yearDayText):
     # Plot RMS SREB
     plotRmsSreb(satStatsData, yearDayText)
 
-    # Plot SREW
-    plotSREW(satStatsData, yearDayText)
+    # Plot MAX AND RMS SREW
+    plotMaxAndRmsSREW(satStatsData, yearDayText)
 
     # Plot SFLT
-    plotSFLT(satStatsData, yearDayText)
+    plotMaxMinSFLT(satStatsData, yearDayText)
 
     # Plot SIW
-    plotSIW(satStatsData, yearDayText)
+    plotMaxSIW(satStatsData, yearDayText)
     
     # Plot MAX FC and LTCb
     plotMaxFcAndLTCb(satStatsData, yearDayText)
@@ -87,6 +84,9 @@ def plotSatStats(satStatsData, yearDayText):
 
     # Plot MAX NMI
     plotNMI(satStatsData, yearDayText)
+
+    # Plot Number of Transitions
+    plotNTRANS(satStatsData, yearDayText)
     
 def plotSatStatsTime(SatStatsTimeData, SatInfoFilePath, yearDayText):
     """
@@ -100,13 +100,13 @@ def plotSatStatsTime(SatStatsTimeData, SatInfoFilePath, yearDayText):
     Returns:
         None
     """
-    # Plot the instantaneous number of satellites monitored as a function of the hour of the day 
-    plotMON1(SatStatsTimeData, yearDayText)
-
     SatInfoData = sft.readDataFile(SatInfoFilePath,[
         SatInfoIdx["SoD"], SatInfoIdx["PRN"], SatInfoIdx["MONSTAT"],SatInfoIdx["NRIMS"],
         SatInfoIdx["SREW"], SatInfoIdx["SFLT-W"], SatInfoIdx["RDOP"], SatInfoIdx["SRESTAT"],
         SatInfoIdx["SAT-X"],SatInfoIdx["SAT-Y"],SatInfoIdx["SAT-Z"]])        
+    
+    # Plot the instantaneous number of satellites monitored as a function of the hour of the day 
+    plotMON1(SatStatsTimeData, yearDayText)    
 
     # Plot the satellites monitoring windows as a function of the hour of the day   
     plotMON2(SatInfoData, yearDayText)
@@ -238,10 +238,10 @@ def plotRmsSreb(StatsData, yearDayText):
         filePath, title, 
         PRN, [SREbRMS], 
         "GPS-PRN", ["RMS SRE-B[m]"], 
-        ['y'],'upper left',[0,0.1]))
+        ['y'],'upper left',[-0.2,0.1]))
 
-def plotSREW(StatsData, yearDayText):
-    filePath = sys.argv[1] + f'{RelativePath}SAT_SREW_{yearDayText}_G123_50s.png' 
+def plotMaxAndRmsSREW(StatsData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}SAT_MAX_RMS_SREW_{yearDayText}_G123_50s.png' 
     title = f"RMS and Maximun Value of SRE at the WUL {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
 
@@ -251,10 +251,10 @@ def plotSREW(StatsData, yearDayText):
     SREWMAX = StatsData[SatStatsIdx["SREWMAX"]]    
     
     plt.generatePlot(plt.createPlotConfig2DVerticalBars(
-        filePath, title, PRN, [SREWMAX,SREWRMS], "GPS-PRN", ["MAX SREW[m]","RMS SREW[m]"], ['y','b'],'upper left', [0,0.4] ))
+        filePath, title, PRN, [SREWMAX,SREWRMS], "GPS-PRN", ["MAX SREW[m]","RMS SREW[m]"], ['y','b'],'upper left', [-0.5,0.4] ))
 
-def plotSFLT(StatsData, yearDayText):
-    filePath = sys.argv[1] + f'{RelativePath}SAT_SFLT_{yearDayText}_G123_50s.png' 
+def plotMaxMinSFLT(StatsData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}SAT_MAX_MIN_SigmaFLT_{yearDayText}_G123_50s.png' 
     title = f"Maximun and Minimun SigmaFLT (=SigmaUDRE) {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
 
@@ -264,10 +264,10 @@ def plotSFLT(StatsData, yearDayText):
     SFLTMAX = StatsData[SatStatsIdx["SFLTMAX"]]    
     
     plt.generatePlot(plt.createPlotConfig2DVerticalBars(
-        filePath, title, PRN, [SFLTMAX,SFLTMIN], "GPS-PRN", ["MAX SFLT[m]","MIN SFLT[m]"], ['y','b'],'upper left', [0,0.7] ))
+        filePath, title, PRN, [SFLTMAX,SFLTMIN], "GPS-PRN", ["MAX SFLT[m]","MIN SFLT[m]"], ['y','b'],'upper left', [-0.6,0.7] ))
 
-def plotSIW(StatsData, yearDayText):
-    filePath = sys.argv[1] + f'{RelativePath}SAT_SIW_{yearDayText}_G123_50s.png' 
+def plotMaxSIW(StatsData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}SAT_MAX_SIW_{yearDayText}_G123_50s.png' 
     title = f"Maximun Satellite Safety Index SI at WUL SREW/5.33UDRE {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
     
@@ -369,38 +369,22 @@ def plotMON2(SatInfoData, yearDayText):
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns    
-    HOD = SatInfoData[SatInfoIdx["SoD"]] / GnssConstants.S_IN_H  # Converting to hours
-    PRN = SatInfoData[SatInfoIdx["PRN"]]    
-    MONSTAT = SatInfoData[SatInfoIdx["MONSTAT"]]    
-    NRIMS = SatInfoData[SatInfoIdx["NRIMS"]]    
+    FilterCond = SatInfoData[SatInfoIdx["MONSTAT"]] == 1
+    xData = SatInfoData[SatInfoIdx["SoD"]][FilterCond] / GnssConstants.S_IN_H
+    yData = [int(s[1:]) for s in SatInfoData[SatInfoIdx["PRN"]][FilterCond]]    
+    zData = SatInfoData[SatInfoIdx["NRIMS"]][FilterCond]
 
-    NRIMS_FILT = np.array([])
-    HOD_FILT = np.array([])
-    PRN_FILT = np.array([])
-
-    for index in range(len(SatInfoData[SatInfoIdx["SAT-X"]])):
-        mon = MONSTAT[index]
-        if (mon != 1): # Discard data where monstat is not good
-            continue         
-        HOD_FILT = np.append(HOD_FILT, HOD[index])
-        PRN_FILT = np.append(PRN_FILT, PRN[index])   
-        NRIMS_FILT = np.append(NRIMS_FILT, NRIMS[index])
-        
-
-    #filtered_nrims = [nrims_value if monstat_value == 1 else -1000 for monstat_value, nrims_value in zip(MONSTAT, NRIMS)]
-
-    
     PlotConf = plt.createPlotConfig2DLinesColorBar(
         filePath, title, 
-        HOD_FILT, PRN_FILT, NRIMS_FILT,                 # xData, yData, zData 
+        xData, yData, zData,                            # xData, yData, zData 
         "Hour of Day", "GPS-PRN", "Number of RIMS",     # xLabel, yLabel, zLabel 
-        '.' , False)                                    # marker, applyLimits
+        '|' , False)                                    # marker, applyLimits
     
+    PlotConf["LineWidth"] = 2
     PlotConf["xTicks"] = range(0, 25)
     PlotConf["xLim"] = [0, 24]
     PlotConf["yTicks"] = range(0,33)
-    #PlotConf["yTicks"] = sorted(np.unique(PRN_FILT))
-    PlotConf["yLim"] = [0, 31]    
+    PlotConf["yLim"] = [0, 32]    
     
     plt.generatePlot(PlotConf)
 
@@ -427,11 +411,10 @@ def plotMON3(SatInfoData, yearDayText):
         mon = MONSTAT[index]
         if (mon != 1): # Discard data where monstat is not good
             continue            
-        x = SatInfoData[SatInfoIdx["SAT-X"]][index]
-        y = SatInfoData[SatInfoIdx["SAT-Y"]][index]
-        z = SatInfoData[SatInfoIdx["SAT-Z"]][index]
-        long, lat, alt = sft.ecef_to_geodetic(x, y, z)
-        #long, lat, alt = xyz2llh(x, y, z)
+        x = SatInfoData[SatInfoIdx["SAT-X"]][index] * 1000
+        y = SatInfoData[SatInfoIdx["SAT-Y"]][index] * 1000
+        z = SatInfoData[SatInfoIdx["SAT-Z"]][index] * 1000        
+        long, lat, alt = xyz2llh(x, y, z)
         LONG = np.append(LONG, long)
         LAT = np.append(LAT, lat)
         NRIMS_FILT = np.append(NRIMS_FILT, NRIMS[index])
@@ -439,7 +422,7 @@ def plotMON3(SatInfoData, yearDayText):
     PlotConf = plt.createPlotConfig2DLinesColorBar(filePath, title, 
         LONG, LAT, NRIMS_FILT,                                  # xData, yData, zData 
         "LON [deg]", "LAT [deg]", "Number of RIMS",             # xLabel, yLabel, zLabel 
-        '.' , False)                                       # marker, applyLimits
+        '.' , False)                                            # marker, applyLimits
     
     PlotConf["Map"] = True    
     PlotConf["LonMin"] = -135
@@ -513,16 +496,17 @@ def plotSigmaFLTvsIDOP(SatInfoData, yearDayText):
     HOD = SatInfoData[SatInfoIdx["SoD"]] / GnssConstants.S_IN_H  # Converting to hours
     RDOP = SatInfoData[SatInfoIdx["RDOP"]]
     SFLTW = SatInfoData[SatInfoIdx["SFLT-W"]]    
-    IRDOP = 1/RDOP
-
+    
     PlotConf = plt.createPlotConfig2DLinesColorBar(
         filePath, title, 
-        HOD, SFLTW, RDOP,                                             # xData, yData, zData 
+        HOD, SFLTW, RDOP,                                              # xData, yData, zData 
         "Hour of Day", "SigmaFLT [m]", "Inverse Radial DOP",           # xLabel, yLabel, zLabel 
         '.' , False)                                                   # marker, applyLimits
     
     PlotConf["xTicks"] = range(0, 25)
     PlotConf["xLim"] = [0, 24]   
+    PlotConf["ColorBarMin"] = 0
+    PlotConf["ColorBarMax"] = 100
     
     plt.generatePlot(PlotConf)
 

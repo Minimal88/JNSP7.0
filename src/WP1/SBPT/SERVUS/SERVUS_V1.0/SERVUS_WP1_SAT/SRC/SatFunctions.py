@@ -175,18 +175,6 @@ def ecefToGeodetic(xEcef, yEcef, zEcef):
 
     return Longitude, Latitude, Altitude
 
-from pyproj import Proj, transform
-
-def ecef_to_geodetic(x_ecef, y_ecef, z_ecef):
-    # Define the ECEF and Geodetic coordinate systems
-    ecef = Proj(proj='geocent', ellps='WGS84', datum='WGS84')
-    geodetic = Proj(proj='latlong', ellps='WGS84', datum='WGS84')
-
-    # Perform the coordinate transformation
-    lon, lat, alt = transform(ecef, geodetic, x_ecef, y_ecef, z_ecef, radians=False)
-
-    return lon, lat, alt
-
 # ------------------------------------------------------------------------------------
 # INTERNAL FUNCTIONS 
 # ------------------------------------------------------------------------------------
@@ -225,10 +213,7 @@ def updateEpochStats(SatInfo, InterOutputs, Outputs):
         Outputs[satPrn]["NTRANS"] += 1        
 
     # Reject if satellite is not MONITORED:
-    if(SatInfo[SatInfoIdx["MONSTAT"]] != '1'):         
-        logFile = 'MONITORED_updateEpochStats.txt'
-        logMessage = 'Rejected -> SoD: '+ SatInfo[SatInfoIdx["SoD"]] + ', PRN: ' + SatInfo[SatInfoIdx["PRN"]] + ', MONSTAT: ' + SatInfo[SatInfoIdx["MONSTAT"]] + ', MONPREV: ' + str(InterOutputs[satPrn]["MONPREV"]) + ' \n'        
-        open(logFile, 'a').write(logMessage)  if os.path.isfile(logFile) else open(logFile, 'w').write(logMessage)
+    if(SatInfo[SatInfoIdx["MONSTAT"]] != '1'):        
         stat.updatePreviousInterOutputsFromCurrentSatInfo(InterOutputs, SatInfo)
         return
     
@@ -237,15 +222,9 @@ def updateEpochStats(SatInfo, InterOutputs, Outputs):
 
     # Reject if SRE_STATUS IS NOT OK:
     if(SatInfo[SatInfoIdx["SRESTAT"]] != '1'): 
-        stat.updatePreviousInterOutputsFromCurrentSatInfo(InterOutputs, SatInfo)
-        logFile = 'SRESTAT_updateEpochStats.txt'
-        logMessage = 'Rejected -> SoD: '+ SatInfo[SatInfoIdx["SoD"]] + ', PRN: ' + SatInfo[SatInfoIdx["PRN"]] + ', SRESTAT: ' + SatInfo[SatInfoIdx["SRESTAT"]] + ' \n'
-        open(logFile, 'a').write(logMessage)  if os.path.isfile(logFile) else open(logFile, 'w').write(logMessage)
+        stat.updatePreviousInterOutputsFromCurrentSatInfo(InterOutputs, SatInfo)        
         return
     
-    # Update number of samples Monitored & SRE OK
-    InterOutputs[satPrn]["SREWSAMPS"] += 1
-
     updateEpochStatsMaxMin(SatInfo, satPrn, InterOutputs, Outputs)
 
     # Computes the SREa SREb SREc SREr squeared sum
@@ -253,11 +232,11 @@ def updateEpochStats(SatInfo, InterOutputs, Outputs):
     # Reject the first Epoch
     if ( currSod == 0):         
         stat.updatePreviousInterOutputsFromCurrentSatInfo(InterOutputs, SatInfo)
-        logFile = 'FIRSTEPOCH_updateEpochStats.txt'
-        logMessage = 'Rejected -> SoD: '+ SatInfo[SatInfoIdx["SoD"]] + ', PRN: ' + SatInfo[SatInfoIdx["PRN"]] + ' \n'
-        open(logFile, 'a').write(logMessage)  if os.path.isfile(logFile) else open(logFile, 'w').write(logMessage)
-        return           
-    
+        return    
+
+    # Update number of samples Monitored & SRE OK
+    InterOutputs[satPrn]["SREWSAMPS"] += 1
+
     # Update number of samples Monitored & SRE OK & Not First Epoch
     InterOutputs[satPrn]["SREACRSAMPS"] += 1        
     
@@ -273,11 +252,14 @@ def updateEpochStats(SatInfo, InterOutputs, Outputs):
     srea, srec = stat.computeSREaAndSREc(DeltaT, PrevPosVector, CurrPosVector, sreVector)   
     sreb = InterOutputs[satPrn]["SREb"]
     srer = InterOutputs[satPrn]["SREr"]
+    srew = float(SatInfo[SatInfoIdx["SREW"]])
+
     # Update sum of squared SRE values in InterOutputs[SatLabel]
     InterOutputs[satPrn]["SREaSUM2"] += srea**2
     InterOutputs[satPrn]["SREbSUM2"] += sreb**2
     InterOutputs[satPrn]["SREcSUM2"] += srec**2
     InterOutputs[satPrn]["SRErSUM2"] += srer**2   
+    InterOutputs[satPrn]["SREWSUM2"] += srew**2   
 
     # Update the previous values with the current SatInfo Values
     stat.updatePreviousInterOutputsFromCurrentSatInfo(InterOutputs, SatInfo)
@@ -353,10 +335,11 @@ def computeFinalStatistics(InterOutputs, Outputs):
         Outputs[satLabel]["MON"] = Outputs[satLabel]["MON"] * 100.0 / InterOutputs[satLabel]["NSAMPS"]
 
         # Compute final RMS for all SRE        
-        SREaRMS, SREbRMS,SREcRMS,SRErRMS = stat.computeSatRmsSreAcrFromInterOuputs(InterOutputs, satLabel)
+        SREaRMS, SREbRMS,SREcRMS,SRErRMS,SREwRMS = stat.computeSatRmsSreAcrFromInterOuputs(InterOutputs, satLabel)
         Outputs[satLabel]["SREaRMS"] = SREaRMS
         Outputs[satLabel]["SREbRMS"] = SREbRMS
         Outputs[satLabel]["SREcRMS"] = SREcRMS
         Outputs[satLabel]["SRErRMS"] = SRErRMS
+        Outputs[satLabel]["SREWRMS"] = SREwRMS
 
 
