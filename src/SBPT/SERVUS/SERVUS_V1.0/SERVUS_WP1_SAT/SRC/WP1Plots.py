@@ -149,9 +149,9 @@ def plotRimsPositions(RimsData, yearDayText):
     
     PlotConf = plt.createPlotConfig2DLines(
         filePath, title, 
-        LON, [LAT], 
-        "Longitude [deg]", ["Latitude [deg]"], 
-        ['r'], ['o'], 
+        LON, [LAT],                                 # xData, yData
+        "Longitude [deg]", ["Latitude [deg]"],      # xLabel, yLabel
+        ['r'], ['o'],                               # Colors, Markers
         '', [0,0], applyLimits=False)
     
     PlotConf["Text"] = {}
