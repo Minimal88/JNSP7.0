@@ -31,15 +31,12 @@
 import sys, os
 projectDir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, projectDir)
-from COMMON.Dates import convertYearMonthDay2JulianDay
 from COMMON.Dates import convertJulianDay2YearMonthDay
 from COMMON.Dates import convertYearMonthDay2Doy
-from COMMON.Files import readDataFile
+from COMMON.Files import readDataFile, readConf, processConf
 from SatFunctions import computeSatStats
-from SatStatistics import SatStatsIdx, SatStatsTimeIdx, SatInfoIdx
-from collections import OrderedDict
+from SatStatistics import SatStatsIdx, SatStatsTimeIdx
 import WP1Plots  as wp1Plot
-from yaml import dump
 import sys, os
 
 
@@ -49,46 +46,6 @@ import sys, os
 
 def displayUsage():
     sys.stderr.write("ERROR: Please provide path to SCENARIO as a unique argument\n")
-
-# Function to read the configuration file
-def readConf(CfgFile):
-    Conf = OrderedDict({})
-    with open(CfgFile, 'r') as f:
-        # Read file
-        Lines = f.readlines()
-
-        # Read each configuration parameter which is compound of a key and a value
-        for Line in Lines:
-            if "#" in Line: continue
-            if not Line.strip(): continue
-            LineSplit = Line.split('=')
-            try:
-                LineSplit = list(filter(None, LineSplit))
-                Conf[LineSplit[0].strip()] = LineSplit[1].strip()
-
-            except:
-                sys.stderr.write("ERROR: Bad line in conf: %s\n" % Line)
-
-    return Conf
-
-def processConf(Conf):
-    ConfCopy = Conf.copy()
-    for Key in ConfCopy:
-        Value = ConfCopy[Key]
-        if Key == "INI_DATE" or Key == "END_DATE":
-            ParamSplit = Value.split('/')
-
-            # Compute Julian Day
-            Conf[Key + "_JD"] = \
-                int(round(
-                    convertYearMonthDay2JulianDay(
-                        int(ParamSplit[2]),
-                        int(ParamSplit[1]),
-                        int(ParamSplit[0]))
-                    )
-                )
-
-    return Conf
 
 #######################################################
 # MAIN BODY
