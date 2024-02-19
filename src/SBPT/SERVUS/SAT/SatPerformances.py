@@ -6,9 +6,9 @@
 #
 #  Project:        SBPT
 #  File:           SatPerformances.py
-#  Date(YY/MM/DD): 20/07/11
+#  Date(YY/MM/DD): 24/02/19
 #
-#   Author: GNSS Academy
+#   Author: Esteban Martinez Valvere
 #   Copyright 2020 GNSS Academy
 #
 # -----------------------------------------------------------------
@@ -19,13 +19,18 @@
 # i.e: SatPerformances.py $SCEN_PATH
 # 
 # Internal dependencies:
-#   SatFunctions.py
 #   COMMON
+#   SatFunctions
+#   SatStatistics
 ########################################################################
 
 
 # Import External and Internal functions and Libraries
 #----------------------------------------------------------------------
+# Add path to find all modules
+import sys, os
+projectDir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, projectDir)
 from COMMON.Dates import convertYearMonthDay2JulianDay
 from COMMON.Dates import convertJulianDay2YearMonthDay
 from COMMON.Dates import convertYearMonthDay2Doy

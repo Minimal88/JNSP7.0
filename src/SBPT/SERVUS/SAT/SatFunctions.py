@@ -6,25 +6,21 @@
 #
 #  Project:        SBPT
 #  File:           SatFunctions.py
-#  Date(YY/MM/DD): 20/07/11
+#  Date(YY/MM/DD): 24/02/19
 #
-#   Author: GNSS Academy
+#   Author: Esteban Martinez Valvere
 #   Copyright 2020 GNSS Academy
 # 
 # Internal dependencies:
 #   COMMON
+#   SatStatistics
 ########################################################################
 
 
 # Import External and Internal functions and Libraries
 #----------------------------------------------------------------------
-import sys, os
-
+import sys
 from pandas import read_csv
-# Add path to find all modules
-Common = os.path.dirname(os.path.dirname(
-    os.path.abspath(sys.argv[0]))) + '/COMMON'
-sys.path.insert(0, Common)
 from collections import OrderedDict
 from COMMON.Coordinates import xyz2llh
 import SatStatistics  as stat

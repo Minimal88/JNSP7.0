@@ -6,29 +6,27 @@
 #
 #  Project:        SBPT
 #  File:           SatStatPlots.py
-#  Date(YY/MM/DD): 24/02/08
+#  Date(YY/MM/DD): 24/02/19
 #
-#   Author: GNSS Academy
+#   Author: Esteban Martinez Valvere
 #   Copyright 2020 GNSS Academy
 # 
 # Internal dependencies:
 #   COMMON
+#   SatStatistics
+#   SatFunctions
 ########################################################################
 
 
 # Import External and Internal functions and Libraries
 #----------------------------------------------------------------------
-import sys, os
-# Add path to find all modules
-Common = os.path.dirname(os.path.dirname(
-    os.path.abspath(sys.argv[0]))) + '/COMMON'
-sys.path.insert(0, Common)
+import sys
+import numpy as np
 import COMMON.Plots as plt
 from COMMON import GnssConstants
-from SatStatistics import SatStatsIdx, SatInfoIdx, SatStatsTimeIdx, RimsIdx
 from COMMON.Coordinates import xyz2llh
 import SatFunctions as sft
-import numpy as np
+from SatStatistics import SatStatsIdx, SatInfoIdx, SatStatsTimeIdx, RimsIdx
 
 # Define relative path
 RelativePath = '/OUT/SAT/FIGURES/'
