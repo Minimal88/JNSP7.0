@@ -34,7 +34,8 @@ sys.path.insert(0, projectDir)
 from COMMON.Dates import convertYearMonthDay2JulianDay
 from COMMON.Dates import convertJulianDay2YearMonthDay
 from COMMON.Dates import convertYearMonthDay2Doy
-from SatFunctions import computeSatStats, readDataFile
+from COMMON.Files import readDataFile
+from SatFunctions import computeSatStats
 from SatStatistics import SatStatsIdx, SatStatsTimeIdx, SatInfoIdx
 from collections import OrderedDict
 import WP1Plots  as wp1Plot

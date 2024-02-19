@@ -25,6 +25,7 @@ import numpy as np
 import COMMON.Plots as plt
 from COMMON import GnssConstants
 from COMMON.Coordinates import xyz2llh
+from COMMON.Files import readDataFile
 import SatFunctions as sft
 from SatStatistics import SatStatsIdx, SatInfoIdx, SatStatsTimeIdx, RimsIdx
 
@@ -34,7 +35,7 @@ RelativePath = '/OUT/SAT/FIGURES/'
 # EXTERNAL FUNCTIONS 
 # ------------------------------------------------------------------------------------
 def plotRims(RimsFilePath, yearDayText):
-    RimsData = sft.readDataFile(RimsFilePath, [RimsIdx["SNA"],RimsIdx["LAT"],RimsIdx["LON"]], 15)
+    RimsData = readDataFile(RimsFilePath, [RimsIdx["SNA"],RimsIdx["LAT"],RimsIdx["LON"]], 15)
 
     # Display the network of RIMS configured in the Scenario
     plotRimsPositions(RimsData, yearDayText)
@@ -98,7 +99,7 @@ def plotSatStatsTime(SatStatsTimeData, SatInfoFilePath, yearDayText):
     Returns:
         None
     """
-    SatInfoData = sft.readDataFile(SatInfoFilePath,[
+    SatInfoData = readDataFile(SatInfoFilePath,[
         SatInfoIdx["SoD"], SatInfoIdx["PRN"], SatInfoIdx["MONSTAT"],SatInfoIdx["NRIMS"],
         SatInfoIdx["SREW"], SatInfoIdx["SFLT-W"], SatInfoIdx["RDOP"], SatInfoIdx["SRESTAT"],
         SatInfoIdx["SAT-X"],SatInfoIdx["SAT-Y"],SatInfoIdx["SAT-Z"]])        

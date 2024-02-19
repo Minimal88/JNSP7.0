@@ -20,7 +20,6 @@
 # Import External and Internal functions and Libraries
 #----------------------------------------------------------------------
 import sys
-from pandas import read_csv
 from collections import OrderedDict
 from COMMON.Coordinates import xyz2llh
 import SatStatistics  as stat
@@ -126,27 +125,6 @@ def computeSatStats(satFile, EntGpsFile, satStatsFile):
             # End of with open(satStatsFile, 'w') as fOut:
         # End of with open(EntGpsFile, 'w') as fEntGps:
     # End of with open(satFile, 'r') as f:
-
-def readDataFile(dataFilePath, columnNameList, skipRows = 1):
-    """
-    Read specific columns from a statistics file and return a DataFrame.
-
-    Parameters:
-    - statisticsFilePath: Path to the statistics file.
-    - columnNameList: List of column names to be read.
-    - skipRows: Number of rows to skip. 1 by default.
-
-    Returns:
-    - FetchedData containing the specified columns.
-    """
-    # Read the specified columns from the file
-    FetchedData = read_csv(
-        dataFilePath, delim_whitespace=True, skiprows=skipRows, header=None, usecols=columnNameList)    
-
-    # Set column names based on the provided columnList    
-    #FetchedData.columns = columnNameList
-
-    return FetchedData
 
 def ecefToGeodetic(xEcef, yEcef, zEcef):
     """
