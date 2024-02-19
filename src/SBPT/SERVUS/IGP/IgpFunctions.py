@@ -79,7 +79,7 @@ def computeIgpStats(igpInfoFile, igpStatsFile):
             # ----------------------------------------------------------
             # Write Header of Output files                
             #header_string = delim.join(IgpStatsIdx) + "\n"
-            header_string = "ID BAND BIT   LON       LAT      MON    MINIPPs MAXIPPs NTRANS  RMSGIVDE MAXGIVD  MAXGIVE  MAXGIVEI  MAXVTEC  MAXSI    NMI\n"
+            header_string = "ID   BAND BIT   LON       LAT      MON    MINIPPs MAXIPPs NTRANS  RMSGIVDE MAXGIVD  MAXGIVE  MAXGIVEI  MAXVTEC  MAXSI     NMI\n"
             fOut.write(header_string)
 
             for sat in Outputs.keys():
@@ -133,11 +133,17 @@ def updateEpochStats(IgpInfo, InterOutputs, Outputs):
     # Add Number of samples
     InterOutputs[igpId]["NSAMPS"] = InterOutputs[igpId]["NSAMPS"] + 1
 
+    # Add NTRANS Monitored to Not Monitored (MtoNM) or to Don't USE (MtoDU)
+    prevMon = InterOutputs[igpId]["MONPREV"]
+    currMon = int(IgpInfo[IgpInfoIdx["STATUS"]])
+    if(((prevMon == 1) and (currMon == 0)) or ((prevMon == 1) and (currMon == -1))):
+        Outputs[igpId]["NTRANS"] += 1      
+
     updateEpochMaxMinStatsNonMonitored(IgpInfo, igpId, Outputs)
 
     # Reject if IGP STATUS is not OK:
-    if(IgpInfo[IgpInfoIdx["STATUS"]] != '1'):        
-        # stat.updatePreviousInterOutputsFromCurrentIgpInfo(InterOutputs, IgpInfo)
+    if(currMon != 1):        
+        stat.updatePreviousInterOutputsFromCurrentIgpInfo(InterOutputs, IgpInfo)
         return
     
     # Add Satellite Monitoring if Satellite is Monitored
@@ -145,27 +151,24 @@ def updateEpochStats(IgpInfo, InterOutputs, Outputs):
 
     # Reject if GIVDE_STAT IS NOT OK:
     if(IgpInfo[IgpInfoIdx["GIVDE_STAT"]] != '1'): 
-        # stat.updatePreviousInterOutputsFromCurrentIgpInfo(InterOutputs, IgpInfo)        
+        stat.updatePreviousInterOutputsFromCurrentIgpInfo(InterOutputs, IgpInfo)        
         return
     
     # Update number of samples GIVDESAMPS
     InterOutputs[igpId]["GIVDESAMPS"] += 1
+
+    updateEpochMaxMinStatsMonitored(IgpInfo, igpId, Outputs)
 
     Outputs[igpId]["BAND"] = int(IgpInfo[IgpInfoIdx["BAND"]])
     Outputs[igpId]["BIT"] = int(IgpInfo[IgpInfoIdx["BIT"]])
     Outputs[igpId]["LON"] = float(IgpInfo[IgpInfoIdx["LON"]])
     Outputs[igpId]["LAT"] = float(IgpInfo[IgpInfoIdx["LAT"]])
 
-    # # Reject the first Epoch
-    # if ( currSod == 0):         
-    #     stat.updatePreviousInterOutputsFromCurrentIgpInfo(InterOutputs, IgpInfo)
-    #     return    
-   
     # Update sum of squared GIVDE values in InterOutputs[igpId]
     InterOutputs[igpId]["GIVDESUM2"] += float(IgpInfo[IgpInfoIdx["GIVDE"]])**2
     
     # Update the previous values with the current IgpInfo Values
-    # stat.updatePreviousInterOutputsFromCurrentIgpInfo(InterOutputs, IgpInfo)
+    stat.updatePreviousInterOutputsFromCurrentIgpInfo(InterOutputs, IgpInfo)
 
 def updateEpochMaxMinStatsNonMonitored(IgpInfo, igpId, Outputs):
     # Update the Minimum Number of IPPs surrounding the IGP
@@ -177,56 +180,36 @@ def updateEpochMaxMinStatsNonMonitored(IgpInfo, igpId, Outputs):
     if( NIPP > Outputs[igpId]["MAXIPPs"]):
         Outputs[igpId]["MAXIPPs"] = NIPP        
 
-    # Update the Maximun SREw
-    # currSREW = float(IgpInfo[IgpInfoIdx["SREW"]])
-    # if( currSREW > Outputs[igpId]["SREWMAX"]):
-    #     Outputs[igpId]["SREWMAX"] = currSREW
+def updateEpochMaxMinStatsMonitored(IgpInfo, igpId, Outputs):
+    # Update the Maximun GIVD
+    currGIVD = float(IgpInfo[IgpInfoIdx["GIVD"]])
+    if( currGIVD > Outputs[igpId]["MAXGIVD"]):
+        Outputs[igpId]["MAXGIVD"] = currGIVD
 
-    # # Update the Maximun SFLT
-    # currSFLT = float(IgpInfo[IgpInfoIdx["SFLT-W"]])
-    # if( currSFLT > Outputs[igpId]["SFLTMAX"]):
-    #     Outputs[igpId]["SFLTMAX"] = currSFLT
+    # Update the Maximun GIVE
+    currGIVE = float(IgpInfo[IgpInfoIdx["GIVE"]])
+    if( currGIVE > Outputs[igpId]["MAXGIVE"]):
+        Outputs[igpId]["MAXGIVE"] = currGIVE
 
-    # # Update the Minimun SFLT
-    # if( currSFLT < Outputs[igpId]["SFLTMIN"]):
-    #     Outputs[igpId]["SFLTMIN"] = currSFLT
+    # Update the Maximun GIVEI
+    currGIVEI = float(IgpInfo[IgpInfoIdx["GIVEI"]])
+    if( currGIVEI > Outputs[igpId]["MAXGIVEI"]):
+        Outputs[igpId]["MAXGIVEI"] = currGIVEI
+
+    # Update the Maximun VTEC
+    currVTEC = float(IgpInfo[IgpInfoIdx["VTEC"]])
+    if( currVTEC > Outputs[igpId]["MAXVTEC"]):
+        Outputs[igpId]["MAXVTEC"] = currVTEC
     
-    # # Compute MAX SIW - Maximum Satellite Safety Index
-    # # As the ratio between the SRE and the SigmaFLT at the Worst User Location
-    # currSIW = currSREW / (5.33 * currSFLT)
-
-    # # Update the Maximum SIMAX
-    # if( currSIW > Outputs[igpId]["SIMAX"]):
-    #     Outputs[igpId]["SIMAX"] = currSIW
-
-    # # Update the Number of Satellite MIs (Misleading Information) - SI > 1
-    # if(currSIW > 1):
-    #     Outputs[igpId]["NMI"] += 1    
+    # Update the Maximun SI
+    currSIW = float(IgpInfo[IgpInfoIdx["SI-W"]])
+    if( currSIW > Outputs[igpId]["MAXSI"]):
+        Outputs[igpId]["MAXSI"] = currSIW
     
-    # # Update the Maximun Absolute Value of LTCb
-    # absAF0 = abs(float(IgpInfo[IgpInfoIdx["AF0"]]))
-    # if(absAF0 > Outputs[igpId]["LTCbMAX"]):
-    #     Outputs[igpId]["LTCbMAX"] = absAF0
+    # Update the Number of IGP MIs (Misleading Information) NMI = SI > 1
+    if(currSIW > 1):
+        Outputs[igpId]["NMI"] += 1    
 
-    # # Update the Maximun Absolute Value of FCMAX
-    # absFC = abs(float(IgpInfo[IgpInfoIdx["FC"]]))
-    # if(absFC > Outputs[igpId]["FCMAX"]):
-    #     Outputs[igpId]["FCMAX"] = absFC
-
-    # # Update the Maximun Absolute Value of LTCx
-    # absLTCx = abs(float(IgpInfo[IgpInfoIdx["LTCx"]]))
-    # if(absLTCx > Outputs[igpId]["LTCxMAX"]):
-    #     Outputs[igpId]["LTCxMAX"] = absLTCx
-
-    # # Update the Maximun Absolute Value of LTCy
-    # absLTCy = abs(float(IgpInfo[IgpInfoIdx["LTCy"]]))
-    # if(absLTCy > Outputs[igpId]["LTCyMAX"]):
-    #     Outputs[igpId]["LTCyMAX"] = absLTCy
-    
-    # # Update the Maximun Absolute Value of LTCz
-    # absLTCz = abs(float(IgpInfo[IgpInfoIdx["LTCz"]]))
-    # if(absLTCz > Outputs[igpId]["LTCzMAX"]):
-    #     Outputs[igpId]["LTCzMAX"] = absLTCz
 
 def computeFinalStatistics(InterOutputs, Outputs):
     for igpId in Outputs.keys():
@@ -238,9 +221,9 @@ def computeFinalStatistics(InterOutputs, Outputs):
         # Estimate the Monitoring percentage = Monitored epochs / Total epochs
         Outputs[igpId]["MON"] = Outputs[igpId]["MON"] * 100.0 / InterOutputs[igpId]["NSAMPS"]
 
-        # Compute final RMS for all SRE        
-        # SREaRMS, SREbRMS,SREcRMS,SRErRMS,SREwRMS = stat.computeSatRmsSreAcrFromInterOuputs(InterOutputs, igpId)
-        # Outputs[igpId]["SREaRMS"] = SREaRMS        
+        # Compute final RMS
+        rmsGIVDE = stat.computeIgpRmsFromInterOuputs(InterOutputs, igpId)
+        Outputs[igpId]["RMSGIVDE"] = rmsGIVDE        
 
 
 

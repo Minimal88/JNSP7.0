@@ -85,7 +85,7 @@ RimsIdx = dict([
 ])
 
 # Define Satidistics Output file format list
-StatsOutputFormat = "%3d %3d %3d %8.2f %8.2f %8.2f %6d %6d %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f"
+StatsOutputFormat = "%3d %3d %5d %8.2f %8.2f %8.2f %6d %6d %6d %10.4f %8.3f %8.3f %8d %8.3f %8.3f %6d"
 
 
 def splitLine(Line):
@@ -149,7 +149,8 @@ def initializeInterOutputs(InterOutputs):
     for igpId in range(1,288):
         InterOutputs[igpId] = {
             "NMI": 0,     
-            "NSAMPS": 0,       
+            "NSAMPS": 0,
+            "MONPREV": 0,
             "GIVDESUM2": 0,
             "GIVDESAMPS": 0,
             "LATPREV": 0,
@@ -220,61 +221,50 @@ def updateInterOutputs(InterOutputs, SatLabel, UpdateDict):
     for tag, value in UpdateDict.items():
         InterOutputs[SatLabel][tag] = value
 
-def updatePreviousInterOutputsFromCurrentSatInfo(InterOutputs, SatInfo):
+def updatePreviousInterOutputsFromCurrentIgpInfo(InterOutputs, IgpInfo):
     """
-    Update the previous values in InterOutputs[SatLabel] using the current values from SatInfo.
+    Update the previous values in InterOutputs[SatLabel] using the current values from IgpInfo.
     SODPREV -> SoD;    MONPREV -> MONSTAT;    XPREV -> SAT-X;    YPREV -> SAT-X;    ZPREV -> SAT-X
 
     Parameters:
     - InterOutputs: Intermediate outputs containing information for each satellite.
-    - SatInfo: Information for a specific satellite, including current values.
+    - IgpInfo: Information for a specific satellite, including current values.
     """
-    # Extract satellite label (PRN) from SatInfo
-    SatLabel = SatInfo[IgpInfoIdx["PRN"]]
+    # Extract IGP ID from IgpInfo
+    igpId = int(IgpInfo[IgpInfoIdx["ID"]])
 
-    # Check if SatLabel exists in InterOutputs
-    if SatLabel in InterOutputs:
+    # Check if igpId exists in InterOutputs
+    if igpId in InterOutputs:
         # Create UpdateDict with tag-value pairs for "PREV" values
         UpdateDict = {
-            "SODPREV": int(SatInfo[IgpInfoIdx["SoD"]]),
-            "MONPREV": int(SatInfo[IgpInfoIdx["MONSTAT"]]),
-            "XPREV": float(SatInfo[IgpInfoIdx["SAT-X"]]),
-            "YPREV": float(SatInfo[IgpInfoIdx["SAT-Y"]]),
-            "ZPREV": float(SatInfo[IgpInfoIdx["SAT-Z"]])
+            "SODPREV": int(IgpInfo[IgpInfoIdx["SoD"]]),
+            "MONPREV": int(IgpInfo[IgpInfoIdx["STATUS"]])            
         }
 
         # Call the UpdateInterOutputs function with the UpdateDict
-        updateInterOutputs(InterOutputs, SatLabel, UpdateDict)
+        updateInterOutputs(InterOutputs, igpId, UpdateDict)
 
-def computeSatRmsSreAcrFromInterOuputs(interOutputs, satLabel):
+def computeIgpRmsFromInterOuputs(interOutputs, igpId):
     """
-    Compute the Root Mean Square of Satellite Orbit Error Components (SRE-A, SRE-B, SRE-C, SRE-R).
+    Compute the Root Mean Square of the GIVD error (GIVDE) in meters.
 
     Parameters:
-    - interOutputs: Intermediate outputs containing SRE components for each satellite.    
-    - satLabel: Label (identifier) for the satellite.
+    - interOutputs: Intermediate outputs.
+    - igpId: Identifier) for the IGP.
 
     Returns:
-    - rmsSreA: RMS of Satellite Residual Error Along-Track component.
-    - rmsSreB: RMS of Satellite Residual Error Clock component.
-    - rmsSreC: RMS of Satellite Residual Error Cross-Track component.
-    - rmsSreR: RMS of Satellite Residual Error Radial component.
+    - rmsGIVDE: RMS of the GIVD error.
     """
-    satData = interOutputs[satLabel]
+    igpData = interOutputs[igpId]
     
     # Update sample counts
-    srewSamps = satData["SREWSAMPS"]
-    sreacrSamps = satData["SREACRSAMPS"]
-    assert sreacrSamps == srewSamps, "Samples are not equal"
+    givdeSamps = igpData["GIVDESAMPS"]   
+    if(givdeSamps == 0): return 0
 
     # Calculate RMS values
-    rmsSreA = sqrt(satData["SREaSUM2"] / (sreacrSamps))
-    rmsSreB = sqrt(satData["SREbSUM2"] / (sreacrSamps))
-    rmsSreC = sqrt(satData["SREcSUM2"] / (sreacrSamps))
-    rmsSreR = sqrt(satData["SRErSUM2"] / (sreacrSamps))
-    rmsSreW = sqrt(satData["SREWSUM2"] / (srewSamps))
+    rmsGIVDE = sqrt(igpData["GIVDESUM2"] / (givdeSamps))
 
-    return rmsSreA, rmsSreB,rmsSreC,rmsSreR,rmsSreW
+    return rmsGIVDE
 
 def computeSREaAndSREc(deltaT, prevPosVector, currPosVector, sreVector): 
     """
