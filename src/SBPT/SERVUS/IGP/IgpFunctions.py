@@ -20,7 +20,7 @@ import numpy as np
 from COMMON.Files import readDataFile
 from collections import OrderedDict
 import IgpStatistics  as stat
-from IgpStatistics import IgpInfoIdx, IgpStatsIdx, RimsIdx 
+from IgpStatistics import IgpInfoIdx, IgpStatsIdx
 
 
 # Define Satidistics Output file format list

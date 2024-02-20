@@ -65,7 +65,7 @@ def prepareAxis(PlotConf, ax):
 
             if axis == "y":
                 if key == axis + "Label":
-                    ax.set_ylabel(PlotConf[axis + "Label"], labelpad=20)
+                    ax.set_ylabel(PlotConf[axis + "Label"], labelpad=35)
 
                 if key == axis + "Ticks":
                     ax.set_yticks(PlotConf[axis + "Ticks"])
@@ -179,19 +179,13 @@ def generateLinesPlot(PlotConf):
             linewidth = LineWidth,
             c = cmap(normalize(np.array(PlotConf["zData"][Label]))))
 
-        elif "Text" in PlotConf:
-            # Use scatter instead of plot for marker-based plot without connecting lines
-            ax.scatter(PlotConf["xData"][Label], PlotConf["yData"][Label],
-                            marker=PlotConf["Marker"][Label],
-                            color=PlotConf["Color"][Label],
-                            linewidth=LineWidth,
-                            edgecolors='none',  # No visible marker edges
-                            label=Label)
-            
+        if "Text" in PlotConf:
             # Add text to each point
             for i, txt in enumerate(PlotConf["Text"][Label]):
-                ax.text(PlotConf["xData"][Label][i], PlotConf["yData"][Label][i], txt,
-                        ha='right', va='bottom', fontsize=8)
+                y = PlotConf["yData"][Label][i]
+                color = cmap(normalize(np.array(PlotConf["zData"][Label][i]))) if "ColorBar" in PlotConf else PlotConf["Color"][Label]
+                ax.text(PlotConf["xData"][Label][i], y + 0.5 , f'{txt}',
+                        ha='center', va='bottom', fontsize=8, color=color)
         
         else:
             ax.plot(PlotConf["xData"][Label], PlotConf["yData"][Label],
@@ -451,5 +445,33 @@ def createPlotConfig2DLinesColorBar(filepath, title, xData, yData, zData, xLabel
     PlotConf["ColorBarMin"] = min(zData)
     PlotConf["ColorBarMax"] = max(zData)      
     PlotConf["Path"] = filepath
+
+    return PlotConf
+
+def addMapToPlotConf(PlotConf, LonMin, LonMax, LonStep, LatMin, LatMax, LatStep, yLabel='', TextData=[]):
+    """
+    Adds to an existing configuration, the parameters for a plotting a Map.
+
+    Parameters:
+        
+
+    Returns:
+        PlotConf (dict): Configuration Data Structure for plotting 2D lines with a color bar using generateLinesPlot().
+    """
+    
+    PlotConf["Map"] = True    
+    PlotConf["LonMin"] = LonMin
+    PlotConf["LonMax"] = LonMax
+    PlotConf["LonStep"] = LonStep
+    PlotConf["LatMin"] = LatMin
+    PlotConf["LatMax"] = LatMax
+    PlotConf["LatStep"] = LatStep
+    PlotConf["xTicks"] = range(PlotConf["LonMin"],PlotConf["LonMax"]+1,LonStep)
+    PlotConf["xLim"] = [PlotConf["LonMin"], PlotConf["LonMax"]]
+    PlotConf["yTicks"] = range(PlotConf["LatMin"],PlotConf["LatMax"]+1,LatStep)
+    PlotConf["yLim"] = [PlotConf["LatMin"], PlotConf["LatMax"]]
+    if (len(TextData) > 0):
+        PlotConf["Text"] = {}
+        PlotConf["Text"][yLabel] = TextData
 
     return PlotConf

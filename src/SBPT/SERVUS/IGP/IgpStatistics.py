@@ -69,23 +69,8 @@ IgpStatsIdx = dict([
     ("NMI", 15)    
 ])
 
-
-# Define RIMS file Columns 
-RimsIdx = dict([
-    ("SF", 0),          # Selection flag [0:OFF/1:ON]
-    ("SNA", 1),         # Station Name Acronym [%4s]
-    ("SID", 2),         # Station Number ID [%2d]
-    ("LON", 3),         # Longitude [deg]
-    ("LAT", 4),         # Latitude [deg]
-    ("HEI", 5),         # Height [meters]
-    ("MA", 6),          # Mask Angle [deg]
-    ("AT", 7),          # Acquisition Time [minutes]
-    ("SITE", 8),        # Site [%s] 
-    ("COUNTRY", 9)      # Country [%s]
-])
-
 # Define Satidistics Output file format list
-StatsOutputFormat = "%3d %3d %5d %8.2f %8.2f %8.2f %6d %6d %6d %10.4f %8.3f %8.3f %8d %8.3f %8.3f %6d"
+StatsOutputFormat = "%3d %3d %5d %8.2f %8.2f %8.2f %6d %6d %6d %10.4f %8.3f %8.3f %8d %8.3f %8.4f %6d"
 
 
 def splitLine(Line):

@@ -31,6 +31,7 @@ from COMMON.Dates import convertJulianDay2YearMonthDay
 from COMMON.Dates import convertYearMonthDay2Doy
 from COMMON.Files import readDataFile, readConf, processConf
 from IgpFunctions import computeIgpStats
+import WP2Plots  as plt
 
 
 #----------------------------------------------------------------------
@@ -91,16 +92,23 @@ for Jd in range(Conf["INI_DATE_JD"], Conf["END_DATE_JD"] + 1):
     # Define the name of the Output file Statistics
     IgpStatsFile = IgpInfoFilePath.replace("INFO", "STAT")
 
-    # Display Message
     print('\n*** Processing Day of Year: ', Doy, '...***')
-
-    # Display Message
-    print('1. Processing file:', IgpInfoFilePath)
+    print('1. Processing file: ', IgpInfoFilePath)
     
     # T1. Compute IGP Statistics and generate file
-    computeIgpStats(IgpInfoFilePath, IgpStatsFile)
+    #computeIgpStats(IgpInfoFilePath, IgpStatsFile)
+    print('2. Created file:', IgpStatsFile) 
 
-
+    print('3. Generating Figures...\n')
+    
+    # T4. Generate Satellite RIMS figures   
+    plt.plotMaps(IgpStatsFile, yearDayText)
+    
+    # T5. Generate Satellite Statistics figures   
+    # wp2Plot.plotSatStats(satStatsData, yearDayText)
+    
+    # T6. Generate Satellite Time and Info figures    
+    # wp2Plot.plotSatStatsTime(igpStatsData, SatInfoFilePath, yearDayText)
 
 
 
