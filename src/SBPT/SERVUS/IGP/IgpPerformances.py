@@ -84,11 +84,6 @@ for Jd in range(Conf["INI_DATE_JD"], Conf["END_DATE_JD"] + 1):
         '/OUT/IGP/' + 'IGP_INFO_%s_G123_%ss.dat' % \
             (yearDayText, Conf["TSTEP"])
 
-    # Define the name of the RIMS file
-    RimsFilePath = Scen + \
-        '/INP/RIMS/' + 'RIMS_REF_POSITIONS_%s.dat' % \
-            (Year)
-
     # Define the name of the Output file Statistics
     IgpStatsFile = IgpInfoFilePath.replace("INFO", "STAT")
 
@@ -101,11 +96,11 @@ for Jd in range(Conf["INI_DATE_JD"], Conf["END_DATE_JD"] + 1):
 
     print('3. Generating Figures...\n')
     
-    # T4. Generate Satellite RIMS figures   
-    wp2.plotIgpStatsMaps(IgpStatsFile, yearDayText)
+    # T2. Generate IGP Statistic Maps figures   
+    #wp2.plotIgpStatsMaps(IgpStatsFile, yearDayText)
     
-    # T5. Generate Satellite Statistics figures   
-    # wp2Plot.plotSatStats(satStatsData, yearDayText)
+    # T2. Generate IGP Time figures     
+    wp2.plotIgpInfoTime(IgpInfoFilePath, yearDayText)
     
     # T6. Generate Satellite Time and Info figures    
     # wp2Plot.plotSatStatsTime(igpStatsData, SatInfoFilePath, yearDayText)

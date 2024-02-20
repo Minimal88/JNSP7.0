@@ -23,7 +23,7 @@
 import sys
 import numpy as np
 import COMMON.Plots as plt
-from COMMON.Coordinates import xyz2llh
+from COMMON import GnssConstants
 from COMMON.Files import readDataFile
 import IgpFunctions as sft
 from IgpStatistics import IgpStatsIdx, IgpInfoIdx
@@ -33,9 +33,8 @@ RelativePath = '/OUT/IGP/FIGURES/'
 # ------------------------------------------------------------------------------------
 # EXTERNAL FUNCTIONS 
 # ------------------------------------------------------------------------------------
-def plotIgpStatsMaps(IgpStatsFile, yearDayText):
-    
-    #Fecth all the columns
+def plotIgpStatsMaps(IgpStatsFile, yearDayText):    
+    # Fecth all the columns
     IgpStatsData = readDataFile(IgpStatsFile, IgpStatsIdx.values(), 1)
 
     plotIgpMapMon(IgpStatsData, yearDayText)
@@ -59,11 +58,15 @@ def plotIgpStatsMaps(IgpStatsFile, yearDayText):
     plotIgpMapNTRANS(IgpStatsData, yearDayText)
 
     plotIgpMapNMI(IgpStatsData, yearDayText)
-
-
-    
     return
-    
+
+def plotIgpInfoTime(IgpInfoFile, yearDayText):
+    # Fecth target columns
+    IgpInfoData = readDataFile(IgpInfoFile, [IgpInfoIdx["SoD"], IgpInfoIdx["STATUS"]], 1)
+
+    plotIgpTimeMon(IgpInfoData, yearDayText)
+
+    return
 
 # ------------------------------------------------------------------------------------
 # INTERNAL FUNCTIONS 
@@ -226,7 +229,6 @@ def plotIgpMapMaxRMSGIVDE(IgpStatsData, yearDayText):
 
     plt.generatePlot(PlotConf)
 
-
 # Generate a plot with Map for the IGP Maximum GIVE
 def plotIgpMapMaxGIVE(IgpStatsData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}IGP_MAX_GIVE_MAP_{yearDayText}_G123_50s.png' 
@@ -354,3 +356,67 @@ def plotIgpMapNMI(IgpStatsData, yearDayText):
         yLabel, NMI)              # yLabel, TextData (Optional)
 
     plt.generatePlot(PlotConf)    
+
+
+# Generate a plot with the  Number of Not Monitored IGPs and DU
+def plotIgpTimeMon(IgpInfoData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}IGP_TIME_MON_{yearDayText}_G123_50s.png' 
+    title = f"Number of IGP Monitored EGNOS SIS {yearDayText}"    
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting Target columns        
+    HOD = IgpInfoData[IgpInfoIdx["SoD"]] / GnssConstants.S_IN_H  # Converting to hours    
+    HOD_FILT = sorted(set(HOD))
+    arraySize = len(HOD_FILT)    
+    MON_FILT = np.zeros(arraySize)
+    NMON_FILT = np.zeros(arraySize)
+    DU_FILT = np.zeros(arraySize)
+
+    monCounter = 0
+    nmonCounter = 0
+    duCounter = 0
+    prevHod = HOD[0]
+    j=0
+    for i in range(len(HOD)):
+        if(HOD[i] != prevHod):            
+            MON_FILT[j] = monCounter
+            NMON_FILT[j] = nmonCounter
+            DU_FILT[j] = duCounter        
+            j += 1
+            monCounter = 0
+            nmonCounter = 0
+            duCounter = 0        
+            
+
+        if (IgpInfoData[IgpInfoIdx["STATUS"]][i] == 1):
+            monCounter += 1
+        elif (IgpInfoData[IgpInfoIdx["STATUS"]][i] == 0):
+            nmonCounter += 1
+        elif (IgpInfoData[IgpInfoIdx["STATUS"]][i] == -1):
+            duCounter += 1
+
+        prevHod = HOD[i]
+    # FilterCondMon = IgpInfoData[IgpInfoIdx["STATUS"]] == 1
+    # MON = IgpInfoData[IgpInfoIdx["STATUS"]][FilterCondMon]
+
+    # FilterCondMon = IgpInfoData[IgpInfoIdx["STATUS"]] == 0
+    # NMON = IgpInfoData[IgpInfoIdx["STATUS"]][FilterCondMon]
+
+    # FilterCondMon = IgpInfoData[IgpInfoIdx["STATUS"]] == -1
+    # DU = IgpInfoData[IgpInfoIdx["STATUS"]][FilterCondMon]
+    
+    # NMON = MON
+    # DU = MON
+    # NMON = IgpInfoData[IgpInfoIdx["NMON"]]   
+    # DU = IgpInfoData[IgpInfoIdx["DU"]]   
+    
+    PlotConf = plt.createPlotConfig2DLines(
+        filePath, title, 
+        HOD_FILT, [MON_FILT,NMON_FILT,DU_FILT], 
+        "Hour of Day", ["MON","NOT-MON","DONT USE"], 
+        ['y','g','b'], ['.','.','.'],
+        'upper right', [-0.2,30] )
+    
+    PlotConf["xTicks"] = range(0, 25)
+    PlotConf["xLim"] = [0, 24]
+    plt.generatePlot(PlotConf)
