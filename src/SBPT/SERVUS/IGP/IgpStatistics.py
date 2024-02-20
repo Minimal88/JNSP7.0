@@ -144,48 +144,6 @@ def initializeInterOutputs(InterOutputs):
 
     return
 
-def projectVector(Vector, Direction):
-    """
-    Project a vector onto a given direction.
-
-    Parameters:
-    - Vector: The vector to be projected.
-    - Direction: The direction onto which the vector is projected.
-
-    Returns:
-    - The projection of the vector onto the given direction.
-    """    
-    assert any(Direction) == True, "Empty Direction Vector Array"
-
-    # Compute the Unitary Vector
-    UnitaryVector = Direction / np.linalg.norm(Direction)
-
-    return Vector.dot(UnitaryVector)
-
-def generateVectorFromSatInfo(sat_info, ColTagX, ColTagY, ColTagZ):
-    """
-    This function generates a vector given the column tags.
-
-    Parameters:
-    sat_info (dict): The dictionary containing satellite information.    
-    ColTagX (str): The column tag for the x-component.
-    ColTagY (str): The column tag for the y-component.
-    ColTagZ (str): The column tag for the z-component.
-
-    Returns:
-    np.array: The generated vector.
-    """
-
-    # Get the components of the vector
-    x = float(sat_info[IgpInfoIdx[ColTagX]])
-    y = float(sat_info[IgpInfoIdx[ColTagY]])
-    z = float(sat_info[IgpInfoIdx[ColTagZ]])
-
-    # Get the vector
-    vector = np.array([x, y, z])
-
-    return vector
-
 def updateInterOutputs(InterOutputs, SatLabel, UpdateDict):
     """
     Update the intermediate outputs for a specific satellite with the provided tag-value pairs.
@@ -250,46 +208,5 @@ def computeIgpRmsFromInterOuputs(interOutputs, igpId):
     rmsGIVDE = sqrt(igpData["GIVDESUM2"] / (givdeSamps))
 
     return rmsGIVDE
-
-def computeSREaAndSREc(deltaT, prevPosVector, currPosVector, sreVector): 
-    """
-    Estimate the SRE-Along/Cross.
-
-    Parameters:
-    - deltaT: Time difference between PosPrev and Pos.
-    - prevPosVector: Previous position vector.
-    - currPosVector: Current position vector.
-    - sreVector: Satellite Residual Error vector in XYZ.
-
-    Returns:
-    - SREa: SRE-Along.
-    - SREc: SRE-Cross.    
-    """
-    # Compute the Satellite Velocity deriving the position and 
-    # Adding Earth's Rotation effect on the reference frame
-    omega_vector = np.array([0,0,GnssConstants.OMEGA_EARTH])
-    satVelVector = ( (currPosVector - prevPosVector) / deltaT) +  np.cross(omega_vector, currPosVector)
-
-    # Compute the Satellite Velocity unitary vector
-    Uv = satVelVector / np.linalg.norm(satVelVector)
-
-    # Compute the Radial Unitary Vector
-    Ur = currPosVector / np.linalg.norm(currPosVector)
-    
-    # Compute the Cross Track Unitary Vector
-    Uc = np.cross(Ur,Uv)
-
-    # Compute the Along Track Unitary Vector
-    Ua = np.cross(Uc,Ur)
-
-    assert any(Ua) == True, "Empty Ua Array"
-    assert any(Uc) == True, "Empty Uc Array"        
-
-    # Compute SRE in ACR frame by projecting the SRE in XYZ
-    SREa = projectVector(sreVector, Ua)  
-    SREc = projectVector(sreVector, Uc)      
-
-    return SREa, SREc
-
 
 

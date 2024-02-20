@@ -31,7 +31,7 @@ from COMMON.Dates import convertJulianDay2YearMonthDay
 from COMMON.Dates import convertYearMonthDay2Doy
 from COMMON.Files import readDataFile, readConf, processConf
 from IgpFunctions import computeIgpStats
-import WP2Plots  as plt
+import WP2Plots  as wp2
 
 
 #----------------------------------------------------------------------
@@ -102,7 +102,7 @@ for Jd in range(Conf["INI_DATE_JD"], Conf["END_DATE_JD"] + 1):
     print('3. Generating Figures...\n')
     
     # T4. Generate Satellite RIMS figures   
-    plt.plotMaps(IgpStatsFile, yearDayText)
+    wp2.plotIgpStatsMaps(IgpStatsFile, yearDayText)
     
     # T5. Generate Satellite Statistics figures   
     # wp2Plot.plotSatStats(satStatsData, yearDayText)
