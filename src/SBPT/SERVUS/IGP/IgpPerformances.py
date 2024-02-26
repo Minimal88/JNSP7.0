@@ -91,15 +91,15 @@ for Jd in range(Conf["INI_DATE_JD"], Conf["END_DATE_JD"] + 1):
     print('1. Processing file: ', IgpInfoFilePath)
     
     # T1. Compute IGP Statistics and generate file
-    #computeIgpStats(IgpInfoFilePath, IgpStatsFile)
+    computeIgpStats(IgpInfoFilePath, IgpStatsFile)
     print('2. Created file:', IgpStatsFile) 
 
     print('3. Generating Figures...\n')
     
     # T2. Generate IGP Statistic Maps figures   
-    #wp2.plotIgpStatsMaps(IgpStatsFile, yearDayText)
+    wp2.plotIgpStatsMaps(IgpStatsFile, yearDayText)
     
-    # T2. Generate IGP Time figures     
+    # T3. Generate IGP Time figures     
     wp2.plotIgpInfoTime(IgpInfoFilePath, yearDayText)
     
     # T6. Generate Satellite Time and Info figures    

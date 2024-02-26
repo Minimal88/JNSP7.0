@@ -179,6 +179,11 @@ def updateEpochMaxMinStatsNonMonitored(IgpInfo, igpId, Outputs):
     # Update the Maximum Number of IPPs surrounding the IGP
     if( NIPP > Outputs[igpId]["MAXIPPs"]):
         Outputs[igpId]["MAXIPPs"] = NIPP        
+    
+    # Update the Maximun VTEC
+    currVTEC = float(IgpInfo[IgpInfoIdx["VTEC"]])
+    if( currVTEC > Outputs[igpId]["MAXVTEC"]):
+        Outputs[igpId]["MAXVTEC"] = currVTEC
 
 def updateEpochMaxMinStatsMonitored(IgpInfo, igpId, Outputs):
     # Update the Maximun GIVD
@@ -194,12 +199,7 @@ def updateEpochMaxMinStatsMonitored(IgpInfo, igpId, Outputs):
     # Update the Maximun GIVEI
     currGIVEI = float(IgpInfo[IgpInfoIdx["GIVEI"]])
     if( currGIVEI > Outputs[igpId]["MAXGIVEI"]):
-        Outputs[igpId]["MAXGIVEI"] = currGIVEI
-
-    # Update the Maximun VTEC
-    currVTEC = float(IgpInfo[IgpInfoIdx["VTEC"]])
-    if( currVTEC > Outputs[igpId]["MAXVTEC"]):
-        Outputs[igpId]["MAXVTEC"] = currVTEC
+        Outputs[igpId]["MAXGIVEI"] = currGIVEI 
     
     # Update the Maximun SI
     currSIW = float(IgpInfo[IgpInfoIdx["SI-W"]])

@@ -358,7 +358,7 @@ def plotIgpMapNMI(IgpStatsData, yearDayText):
     plt.generatePlot(PlotConf)    
 
 
-# Generate a plot with the  Number of Not Monitored IGPs and DU
+# Generate a plot with the Number of Monitored/ Not Monitored / DU IGPs 
 def plotIgpTimeMon(IgpInfoData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}IGP_TIME_MON_{yearDayText}_G123_50s.png' 
     title = f"Number of IGP Monitored EGNOS SIS {yearDayText}"    
@@ -366,7 +366,7 @@ def plotIgpTimeMon(IgpInfoData, yearDayText):
 
     # Extracting Target columns        
     HOD = IgpInfoData[IgpInfoIdx["SoD"]] / GnssConstants.S_IN_H  # Converting to hours    
-    HOD_FILT = sorted(set(HOD))
+    HOD_FILT = np.unique(HOD)
     arraySize = len(HOD_FILT)    
     MON_FILT = np.zeros(arraySize)
     NMON_FILT = np.zeros(arraySize)
@@ -395,7 +395,7 @@ def plotIgpTimeMon(IgpInfoData, yearDayText):
         elif (IgpInfoData[IgpInfoIdx["STATUS"]][i] == -1):
             duCounter += 1
 
-        prevHod = HOD[i]
+        prevHod = HOD[i]    
     # FilterCondMon = IgpInfoData[IgpInfoIdx["STATUS"]] == 1
     # MON = IgpInfoData[IgpInfoIdx["STATUS"]][FilterCondMon]
 
