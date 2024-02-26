@@ -182,10 +182,14 @@ def generateLinesPlot(PlotConf):
         if "Text" in PlotConf:
             # Add text to each point
             for i, txt in enumerate(PlotConf["Text"][Label]):
-                y = PlotConf["yData"][Label][i]
-                color = cmap(normalize(np.array(PlotConf["zData"][Label][i]))) if "ColorBar" in PlotConf else PlotConf["Color"][Label]
-                ax.text(PlotConf["xData"][Label][i], y + 0.5 , f'{txt}',
-                        ha='center', va='bottom', fontsize=8, color=color)
+                x_coord = PlotConf["xData"][Label][i]
+                y_coord = PlotConf["yData"][Label][i]
+                # Check if coordinates are within the specified limits
+                if PlotConf["xLim"][0] <= x_coord <= PlotConf["xLim"][1] and PlotConf["yLim"][0] <= y_coord <= PlotConf["yLim"][1]:
+                    y = PlotConf["yData"][Label][i]
+                    color = cmap(normalize(np.array(PlotConf["zData"][Label][i]))) if "ColorBar" in PlotConf else PlotConf["Color"][Label]
+                    ax.text(PlotConf["xData"][Label][i], y + 0.5 , f'{txt}',
+                            ha='center', va='bottom', fontsize=8, color=color)
         
         else:
             ax.plot(PlotConf["xData"][Label], PlotConf["yData"][Label],
