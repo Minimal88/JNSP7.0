@@ -64,8 +64,11 @@ def prepareAxis(PlotConf, ax):
                     ax.set_xlim(PlotConf[axis + "Lim"])
 
             if axis == "y":
-                if key == axis + "Label":
-                    ax.set_ylabel(PlotConf[axis + "Label"], labelpad=35)
+                if key == axis + "Label":                    
+                    if isinstance(PlotConf[axis + "Label"], dict):
+                        ax.set_ylabel("", labelpad=5)
+                    else:
+                        ax.set_ylabel(PlotConf[axis + "Label"], labelpad=35)
 
                 if key == axis + "Ticks":
                     ax.set_yticks(PlotConf[axis + "Ticks"])
@@ -147,6 +150,7 @@ def drawMap(PlotConf, ax,):
 
 def generateLinesPlot(PlotConf):
     LineWidth = 1.5
+    LineStyle = '-'
 
     fig, ax = createFigure(PlotConf)
 
@@ -155,22 +159,35 @@ def generateLinesPlot(PlotConf):
     for key in PlotConf:
         if key == "LineWidth":
             LineWidth = PlotConf["LineWidth"]
+        if key == "LineStyle":
+            LineStyle = PlotConf["LineStyle"]
         if key == "ColorBar":
             normalize, cmap = prepareColorBar(PlotConf, ax, PlotConf["zData"])
         if key == "Map" and PlotConf[key] == True:
             drawMap(PlotConf, ax)
-
+            
+    ax2_handles = {}
     for Label in PlotConf["yData"].keys():
         if "Twin" in PlotConf:
             if (PlotConf["Twin"]["Label"] == Label):
                 ax2 = ax.twinx()
+                ax2.set_label(Label)
                 ax2.plot(PlotConf["xData"][Label], PlotConf["yData"][Label],                
-                PlotConf["Marker"][Label],
+                marker=PlotConf["Marker"][Label],
                 linewidth = LineWidth,
                 label = Label, 
                 color=PlotConf["Color"][Label])
                 #ax2.set_yticks(PlotConf["Twin_yTicks"])
                 ax2.set_ylim(PlotConf["Twin"]["yLim"])
+
+                # Get handles and labels
+                handles, labels = ax.get_legend_handles_labels()
+
+                # Get ax2 handles and labels
+                ax2_handles, ax2_labels = ax2.get_legend_handles_labels()
+
+                # Manually add twin handle
+                handles.extend(ax2_handles)
                 continue
 
         if "ColorBar" in PlotConf:
@@ -196,6 +213,7 @@ def generateLinesPlot(PlotConf):
             marker = PlotConf["Marker"][Label],
             color = PlotConf["Color"][Label],
             linewidth = LineWidth,
+            LineStyle = LineStyle,
             label = Label)
 
             # When Using the 'Twin' configuration, make sure to use the last label
@@ -216,6 +234,11 @@ def generateLinesPlot(PlotConf):
     if "ShowLegend" in PlotConf:
          # Create legends for each label
         handles, labels = ax.get_legend_handles_labels()
+
+        if "Twin" in PlotConf:
+            handles.extend(ax2_handles)
+            for h in ax2_handles: labels.append(h.get_label())                
+
         unique_labels = list(set(labels))
         legend_handles = [handles[labels.index(label)] for label in unique_labels]
         ax.legend(

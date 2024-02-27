@@ -22,6 +22,7 @@
 #----------------------------------------------------------------------
 import sys
 import numpy as np
+import pandas as pd
 import COMMON.Plots as plt
 from COMMON import GnssConstants
 from COMMON.Files import readDataFile
@@ -61,10 +62,45 @@ def plotIgpStatsMaps(IgpStatsFile, yearDayText):
     return
 
 def plotIgpInfoTime(IgpInfoFile, yearDayText):
+
+    positions = {
+    "CNTR": {"LAT": 45, "LON": 5},
+    "SW-1": {"LAT": 20, "LON": -20},
+    "SW-2": {"LAT": 20, "LON": 35},
+    "NW-1": {"LAT": 65, "LON": -20},
+    "NW-2": {"LAT": 60, "LON": 35}
+}
+    
     # Fecth target columns
-    IgpInfoData = readDataFile(IgpInfoFile, [IgpInfoIdx["SoD"], IgpInfoIdx["STATUS"]], 1)
+    IgpInfoData = readDataFile(IgpInfoFile, [
+        IgpInfoIdx["SoD"], 
+        IgpInfoIdx["STATUS"],
+        IgpInfoIdx["LAT"],
+        IgpInfoIdx["LON"],
+        IgpInfoIdx["GIVEI"],
+        IgpInfoIdx["GIVDE"],
+        IgpInfoIdx["GIVE"],
+        IgpInfoIdx["GIVEI"],
+        IgpInfoIdx["VTEC"]
+        ], 1)
 
     plotIgpTimeMon(IgpInfoData, yearDayText)
+
+    # Plot the GIVDE, GIVE, GIVEi and Monitoring for IGP CENTER
+    plotIgpTimeGivdeGiveGiveiMon(IgpInfoData, yearDayText, positions["CNTR"], "CENTER")
+
+    # Plot the GIVDE, GIVE, GIVEi and Monitoring for IGP SOUTH 1
+    plotIgpTimeGivdeGiveGiveiMon(IgpInfoData, yearDayText, positions["SW-1"], "SW-1")
+
+    # Plot the GIVDE, GIVE, GIVEi and Monitoring for IGP SOUTH 2
+    plotIgpTimeGivdeGiveGiveiMon(IgpInfoData, yearDayText, positions["SW-2"], "SW-2")
+
+    # Plot the GIVDE, GIVE, GIVEi and Monitoring for IGP NORTH 1
+    plotIgpTimeGivdeGiveGiveiMon(IgpInfoData, yearDayText, positions["NW-1"], "NW-1")
+
+    # Plot the GIVDE, GIVE, GIVEi and Monitoring for IGP SOUTH 2
+    plotIgpTimeGivdeGiveGiveiMon(IgpInfoData, yearDayText, positions["NW-2"], "NW-2")
+    
 
     return
 
@@ -366,57 +402,69 @@ def plotIgpTimeMon(IgpInfoData, yearDayText):
 
     # Extracting Target columns        
     HOD = IgpInfoData[IgpInfoIdx["SoD"]] / GnssConstants.S_IN_H  # Converting to hours    
+    MON = IgpInfoData[IgpInfoIdx["STATUS"]]
     HOD_FILT = np.unique(HOD)
     arraySize = len(HOD_FILT)    
     MON_FILT = np.zeros(arraySize)
     NMON_FILT = np.zeros(arraySize)
-    DU_FILT = np.zeros(arraySize)
+    DU_FILT = np.zeros(arraySize)    
 
-    monCounter = 0
-    nmonCounter = 0
-    duCounter = 0
-    prevHod = HOD[0]
-    j=0
-    for i in range(len(HOD)):
-        if(HOD[i] != prevHod):            
-            MON_FILT[j] = monCounter
-            NMON_FILT[j] = nmonCounter
-            DU_FILT[j] = duCounter        
-            j += 1
-            monCounter = 0
-            nmonCounter = 0
-            duCounter = 0        
-            
+    # Loop through unique HOD values (Each EPOCH)
+    for i, hod in enumerate(HOD_FILT):
 
-        if (IgpInfoData[IgpInfoIdx["STATUS"]][i] == 1):
-            monCounter += 1
-        elif (IgpInfoData[IgpInfoIdx["STATUS"]][i] == 0):
-            nmonCounter += 1
-        elif (IgpInfoData[IgpInfoIdx["STATUS"]][i] == -1):
-            duCounter += 1
+        # Boolean mask for current HOD
+        mask = (HOD == hod)  
 
-        prevHod = HOD[i]    
-    # FilterCondMon = IgpInfoData[IgpInfoIdx["STATUS"]] == 1
-    # MON = IgpInfoData[IgpInfoIdx["STATUS"]][FilterCondMon]
+        # Count number of Mon/NMon/DU for the current EPOCH
+        MON_FILT[i] = (MON[mask] == 1).sum()          
+        NMON_FILT[i] = (MON[mask] == 0).sum() 
+        DU_FILT[i] = (MON[mask] == -1).sum()
 
-    # FilterCondMon = IgpInfoData[IgpInfoIdx["STATUS"]] == 0
-    # NMON = IgpInfoData[IgpInfoIdx["STATUS"]][FilterCondMon]
-
-    # FilterCondMon = IgpInfoData[IgpInfoIdx["STATUS"]] == -1
-    # DU = IgpInfoData[IgpInfoIdx["STATUS"]][FilterCondMon]
-    
-    # NMON = MON
-    # DU = MON
-    # NMON = IgpInfoData[IgpInfoIdx["NMON"]]   
-    # DU = IgpInfoData[IgpInfoIdx["DU"]]   
-    
     PlotConf = plt.createPlotConfig2DLines(
         filePath, title, 
-        HOD_FILT, [MON_FILT,NMON_FILT,DU_FILT], 
+        HOD_FILT, [MON_FILT,NMON_FILT,DU_FILT],         
         "Hour of Day", ["MON","NOT-MON","DONT USE"], 
-        ['y','g','b'], ['.','.','.'],
+        ['g','r','b'], ['s','s','s'],
         'upper right', [-0.2,30] )
     
     PlotConf["xTicks"] = range(0, 25)
     PlotConf["xLim"] = [0, 24]
+    PlotConf["LineStyle"] = 'None'
+    PlotConf["LineWidth"] = 1
+    plt.generatePlot(PlotConf)
+
+
+# Generate a Plot with the GIVDE, GIVE, GIVEi and Monitoring flag along the hour of the day for a specific Lon|Lat.
+def plotIgpTimeGivdeGiveGiveiMon(IgpInfoData, yearDayText, pos, posLabel):
+    filePath = sys.argv[1] + f'{RelativePath}IGP_TIME_GIVDE_GIVE_GIVEI_{posLabel}_{yearDayText}_G123_50s.png' 
+    lon = pos["LON"]
+    lat = pos["LAT"]
+    title = f"IGP {posLabel} [Lon|Lat]:[{lon}:{lat}] {yearDayText}"    
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting and Filtering  Target columns
+    FilterCondLon = IgpInfoData[IgpInfoIdx["LON"]] == lon
+    FilterCondLat = IgpInfoData[IgpInfoIdx["LAT"]] == lat
+    HOD = IgpInfoData[IgpInfoIdx["SoD"]][FilterCondLat][FilterCondLon] / GnssConstants.S_IN_H  # Converting to hours    
+    MON = IgpInfoData[IgpInfoIdx["STATUS"]][FilterCondLat][FilterCondLon]
+    GIVDE = IgpInfoData[IgpInfoIdx["GIVDE"]][FilterCondLat][FilterCondLon]
+    GIVE = IgpInfoData[IgpInfoIdx["GIVE"]][FilterCondLat][FilterCondLon]
+    GIVEI = IgpInfoData[IgpInfoIdx["GIVEI"]][FilterCondLat][FilterCondLon]       
+   
+    PlotConf = plt.createPlotConfig2DLines(
+        filePath, title, 
+        HOD, [GIVDE,GIVE,GIVEI,MON],                                       # xData, yDatas
+        "Hour of Day", ["GIVDE [m]","GIVE [m]","GIVEI [m]", "Monitored"],  # xLabel, yLabels
+        ['r','g','b','y'], ['s','s','s','.'],                              # Colors, Markers
+        'upper right', [0,2] )                                             # legendPos, yOffsets
+    
+    PlotConf["xTicks"] = range(0, 25)
+    PlotConf["xLim"] = [0, 24]
+    PlotConf["LineStyle"] = 'None'
+    PlotConf["LineWidth"] = 0.9
+    PlotConf["FigSize"] = (12, 10)
+    PlotConf["Twin"] = {                
+        "yLim" : [0 , 2] ,
+        "Label" : "Monitored"    # Must match with one yLabel        
+        }
     plt.generatePlot(PlotConf)
