@@ -107,10 +107,10 @@ def plotIgpInfoTime(IgpInfoFile, yearDayText):
     plotIgpTimeGivdVtecMon(IgpInfoData, yearDayText, positions["CNTR"], "CENTER")
 
     # Plot GIVD and VTEC Evolution along the day for SOUTH 1
-    plotIgpTimeGivdVtecMon(IgpInfoData, yearDayText, positions["SW-1"], "SW-1")
+    plotIgpTimeGivdVtecMon(IgpInfoData, yearDayText, positions["SW-1"], "SW-1", [0 , 5])
 
     # Plot GIVD and VTEC Evolution along the day for SOUTH 2
-    plotIgpTimeGivdVtecMon(IgpInfoData, yearDayText, positions["SW-2"], "SW-2")
+    plotIgpTimeGivdVtecMon(IgpInfoData, yearDayText, positions["SW-2"], "SW-2", [0 , 4])
 
     # Plot GIVD and VTEC Evolution along the day for NORTH 1
     plotIgpTimeGivdVtecMon(IgpInfoData, yearDayText, positions["NW-1"], "NW-1")
@@ -118,6 +118,12 @@ def plotIgpInfoTime(IgpInfoFile, yearDayText):
     # Plot GIVD and VTEC Evolution along the day for NORTH 2
     plotIgpTimeGivdVtecMon(IgpInfoData, yearDayText, positions["NW-2"], "NW-2")
 
+
+    # Plot VTEC Evolution along the day for all the positions
+    plotIgpTimeVtecAllPositions(IgpInfoData, yearDayText, positions)
+
+    # Plot SI (Safey Index) Evolution along the day for all the positions
+    plotIgpTimeSiAllPositions(IgpInfoData, yearDayText, positions)
     
 
     return
@@ -489,7 +495,7 @@ def plotIgpTimeGivdeGiveGiveiMon(IgpInfoData, yearDayText, pos, posLabel):
 
 
 # Generate a Plot GIVD and VTEC Evolution along the day for a specific Lon|Lat.
-def plotIgpTimeGivdVtecMon(IgpInfoData, yearDayText, pos, posLabel):
+def plotIgpTimeGivdVtecMon(IgpInfoData, yearDayText, pos, posLabel, yLimits = None):
     filePath = sys.argv[1] + f'{RelativePath}IGP_TIME_GIVD_VTEC_{posLabel}_{yearDayText}_G123_50s.png' 
     lon = pos["LON"]
     lat = pos["LAT"]
@@ -520,4 +526,76 @@ def plotIgpTimeGivdVtecMon(IgpInfoData, yearDayText, pos, posLabel):
         "yLim" : [0 , 2] ,
         "Label" : "Monitored"    # Must match with one yLabel        
         }
+    
+    if yLimits:
+        PlotConf["yLim"] = yLimits
+
+    plt.generatePlot(PlotConf)
+
+
+# Generate a Plot VTEC Evolution along the day for all the positions
+def plotIgpTimeVtecAllPositions(IgpInfoData, yearDayText, positions):
+    filePath = sys.argv[1] + f'{RelativePath}IGP_TIME_VTEC_All_Positions_{yearDayText}_G123_50s.png' 
+    title = f"IGPs VTEC Evolution {yearDayText}"    
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting and Filtering  Target columns    
+    VTECs = []
+    VTECsLabels = []
+    for pos in positions:
+        lon = positions[pos]["LON"]
+        lat = positions[pos]["LAT"]
+        FilterCondLon = IgpInfoData[IgpInfoIdx["LON"]] == lon
+        FilterCondLat = IgpInfoData[IgpInfoIdx["LAT"]] == lat
+        VTECs.append(IgpInfoData[IgpInfoIdx["VTEC"]][FilterCondLat][FilterCondLon])
+        VTECsLabels.append(f'VTEC {pos} [{lon} {lat}]')
+        HOD = IgpInfoData[IgpInfoIdx["SoD"]][FilterCondLat][FilterCondLon] / GnssConstants.S_IN_H   
+   
+    PlotConf = plt.createPlotConfig2DLines(
+        filePath, title, 
+        HOD, VTECs,                                         # xData, yDatas
+        "Hour of Day", VTECsLabels,                         # xLabel, yLabels
+        ['g','b','y','r','m'], ['s','s','s','s','s'],       # Colors, Markers
+        'upper right', [-0.2,0.2] )                            # legendPos, yOffsets
+    
+    PlotConf["xTicks"] = range(0, 25)
+    PlotConf["xLim"] = [0, 24]    
+    PlotConf["LineWidth"] = 0.9
+    PlotConf["FigSize"] = (12, 10)
+    PlotConf["LineStyle"] = 'None'
+    plt.generatePlot(PlotConf)
+
+
+# Generate a Plot SI (Safey Index) Evolution along the day for all the positions
+def plotIgpTimeSiAllPositions(IgpInfoData, yearDayText, positions):
+    filePath = sys.argv[1] + f'{RelativePath}IGP_TIME_SI_All_Positions_{yearDayText}_G123_50s.png' 
+    title = f"IGPs GIVDE/5.33*GIVE {yearDayText}"    
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting and Filtering  Target columns    
+    SI = []
+    SILabels = []
+    for pos in positions:
+        lon = positions[pos]["LON"]
+        lat = positions[pos]["LAT"]
+        FilterCondLon = IgpInfoData[IgpInfoIdx["LON"]] == lon
+        FilterCondLat = IgpInfoData[IgpInfoIdx["LAT"]] == lat
+        GIVDE = IgpInfoData[IgpInfoIdx["GIVDE"]][FilterCondLat][FilterCondLon]
+        GIVE = IgpInfoData[IgpInfoIdx["GIVE"]][FilterCondLat][FilterCondLon]
+        SI.append(GIVDE / (GIVE * 5.33))
+        SILabels.append(f'SI {pos} [{lon} {lat}]')
+        HOD = IgpInfoData[IgpInfoIdx["SoD"]][FilterCondLat][FilterCondLon] / GnssConstants.S_IN_H   
+   
+    PlotConf = plt.createPlotConfig2DLines(
+        filePath, title, 
+        HOD, SI,                                         # xData, yDatas
+        "Hour of Day", SILabels,                         # xLabel, yLabels
+        ['g','b','y','r','m'], ['s','s','s','s','s'],    # Colors, Markers
+        'upper right', [-0.05,0.1] )                      # legendPos, yOffsets
+    
+    PlotConf["xTicks"] = range(0, 25)
+    PlotConf["xLim"] = [0, 24]        
+    PlotConf["LineWidth"] = 0.9
+    PlotConf["FigSize"] = (12, 10)
+    PlotConf["LineStyle"] = 'None'
     plt.generatePlot(PlotConf)
