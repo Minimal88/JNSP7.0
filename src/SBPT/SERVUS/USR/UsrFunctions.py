@@ -79,8 +79,8 @@ def computeUsrPos(usrLosFile, UsrPosFile):
                         usrHlp.updatePosOutputs(UsrPosEpochOutputs, usrId, {
                             "SOD": SOD, "ULON": ULON, "ULAT":ULAT})                        
                         
-                        # If reached the end of satellites for this usrId on the EPOCH 
-                        # Compute all the necessary for XPE and XPL
+                        # If reached the end of satellites on the EPOCH 
+                        # Compute the PA Solution for usrIdPrev
                         # Discard the first run: usrIdPrev = -100
                         if ((usrId != usrIdPrev) and (usrIdPrev != -100)):
                             # Compute PA Solution if at least 4 Satellites are valid for solution                            
@@ -93,11 +93,16 @@ def computeUsrPos(usrLosFile, UsrPosFile):
                                 WPA= buildWmatrix(usrAvlSatList, usrEpochSigmaUERE2Dict)
 
                                 # Compute Position Errors and Protection levels. XPE, XPL                                
-                                [HPE, VPE, HPL, VPL, FLAG] = computeXpeXpl(NvsPA, GPA, WPA, usrEpochRangeErrorsList)                                
+                                [HPE, VPE, HPL, VPL, PDOP, HDOP, VDOP, FLAG] = computeXpeXplXdops(GPA, WPA, usrEpochRangeErrorsList)       
+
+                                HSI = computeXSI(HPE, HPL)
+
+                                VSI = computeXSI(VPE, VPL)
                                 
                                 # Update the UsrPosOuputs for SOL-FLAG, NvsPA, HPE, Nvs5, VPE, HPL, VPL
                                 usrHlp.updatePosOutputs(UsrPosEpochOutputs, usrIdPrev, {
-                                    "SOL-FLAG":FLAG, "NVS-5": Nvs5, "NVS-PA": NvsPA, "HPE":HPE, "VPE":VPE, "HPL":HPL, "VPL":VPL })
+                                    "SOL-FLAG":FLAG, "NVS-5": Nvs5, "NVS-PA": NvsPA, "HPE":HPE, "VPE":VPE, 
+                                    "HPL":HPL, "VPL":VPL, "HSI":HSI, "VSI":VSI, "PDOP":PDOP, "HDOP":HDOP, "VDOP":VDOP})
                             
                                 # Write USR POS File
                                 # ----------------------------------------------------------
@@ -234,16 +239,16 @@ def buildWmatrix(satList, SigmaUERE2List):
 
 
 
-def computeXpeXpl(NvsPA, GPA, WPA, RangeErrors, threshold = 10000):  
+def computeXpeXplXdops(GPA, WPA, RangeErrors, threshold = 10000):  
     """
-        Return [HPE, VPE, HPL, VPL, FLAG]
+        Return [HPE, VPE, HPL, VPL, PDOP, HDOP, VDOP, FLAG]
     """
-    # Compute PDOPs (Ref.: ESA GNSS Book Vol I Section 6.1.3.2)
-    PDopPA = computeDOPs(GPA);  
+    # Compute PDOP (Ref.: ESA GNSS Book Vol I Section 6.1.3.2)
+    PDOP = computePDOP(GPA);       
 
     # Check if the PDOP is below a threshold, 10000 by default
-    if PDopPA > threshold:        
-        return [0.0, 0.0, 0.0, 0.0, 0] # FLAG: 0 = "Not Used"
+    if PDOP > threshold:        
+        return [0.0, 0.0, 0.0, 0.0, PDOP, 0.0, 0.0, 0] # FLAG: 0 = "Not Used"
     
     # Compute the Position Error Vector through the LSE process
     [EPE, NPE, UPE] = computePositionErrorVector(GPA, WPA, RangeErrors)
@@ -255,11 +260,11 @@ def computeXpeXpl(NvsPA, GPA, WPA, RangeErrors, threshold = 10000):
     VPE = abs(UPE)
 
     # Compute Protection levels in line with Appendix J of MOPS
-    [HPL, VPL] = computeProtectionLevels(GPA, WPA)
+    [HPL, VPL, HDOP, VDOP] = computeProtectionLevels(GPA, WPA)
 
-    return [HPE, VPE, HPL, VPL, 1] # FLAG: 1 = "Used For PA"
+    return [HPE, VPE, HPL, VPL, PDOP, HDOP, VDOP, 1] # FLAG: 1 = "Used For PA"
 
-def computeDOPs(G):
+def computePDOP(G):
     """
     Compute the Dilution of Precision (DOP) Matrix [Q] and Position Dilution of Precision (PDOP)
 
@@ -284,6 +289,28 @@ def computeDOPs(G):
     PDOP = np.sqrt(qE**2 + qN**2 + qU**2)    
 
     return PDOP
+
+def computeHVDOPs(D):
+    """
+    Compute Dilution of Precision (DOP) for Position Accuracy (PA) solution
+
+    Parameters:
+    D (numpy array): pseudo-inverse of the Weighted Normal Matrix (G^T W G)^-1
+
+    Returns:
+    HDOP (float): Horizontal Dilution of Precision
+    VDOP (float): Vertical Dilution of Precision
+    """
+    # Extract the relevant elements from the pseudo-inverse matrix D
+    D11 = D[0, 0]
+    D22 = D[1, 1]
+    D33 = D[2, 2]
+    
+    # Compute HDOP and VDOP
+    HDOP = np.sqrt(D11 + D22)
+    VDOP = np.sqrt(D33)
+
+    return HDOP, VDOP
 
 def computePositionErrorVector(G, W, RangeErrors):
     """
@@ -326,9 +353,12 @@ def computeProtectionLevels(G, W):
     VPLPA (float): Vertical Protection Level (VPL)
     """
     # Compute the pseudo-inverse of the Weighted Normal Matrix (G^T W G)^-1
-    D = np.linalg.pinv(np.dot(np.dot(np.transpose(G), W), G))
+    D = np.linalg.pinv(np.dot(np.dot(np.transpose(G), W), G))   
 
-    # Compute intermidiate variables
+    # Horizontal/Vertical Dilution of Precision 
+    [HDOP, VDOP] = computeHVDOPs(D)
+
+    # Compute intermediate variables
     deast2 = D[0,0]
     dnorth2 = D[1,1]
     dEN = D[1,0]
@@ -347,7 +377,27 @@ def computeProtectionLevels(G, W):
     # VPL = 2.576 * np.sqrt(D[2, 2])
     VPL = 5.33 * dU
 
-    return HPL, VPL
+    return HPL, VPL, HDOP, VDOP
+
+def computeXSI(XPE, XPL):
+    """
+    Compute Horizontal and Vertical Safety Index (XSI) for Position Accuracy (PA) solution
+
+    Parameters:
+    XPE (float): Xorizontal Position Error
+    XPL (float): Xorizontal Protection Level
+
+    Returns:
+    XSI (float): Xorizontal Safety Index
+    """
+    # Ensure XPL is not zero to avoid division by zero
+    if XPL == 0:
+        return float('inf')  # Return infinity if XPL is zero
+
+    # Compute Xorizontal Safety Index
+    XSI = XPE / XPL
+
+    return XSI
 
 def getUsrNSatsFromEpoch(EpochInfo, usrId):
     prnList = []
