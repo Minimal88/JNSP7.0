@@ -110,7 +110,7 @@ UsrPerfIdx = dict([
     ("PDOP-MAX", 22)
 ])
 
-# Define Satidistics Output file format list
+# Define User Performance Output file format list
 UsrPerfOutputFormat = "%d %f %f %d %d %d %d %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f"
 PerfFileOutputFormatList =UsrPerfOutputFormat.split()
 
@@ -158,9 +158,9 @@ def initializePosOutputs(PosOutputs):
     # Loop over all 294 USRs of the GRID
     for usrId in range(1,294):            
         PosOutputs[usrId] = OrderedDict({})
-        for var in UsrPosIdx.keys():                
+        for var in UsrPosIdx.keys():
             if (var == "USER-ID"):
-                PosOutputs[usrId][var] = int(usrId)            
+                PosOutputs[usrId][var] = int(usrId)
             else:
                 PosOutputs[usrId][var] = 0.0
 
@@ -169,29 +169,38 @@ def initializePerfOutputs(PerfOutputs):
     Initialize Performance outputs for each USR
 
     Parameters:
-    - PerfOutputs: Intermediate outputs for each USR's performance.
+    - PerfOutputs: Outputs for each USR's performance.
     
     """    
-    # Loop over all 287 USRs of each constellation 
-    for usrId in range(1,288):
-        PerfOutputs[usrId] = {
-            "NMI": 0,     
-            "NSAMPS": 0,
-            "MONPREV": 0,
-            "GIVDESUM2": 0,
-            "GIVDESAMPS": 0,
-            "LATPREV": 0,
-            "LONPREV": 0            
-        }
-
+    # Loop over all 294 USRs of the GRID
+    for usrId in range(1,294):
+        PerfOutputs[usrId] = OrderedDict({})
+        for var in UsrPerfIdx.keys():
+            if (var == "USER-ID"):
+                PerfOutputs[usrId][var] = int(usrId)
+            else:
+                PerfOutputs[usrId][var] = 0.0
     return
 
-def WriteLineUsrPosfile(fOut, UsrPosEpochOutputs):
-     for usr in UsrPosEpochOutputs.keys():        
-        for i, result in enumerate(UsrPosEpochOutputs[usr]):
-            fOut.write(((PosFileOutputFormatList[i] + delim) % UsrPosEpochOutputs[usr][result]))
+def initializeInterPerfOutputs(PerfInterOutputs):
+    """
+    Initialize intermediate Performance outputs
 
-        fOut.write("\n")    
+    Parameters:
+    - PerfInterOutputs: Intermediate outputs for each USR's performance.
+    
+    """    
+    # Loop over all 294 USRs of the GRID
+    for usrId in range(1,294):
+        PerfInterOutputs[usrId] = {
+            "HPE_list": [],
+            "VPE_list": [],
+            "NSAMPS": 0,
+            "MONPREV": 0
+            
+        }
+    return
+
 
 def updatePosOutputs(PosOutputs, usrId, UpdateDict):
     """
@@ -200,10 +209,7 @@ def updatePosOutputs(PosOutputs, usrId, UpdateDict):
     Parameters:
     - PosOutputs: Intermediate outputs containing information for each satellite.
     - usrId: USER-ID for the user.
-    - UpdateDict: Dictionary containing tag-value pairs to update in PosOutputs[usrId].
-
-    Example:
-    UpdatePosOutputs(PosOutputs, "188", {"SOD": 0, "MONPREV": 1, "XPREV": 100})
+    - UpdateDict: Dictionary containing tag-value pairs to update in PosOutputs[usrId].   
     """
     # Check if usrId exists in PosOutputs
     if usrId not in PosOutputs: PosOutputs[usrId] = {}        
@@ -212,25 +218,38 @@ def updatePosOutputs(PosOutputs, usrId, UpdateDict):
     for tag, value in UpdateDict.items():
         PosOutputs[usrId][tag] = value
 
-def updateInterOutputs(InterOutputs, SatLabel, UpdateDict):
+def updatePerfOutputs(PerfOutputs, usrId, UpdateDict):
     """
-    Update the intermediate outputs for a specific satellite with the provided tag-value pairs.
+    Update the intermediate outputs for a each user's performance
 
     Parameters:
-    - InterOutputs: Intermediate outputs containing information for each satellite.
-    - SatLabel: Label (identifier) for the satellite.
-    - UpdateDict: Dictionary containing tag-value pairs to update in InterOutputs[SatLabel].
-
-    Example:
-    UpdateInterOutputs(InterOutputs, "G01", {"SODPREV": 10, "MONPREV": 1, "XPREV": 100})
+    - PerfOutputs: Intermediate outputs containing information for a each user's performance
+    - usrId: USER-ID for the user.
+    - UpdateDict: Dictionary containing tag-value pairs to update in PerfOutputs[usrId].
     """
-    # Check if SatLabel exists in InterOutputs
-    if SatLabel not in InterOutputs:
-        InterOutputs[SatLabel] = {}
+    # Check if usrId exists in PerfOutputs
+    if usrId not in PerfOutputs: PerfOutputs[usrId] = {}        
 
-    # Update or add tag-value pairs in InterOutputs[SatLabel]
+    # Update or add tag-value pairs in PerfOutputs[usrId]
     for tag, value in UpdateDict.items():
-        InterOutputs[SatLabel][tag] = value
+        PerfOutputs[usrId][tag] = value
+
+def updatePerfInterOutputs(PerfInterOutputs, usrId, UpdateDict):
+    """
+    Update the intermediate outputs for a each user's performance
+
+    Parameters:
+    - PerfOutputs: Intermediate outputs containing information for a each user's performance
+    - usrId: USER-ID for the user.
+    - UpdateDict: Dictionary containing tag-value pairs to update in PerfOutputs[usrId].
+    """
+    # Check if usrId exists in PerfOutputs
+    if usrId not in PerfInterOutputs: PerfInterOutputs[usrId] = {}        
+
+    # Update or add tag-value pairs in PerfOutputs[usrId]
+    for tag, value in UpdateDict.items():
+        PerfInterOutputs[usrId][tag] = value
+
 
 def updatePreviousInterOutputsFromCurrentUsrInfo(InterOutputs, UsrInfo):
     """
@@ -253,7 +272,7 @@ def updatePreviousInterOutputsFromCurrentUsrInfo(InterOutputs, UsrInfo):
         }
 
         # Call the UpdateInterOutputs function with the UpdateDict
-        updateInterOutputs(InterOutputs, usrId, UpdateDict)
+        updatePerfInterOutputs(InterOutputs, usrId, UpdateDict)
 
 def computeUsrRmsFromInterOuputs(interOutputs, usrId):
     """
@@ -276,5 +295,19 @@ def computeUsrRmsFromInterOuputs(interOutputs, usrId):
     rmsGIVDE = sqrt(usrData["GIVDESUM2"] / (givdeSamps))
 
     return rmsGIVDE
+
+def WriteLineInUsrPosFile(fOut, UsrPosEpochOutputs):
+     for usr in UsrPosEpochOutputs.keys():        
+        for i, result in enumerate(UsrPosEpochOutputs[usr]):
+            fOut.write(((PosFileOutputFormatList[i] + delim) % UsrPosEpochOutputs[usr][result]))
+
+        fOut.write("\n")
+
+def WriteLineInUsrPerfFile(fOut, UsrPerfEpochOutputs):
+     for usr in UsrPerfEpochOutputs.keys():        
+        for i, result in enumerate(UsrPerfEpochOutputs[usr]):
+            fOut.write(((PerfFileOutputFormatList[i] + delim) % UsrPerfEpochOutputs[usr][result]))
+
+        fOut.write("\n")
 
 

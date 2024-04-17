@@ -30,7 +30,7 @@ sys.path.insert(0, projectDir)
 from COMMON.Dates import convertJulianDay2YearMonthDay
 from COMMON.Dates import convertYearMonthDay2Doy
 from COMMON.Files import readDataFile, readConf, processConf
-from UsrFunctions import computeUsrPos
+from UsrFunctions import computeUsrPosAndPerf
 import WP3Plots  as wp3
 
 
@@ -79,27 +79,31 @@ for Jd in range(Conf["INI_DATE_JD"], Conf["END_DATE_JD"] + 1):
     Doy = convertYearMonthDay2Doy(Year, Month, Day)
     yearDayText = 'Y%02dD%03d' % (Year % 100, Doy)
 
-    # Define the full path and name to the SAT INFO file to read
+    # Define the full path and name to the LOS INFO file to read
     UsrLosFilePath = Scen + \
         '/OUT/USR/LOS/' + 'LOS_INFO_%s_G123_%ss.dat' % \
             (yearDayText, Conf["LOS_TSTEP"])
 
     # Define the name of the POS Output file
-    UsrPosFile = UsrLosFilePath.replace("LOS", "POS")
+    UsrPosFilePath = UsrLosFilePath.replace("LOS", "POS")
+
+    # Define the name of the POS Output file
+    UsrPerfFilePath = UsrLosFilePath.replace("LOS", "PERF")
+    UsrPerfFilePath = UsrPerfFilePath.replace("INFO", "APVI")
 
     print('\n*** Processing Day of Year: ', Doy, '...***')
     
     print('1. Processing file: ', UsrLosFilePath)
     
     # T1. Compute USR Statistics and generate file
-    computeUsrPos(UsrLosFilePath, UsrPosFile)
+    computeUsrPosAndPerf(UsrLosFilePath, UsrPosFilePath, UsrPerfFilePath)
     
-    print('2. Created file:', UsrPosFile) 
+    print('2. Created file:', UsrPosFilePath) 
 
     print('3. Generating Figures...\n')
     
     # T2. Generate USR Statistic Maps figures   
-    wp3.plotUsrStatsMaps(UsrPosFile, yearDayText)
+    wp3.plotUsrStatsMaps(UsrPosFilePath, yearDayText)
     
     # T3. Generate USR Time figures     
     wp3.plotUsrInfoTime(UsrLosFilePath, yearDayText)   

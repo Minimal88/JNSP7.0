@@ -21,132 +21,162 @@ import numpy as np
 from COMMON.Files import readDataFile
 from collections import OrderedDict
 import UsrHelper  as usrHlp
-from UsrHelper import UsrLosIdx, UsrPosIdx
+from UsrHelper import UsrLosIdx, UsrPosIdx, UsrPerfIdx
 
 # ------------------------------------------------------------------------------------
 # EXTERNAL FUNCTIONS 
 # ------------------------------------------------------------------------------------
-def computeUsrPos(usrLosFile, UsrPosFile):    
-    # Initialize Variables
+def computeUsrPosAndPerf(UsrLosFilePath, UsrPosFilePath, UsrPerfFilePath):    
+    # Define and Initialize Variables            
+    UsrPosEpochOutputs = OrderedDict({})
+    UsrPerfOutputs = OrderedDict({})
+    UsrPerfInterOutputs = OrderedDict({})
     EndOfFile = False
     UsrLosEpochData = []
+    # Initialize Outputs
+    usrHlp.initializePosOutputs(UsrPosEpochOutputs)
+    usrHlp.initializePerfOutputs(UsrPerfOutputs)
+    usrHlp.initializeInterPerfOutputs(UsrPerfInterOutputs)
 
     # Open USR LOS File
-    with open(usrLosFile, 'r') as fUserLos:        
-        # Read header line of USR LOS File
-        fUserLos.readline()
+    fUserLos = open(UsrLosFilePath, 'r')
+    # Open Output USR POS File 
+    fPosFile = open(UsrPosFilePath, 'w')
+    
+    # Read header line of USR LOS File
+    fUserLos.readline()
+    
+    # Write Header of Output files                
+    header_string = usrHlp.delim.join(UsrPosIdx) + "\n"
+    # header_string = "ID   BAND BIT   LON       LAT      MON    MINIPPs MAXIPPs NTRANS  RMSGIVDE MAXGIVD  MAXGIVE  MAXGIVEI  MAXVTEC  MAXSI     NMI\n"
+    fPosFile.write(header_string)    
 
-        # Open Output USR POS File 
-        with open(UsrPosFile, 'w') as fOut:
-            # Write Header of Output files                
-            header_string = usrHlp.delim.join(UsrPosIdx) + "\n"
-            # header_string = "ID   BAND BIT   LON       LAT      MON    MINIPPs MAXIPPs NTRANS  RMSGIVDE MAXGIVD  MAXGIVE  MAXGIVEI  MAXVTEC  MAXSI     NMI\n"
-            fOut.write(header_string)
-
-            # Define and Initialize Variables            
-            UsrPosEpochOutputs = OrderedDict({})
-            UsrPerfOutputs = OrderedDict({})
+    # LOOP over all Epochs of USR INFO file
+    # ----------------------------------------------------------
+    while not EndOfFile:                    
+        # Read the File Epoch by Epoch
+        UsrLosEpochData = usrHlp.readUsrLosEpoch(fUserLos)                
+        
+        # If UsrLosEpochData is not Null
+        if UsrLosEpochData != []:
+            # Loop over all Users Information on each Epoch  in GRID:
+            # --------------------------------------------------
+            usrAvlSatList = []
+            usrEpochSigmaUERE2_Dict = {}
+            usrEpochRangeErrors_List = []            
+            HPE_Dict = {} # [usrId][HPE list array]
+            VPE_Dict = {} # [usrId][VPE list array]
             
-            # Initialize Outputs
-            usrHlp.initializePosOutputs(UsrPosEpochOutputs) # [usrId][posColumn]
-            usrHlp.initializePerfOutputs(UsrPerfOutputs)            
+            usrIdPrev = -100
+            NvsPA = 0   # Number of Visible Satellites in The PA Solutions
+            Nvs5 = 0    # Number of Visible Satellites with EL > 5
+            for UsrLosData in UsrLosEpochData:
+                # Extract USER LOS Columns
+                usrId = int(UsrLosData[UsrLosIdx["USER-ID"]])
+                SOD = int(UsrLosData[UsrLosIdx["SOD"]])
+                ULON = float(UsrLosData[UsrLosIdx["ULON"]])
+                ULAT = float(UsrLosData[UsrLosIdx["ULAT"]])        
+                PRN = int(UsrLosData[UsrLosIdx["PRN"]])
 
-            # LOOP over all Epochs of USR INFO file
-            # ----------------------------------------------------------
-            while not EndOfFile:                    
-                # Read the File Epoch by Epoch
-                UsrLosEpochData = usrHlp.readUsrLosEpoch(fUserLos)                
+                # Update the UsrPosOuputs for SOD, ULON, ULAT
+                usrHlp.updatePosOutputs(UsrPosEpochOutputs, usrId, {
+                    "SOD": SOD, "ULON": ULON, "ULAT":ULAT})
                 
-                # If UsrLosEpochData is not Null
-                if UsrLosEpochData != []:
-                    # Loop over all Users Information on each Epoch  in GRID:
-                    # --------------------------------------------------
-                    usrAvlSatList = []
-                    usrEpochSigmaUERE2Dict = {}
-                    usrEpochRangeErrorsList = []
-                    usrIdPrev = -100
-                    NvsPA = 0   # Number of Visible Satellites in The PA Solutions
-                    Nvs5 = 0    # Number of Visible Satellites with EL > 5
-                    for UsrLosData in UsrLosEpochData:
-                        # Extract USER LOS Columns
-                        usrId = int(UsrLosData[UsrLosIdx["USER-ID"]])
-                        SOD = int(UsrLosData[UsrLosIdx["SOD"]])
-                        ULON = float(UsrLosData[UsrLosIdx["ULON"]])
-                        ULAT = float(UsrLosData[UsrLosIdx["ULAT"]])        
-                        PRN = int(UsrLosData[UsrLosIdx["PRN"]])
+                # Update the UsrPerfOutputs
+                usrHlp.updatePerfOutputs(UsrPerfOutputs, usrId, {
+                    "ULON": ULON, "ULAT":ULAT})
+                
+                if usrId not in HPE_Dict: 
+                    HPE_Dict[usrId] = []                    
 
-                        # Update the UsrPosOuputs for SOD, ULON, ULAT
-                        usrHlp.updatePosOutputs(UsrPosEpochOutputs, usrId, {
-                            "SOD": SOD, "ULON": ULON, "ULAT":ULAT})                        
+                if usrId not in VPE_Dict: 
+                    VPE_Dict[usrId] = []
+
+                # If reached the end of satellites on the EPOCH 
+                # Compute the PA Solution for usrIdPrev
+                # Discard the first run: usrIdPrev = -100
+                if ((usrId != usrIdPrev) and (usrIdPrev != -100)):
+                    # Compute PA Solution if at least 4 Satellites are valid for solution                            
+                    #----------------------------------------------------------------------
+                    if NvsPA >= 4:                                
+                        # Build Geometry [G] matrix in line with SBAS Standard                                
+                        GPA = buildGmatrix(usrAvlSatList)
+
+                        # Build Weighting [W] matrix in line with SBAS Standards                                
+                        WPA= buildWmatrix(usrAvlSatList, usrEpochSigmaUERE2_Dict)
+
+                        # Compute Position Errors and Protection levels. XPE, XPL                                
+                        [HPE, VPE, HPL, VPL, PDOP, HDOP, VDOP, FLAG] = computeXpeXplXdops(GPA, WPA, usrEpochRangeErrors_List)       
+
+                        HSI = computeXSI(HPE, HPL)
+                        VSI = computeXSI(VPE, VPL)
+                        HPE_Dict[usrIdPrev].append(HPE)
+                        VPE_Dict[usrIdPrev].append(VPE)
                         
-                        # If reached the end of satellites on the EPOCH 
-                        # Compute the PA Solution for usrIdPrev
-                        # Discard the first run: usrIdPrev = -100
-                        if ((usrId != usrIdPrev) and (usrIdPrev != -100)):
-                            # Compute PA Solution if at least 4 Satellites are valid for solution                            
-                            #----------------------------------------------------------------------
-                            if NvsPA >= 4:                                
-                                # Build Geometry [G] matrix in line with SBAS Standard                                
-                                GPA = buildGmatrix(usrAvlSatList)
-
-                                # Build Weighting [W] matrix in line with SBAS Standards                                
-                                WPA= buildWmatrix(usrAvlSatList, usrEpochSigmaUERE2Dict)
-
-                                # Compute Position Errors and Protection levels. XPE, XPL                                
-                                [HPE, VPE, HPL, VPL, PDOP, HDOP, VDOP, FLAG] = computeXpeXplXdops(GPA, WPA, usrEpochRangeErrorsList)       
-
-                                HSI = computeXSI(HPE, HPL)
-
-                                VSI = computeXSI(VPE, VPL)
-                                
-                                # Update the UsrPosOuputs for SOL-FLAG, NvsPA, HPE, Nvs5, VPE, HPL, VPL
-                                usrHlp.updatePosOutputs(UsrPosEpochOutputs, usrIdPrev, {
-                                    "SOL-FLAG":FLAG, "NVS-5": Nvs5, "NVS-PA": NvsPA, "HPE":HPE, "VPE":VPE, 
-                                    "HPL":HPL, "VPL":VPL, "HSI":HSI, "VSI":VSI, "PDOP":PDOP, "HDOP":HDOP, "VDOP":VDOP})
-                            
-                                # Write USR POS File
-                                # ----------------------------------------------------------
-                                usrHlp.WriteLineUsrPosfile(fOut, UsrPosEpochOutputs)
-
-                            # Reset Loop variable, for the next
-                            usrAvlSatList = []   
-                            usrEpochSigmaUERE2Dict = {}
-                            usrEpochRangeErrorsList = []
-                            NvsPA = 0
-                            Nvs5 = 0
-                        
-                        usrIdPrev = usrId
-
-                        # LOOP Over all Satellites, and filter them
+                        # Update the UsrPosOuputs for SOL-FLAG, NvsPA, HPE, Nvs5, VPE, HPL, VPL
+                        usrHlp.updatePosOutputs(UsrPosEpochOutputs, usrIdPrev, {
+                            "SOL-FLAG":FLAG, "NVS-5": Nvs5, "NVS-PA": NvsPA, "HPE":HPE, "VPE":VPE, 
+                            "HPL":HPL, "VPL":VPL, "HSI":HSI, "VSI":VSI, "PDOP":PDOP, "HDOP":HDOP, "VDOP":VDOP})
+                    
+                        # Write USR POS File
                         # ----------------------------------------------------------
-                        # Ignore elevation angle less than 5 degree TODO: Change it to USER.MASK_ANGLE
-                        if (float(UsrLosData[UsrLosIdx["ELEV"]]) < 5): continue
-                        Nvs5 = Nvs5 + 1
+                        usrHlp.WriteLineInUsrPosFile(fPosFile, UsrPosEpochOutputs)
 
-                        # Ignore Flag different than 1 (Consider only PA Solutions)
-                        if (int(UsrLosData[UsrLosIdx["FLAG"]]) != 1): continue
-                        NvsPA = NvsPA + 1
-
-                        usrAvlSatList.append(UsrLosData)
-
-                        # Build Ranging Error Vector by adding all the different contributors                        
-                        RangeError = buildRangingErrorVector(UsrLosData)
-                        usrEpochRangeErrorsList.append(RangeError)
-
-                        # Build the SigmaUERE2 in line with MOPS Standard
-                        SigmaUERE2 = buildSigmaUERE2(UsrLosData)
-                        usrEpochSigmaUERE2Dict[PRN] = SigmaUERE2
-
-                    # END OF LOOP For ALL Users in EPOCH     
+                    # Reset Loop variable, for the next iteration
+                    usrAvlSatList = []   
+                    usrEpochSigmaUERE2_Dict = {}
+                    usrEpochRangeErrors_List = []
+                    NvsPA = 0
+                    Nvs5 = 0
                 
-                else:
-                    EndOfFile = True
+                usrIdPrev = usrId
 
-            # END OF LOOP for all Epochs of USR INFO file
+                # LOOP Over all Satellites, and filter them
+                # ----------------------------------------------------------
+                # Ignore elevation angle less than 5 degree TODO: Change it to USER.MASK_ANGLE
+                if (float(UsrLosData[UsrLosIdx["ELEV"]]) < 5): continue
+                Nvs5 = Nvs5 + 1
 
-            # Compute the final Statistics
-            # ----------------------------------------------------------
-            # computeFinalStatistics(UsrPerfOutputs, UsrPosEpochOutputs)
+                # Ignore Flag different than 1 (Consider only PA Solutions)
+                if (int(UsrLosData[UsrLosIdx["FLAG"]]) != 1): continue
+                NvsPA = NvsPA + 1
+
+                usrAvlSatList.append(UsrLosData)
+
+                # Build Ranging Error Vector by adding all the different contributors                        
+                RangeError = buildRangingErrorVector(UsrLosData)
+                usrEpochRangeErrors_List.append(RangeError)
+
+                # Build the SigmaUERE2 in line with MOPS Standard
+                SigmaUERE2 = buildSigmaUERE2(UsrLosData)
+                usrEpochSigmaUERE2_Dict[PRN] = SigmaUERE2
+
+            # END OF LOOP For ALL Users in EPOCH        
+        else:
+            EndOfFile = True
+            # Close the all the open files
+            fUserLos.close()
+            fPosFile.close()
+
+    # END OF LOOP for all Epochs of USR LOS file
+
+        
+    # Open Output USR Performance File 
+    fPerfFile = open(UsrPerfFilePath, 'w')
+
+    # Compute all User Performance values
+    for usr in UsrPerfOutputs:
+        computePercentile95(HPE_Dict[usr])
+
+
+
+
+    fPerfFile.close()
+        
+
+        # Compute the final Statistics
+        # ----------------------------------------------------------
+        # computeFinalStatistics(UsrPerfOutputs, UsrPosEpochOutputs)
        
 
 
@@ -236,8 +266,6 @@ def buildWmatrix(satList, SigmaUERE2List):
     W = np.diag(Wi_values)    
 
     return W
-
-
 
 def computeXpeXplXdops(GPA, WPA, RangeErrors, threshold = 10000):  
     """
@@ -399,22 +427,54 @@ def computeXSI(XPE, XPL):
 
     return XSI
 
-def getUsrNSatsFromEpoch(EpochInfo, usrId):
-    prnList = []
-    
-    filtered_data = EpochInfo[EpochInfo[:,:][2] == usrId]
+def computePercentile95(XPE_list, resolution=0.001):
+    """
+    Compute HPE95% and VPE95%
 
-    EpochData = np.array(EpochInfo)
-    FilterCondUsr = EpochData[UsrLosIdx["USER-ID"]] == usrId
-    prn = EpochData[UsrLosIdx["PRN"]][FilterCondUsr]
+    Parameters:
+    XPE_list (list): List of position error values (either HPE or VPE)
+    resolution (float): Resolution for defining statistical XPE bins
 
-    for userInfo in EpochInfo:
-        FilterCondUsr = userInfo[UsrLosIdx["USER-ID"]] == usrId
-        prn = userInfo[UsrLosIdx["PRN"]][FilterCondUsr]
-        prnList.append(prn)
-    
-    return len(prnList)
+    Returns:
+    XPE_95 (float): 95th percentile of position error
+    """
 
+    if not XPE_list: return 0.0
+
+    # STEP 1: Define statistical XPE bins
+    XPE_bins = np.arange(0, max(XPE_list) + resolution, resolution)
+
+    # STEP 2: Count the number of samples falling into each bin
+    bin_counts, _ = np.histogram(XPE_list, bins=XPE_bins)
+
+    # STEP 3: Compute the ratio for each statistical bin
+    ratios = bin_counts / len(XPE_list)
+
+    # STEP 4: Compute the cumulative sum of the ratios
+    cumulative_ratios = np.cumsum(ratios)
+
+    # STEP 5: Find the bin corresponding to the 95th percentile
+    percentile_index = np.argmax(cumulative_ratios >= 0.95)
+
+    # Compute the 95th percentile as the upper extreme of the lowest bin
+    XPE_95 = XPE_bins[percentile_index]
+
+    return XPE_95
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Not used
 def updateEpochPos(UsrInfo, InterOutputs, Outputs):
     """
     Update the USR POS for the current epoch based on the LOS data.
