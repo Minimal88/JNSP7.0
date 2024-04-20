@@ -100,18 +100,19 @@ def computeUsrPosAndPerf(UsrLosFilePath, UsrPosFilePath, UsrPerfFilePath):
                 if (float(UsrLosData[UsrLosIdx["ELEV"]]) > 5):
                     NVS = NVS + 1
 
-                # Consider Sats only with Flag == 1 (Consider only PA Solutions)
-                if (int(UsrLosData[UsrLosIdx["FLAG"]]) == 1):
-                    usrAvlSatList.append(UsrLosData)
-                    NVSPA = NVSPA + 1                    
+                    # Consider Sats only with Flag == 1 (Consider only PA Solutions)
+                    if (int(UsrLosData[UsrLosIdx["FLAG"]]) == 1):
+                        usrAvlSatList.append(UsrLosData)
+                        NVSPA = NVSPA + 1                    
 
-                    # Build Ranging Error Vector by adding all the different contributors                        
-                    RangeError = buildRangingErrorVector(UsrLosData)
-                    usrEpochRangeErrors_List.append(RangeError)
+                        # Build Ranging Error Vector by adding all the different contributors                        
+                        RangeError = buildRangingErrorVector(UsrLosData)
+                        usrEpochRangeErrors_List.append(RangeError)
 
-                    # Build the SigmaUERE2 in line with MOPS Standard
-                    SigmaUERE2 = buildSigmaUERE2(UsrLosData)
-                    usrEpochSigmaUERE2_Dict[PRN] = SigmaUERE2
+                        # Build the SigmaUERE2 in line with MOPS Standard
+                        SigmaUERE2 = buildSigmaUERE2(UsrLosData)
+                        usrEpochSigmaUERE2_Dict[PRN] = SigmaUERE2
+                
 
                 # If reached the end of satellites on the EPOCH                                 
                 if (usrSatIndex == NSats):
@@ -166,7 +167,8 @@ def computeUsrPosAndPerf(UsrLosFilePath, UsrPosFilePath, UsrPerfFilePath):
 
     # Compute all User Performance values
     for usr in UsrPerfOutputs:
-        computePercentile95(HPE_Dict[usr])
+        HPE95 = computePercentile95(HPE_Dict[usr])
+        VPE95 = computePercentile95(VPE_Dict[usr])
 
 
 
