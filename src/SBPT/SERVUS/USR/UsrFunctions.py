@@ -47,8 +47,8 @@ def computeUsrPosAndPerf(UsrLosFilePath, UsrPosFilePath, UsrPerfFilePath):
     fUserLos.readline()
     
     # Write Header of Output files                
-    header_string = usrHlp.delim.join(UsrPosIdx) + "\n"
-    # header_string = "ID   BAND BIT   LON       LAT      MON    MINIPPs MAXIPPs NTRANS  RMSGIVDE MAXGIVD  MAXGIVE  MAXGIVEI  MAXVTEC  MAXSI     NMI\n"
+    # header_string = usrHlp.delim.join(UsrPosIdx) + "\n"
+    header_string = "#   SOD  USER-ID   ULON       ULAT     SOL-FLAG   NVS   NVS-PA    HPE        VPE        HPL        VPL        HSI        VSI        HDOP       VDOP       PDOP\n"
     fPosFile.write(header_string)    
 
     # LOOP over all Epochs of USR INFO file
@@ -65,11 +65,11 @@ def computeUsrPosAndPerf(UsrLosFilePath, UsrPosFilePath, UsrPerfFilePath):
             usrEpochSigmaUERE2_Dict = {}
             usrEpochRangeErrors_List = []            
             HPE_Dict = {} # [usrId][HPE list array]
-            VPE_Dict = {} # [usrId][VPE list array]
-            
-            usrIdPrev = -100
-            NvsPA = 0   # Number of Visible Satellites in The PA Solutions
-            Nvs5 = 0    # Number of Visible Satellites with EL > 5
+            VPE_Dict = {} # [usrId][VPE list array]            
+            NVSPA = 0   # Number of Visible Satellites in The PA Solutions
+            NVS = 0    # Number of Visible Satellites with EL > 5
+            usrSatIndex = 0
+
             for UsrLosData in UsrLosEpochData:
                 # Extract USER LOS Columns
                 usrId = int(UsrLosData[UsrLosIdx["USER-ID"]])
@@ -77,6 +77,8 @@ def computeUsrPosAndPerf(UsrLosFilePath, UsrPosFilePath, UsrPerfFilePath):
                 ULON = float(UsrLosData[UsrLosIdx["ULON"]])
                 ULAT = float(UsrLosData[UsrLosIdx["ULAT"]])        
                 PRN = int(UsrLosData[UsrLosIdx["PRN"]])
+                NSats = countTotalSatsOfUsrInEpoch(usrId, UsrLosEpochData)
+                usrSatIndex = usrSatIndex + 1
 
                 # Update the UsrPosOuputs for SOD, ULON, ULAT
                 usrHlp.updatePosOutputs(UsrPosEpochOutputs, usrId, {
@@ -92,13 +94,31 @@ def computeUsrPosAndPerf(UsrLosFilePath, UsrPosFilePath, UsrPerfFilePath):
                 if usrId not in VPE_Dict: 
                     VPE_Dict[usrId] = []
 
-                # If reached the end of satellites on the EPOCH 
-                # Compute the PA Solution for usrIdPrev
-                # Discard the first run: usrIdPrev = -100
-                if ((usrId != usrIdPrev) and (usrIdPrev != -100)):
+                # LOOP Over all Satellites, and filter them
+                # ----------------------------------------------------------
+                # Count Sats with ELEV angle more than 5 degree TODO: Change it to USER.MASK_ANGLE
+                if (float(UsrLosData[UsrLosIdx["ELEV"]]) > 5):
+                    NVS = NVS + 1
+
+                # Consider Sats only with Flag == 1 (Consider only PA Solutions)
+                if (int(UsrLosData[UsrLosIdx["FLAG"]]) == 1):
+                    usrAvlSatList.append(UsrLosData)
+                    NVSPA = NVSPA + 1                    
+
+                    # Build Ranging Error Vector by adding all the different contributors                        
+                    RangeError = buildRangingErrorVector(UsrLosData)
+                    usrEpochRangeErrors_List.append(RangeError)
+
+                    # Build the SigmaUERE2 in line with MOPS Standard
+                    SigmaUERE2 = buildSigmaUERE2(UsrLosData)
+                    usrEpochSigmaUERE2_Dict[PRN] = SigmaUERE2
+
+                # If reached the end of satellites on the EPOCH                                 
+                if (usrSatIndex == NSats):
+                    usrHlp.updatePosOutputs(UsrPosEpochOutputs, usrId, {"NVS": NVS, "NVS-PA": NVSPA})
                     # Compute PA Solution if at least 4 Satellites are valid for solution                            
                     #----------------------------------------------------------------------
-                    if NvsPA >= 4:                                
+                    if NVSPA >= 4:                                
                         # Build Geometry [G] matrix in line with SBAS Standard                                
                         GPA = buildGmatrix(usrAvlSatList)
 
@@ -110,54 +130,34 @@ def computeUsrPosAndPerf(UsrLosFilePath, UsrPosFilePath, UsrPerfFilePath):
 
                         HSI = computeXSI(HPE, HPL)
                         VSI = computeXSI(VPE, VPL)
-                        HPE_Dict[usrIdPrev].append(HPE)
-                        VPE_Dict[usrIdPrev].append(VPE)
+                        HPE_Dict[usrId].append(HPE)
+                        VPE_Dict[usrId].append(VPE)
                         
-                        # Update the UsrPosOuputs for SOL-FLAG, NvsPA, HPE, Nvs5, VPE, HPL, VPL
-                        usrHlp.updatePosOutputs(UsrPosEpochOutputs, usrIdPrev, {
-                            "SOL-FLAG":FLAG, "NVS-5": Nvs5, "NVS-PA": NvsPA, "HPE":HPE, "VPE":VPE, 
-                            "HPL":HPL, "VPL":VPL, "HSI":HSI, "VSI":VSI, "PDOP":PDOP, "HDOP":HDOP, "VDOP":VDOP})
+                        # Update the UsrPosOuputs for SOL-FLAG, NVSPA, HPE, Nvs5, VPE, HPL, VPL
+                        usrHlp.updatePosOutputs(UsrPosEpochOutputs, usrId, {
+                            "SOL-FLAG":FLAG, "HPE":HPE, "VPE":VPE, 
+                            "HPL":HPL, "VPL":VPL, "HSI":HSI, "VSI":VSI, 
+                            "PDOP":PDOP, "HDOP":HDOP, "VDOP":VDOP})
                     
-                        # Write USR POS File
-                        # ----------------------------------------------------------
-                        usrHlp.WriteLineInUsrPosFile(fPosFile, UsrPosEpochOutputs)
-
                     # Reset Loop variable, for the next iteration
                     usrAvlSatList = []   
                     usrEpochSigmaUERE2_Dict = {}
                     usrEpochRangeErrors_List = []
-                    NvsPA = 0
-                    Nvs5 = 0
-                
-                usrIdPrev = usrId
+                    NVSPA = 0
+                    NVS = 0
+                    usrSatIndex = 0
 
-                # LOOP Over all Satellites, and filter them
-                # ----------------------------------------------------------
-                # Ignore elevation angle less than 5 degree TODO: Change it to USER.MASK_ANGLE
-                if (float(UsrLosData[UsrLosIdx["ELEV"]]) < 5): continue
-                Nvs5 = Nvs5 + 1
+            # END OF LOOP For ALL Users in EPOCH
 
-                # Ignore Flag different than 1 (Consider only PA Solutions)
-                if (int(UsrLosData[UsrLosIdx["FLAG"]]) != 1): continue
-                NvsPA = NvsPA + 1
-
-                usrAvlSatList.append(UsrLosData)
-
-                # Build Ranging Error Vector by adding all the different contributors                        
-                RangeError = buildRangingErrorVector(UsrLosData)
-                usrEpochRangeErrors_List.append(RangeError)
-
-                # Build the SigmaUERE2 in line with MOPS Standard
-                SigmaUERE2 = buildSigmaUERE2(UsrLosData)
-                usrEpochSigmaUERE2_Dict[PRN] = SigmaUERE2
-
-            # END OF LOOP For ALL Users in EPOCH        
+            # Write USR POS File with the all the Usrs of the EPOCH
+            # ----------------------------------------------------------
+            usrHlp.WriteUsrsEpochPosFile(fPosFile, UsrPosEpochOutputs)            
         else:
             EndOfFile = True
             # Close the all the open files
             fUserLos.close()
             fPosFile.close()
-
+        # END OF LOOP over all Users Information on each Epoch:
     # END OF LOOP for all Epochs of USR LOS file
 
         
@@ -462,7 +462,19 @@ def computePercentile95(XPE_list, resolution=0.001):
     return XPE_95
 
 
-
+def countTotalSatsOfUsrInEpoch(targetId, UsrLosEpochData):
+    counting = False
+    totalSats = 0
+    for UsrLosData in UsrLosEpochData:
+        usrId = int(UsrLosData[UsrLosIdx["USER-ID"]])
+        if (targetId == usrId):
+            totalSats = totalSats + 1
+            counting = True
+        elif((targetId != usrId) and (counting == True)):
+            # The user has changed, end of counting
+            break
+    
+    return totalSats
 
 
 

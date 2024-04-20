@@ -100,13 +100,13 @@ for Jd in range(Conf["INI_DATE_JD"], Conf["END_DATE_JD"] + 1):
     
     print('2. Created file:', UsrPosFilePath) 
 
-    print('3. Generating Figures...\n')
+    # print('3. Generating Figures...\n')
     
     # T2. Generate USR Statistic Maps figures   
-    wp3.plotUsrStatsMaps(UsrPosFilePath, yearDayText)
+    # wp3.plotUsrStatsMaps(UsrPosFilePath, yearDayText)
     
     # T3. Generate USR Time figures     
-    wp3.plotUsrInfoTime(UsrLosFilePath, yearDayText)   
+    # wp3.plotUsrInfoTime(UsrLosFilePath, yearDayText)   
     
 
 

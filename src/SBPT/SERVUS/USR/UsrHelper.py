@@ -66,7 +66,7 @@ UsrPosIdx = dict([
     ("ULON", 2),
     ("ULAT", 3),
     ("SOL-FLAG", 4),
-    ("NVS-5", 5),
+    ("NVS", 5),
     ("NVS-PA", 6),
     ("HPE", 7),
     ("VPE", 8),
@@ -80,7 +80,7 @@ UsrPosIdx = dict([
 ])
 
 # Define Usr POS file format list
-UsrPosOutputFormat = "%7d %6d %10.3f %10.3f %7d %9d %10d %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f"
+UsrPosOutputFormat = "%7d %6d %10.3f %10.3f %7d %8d %8d %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f"
 PosFileOutputFormatList = UsrPosOutputFormat.split()
 
 # Define User Performance file Columns
@@ -156,7 +156,7 @@ def readUsrLosEpoch(f):
 
 def initializePosOutputs(PosOutputs):    
     # Loop over all 294 USRs of the GRID
-    for usrId in range(1,294):            
+    for usrId in range(1,295):            
         PosOutputs[usrId] = OrderedDict({})
         for var in UsrPosIdx.keys():
             if (var == "USER-ID"):
@@ -173,7 +173,7 @@ def initializePerfOutputs(PerfOutputs):
     
     """    
     # Loop over all 294 USRs of the GRID
-    for usrId in range(1,294):
+    for usrId in range(1,295):
         PerfOutputs[usrId] = OrderedDict({})
         for var in UsrPerfIdx.keys():
             if (var == "USER-ID"):
@@ -191,7 +191,7 @@ def initializeInterPerfOutputs(PerfInterOutputs):
     
     """    
     # Loop over all 294 USRs of the GRID
-    for usrId in range(1,294):
+    for usrId in range(1,295):
         PerfInterOutputs[usrId] = {
             "HPE_list": [],
             "VPE_list": [],
@@ -296,7 +296,7 @@ def computeUsrRmsFromInterOuputs(interOutputs, usrId):
 
     return rmsGIVDE
 
-def WriteLineInUsrPosFile(fOut, UsrPosEpochOutputs):
+def WriteUsrsEpochPosFile(fOut, UsrPosEpochOutputs):
      for usr in UsrPosEpochOutputs.keys():        
         for i, result in enumerate(UsrPosEpochOutputs[usr]):
             fOut.write(((PosFileOutputFormatList[i] + delim) % UsrPosEpochOutputs[usr][result]))
