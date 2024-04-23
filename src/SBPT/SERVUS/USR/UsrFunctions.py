@@ -26,7 +26,7 @@ from UsrHelper import UsrLosIdx, UsrPosIdx, UsrPerfIdx
 # ------------------------------------------------------------------------------------
 # EXTERNAL FUNCTIONS 
 # ------------------------------------------------------------------------------------
-def computeUsrPosAndPerf(UsrLosFilePath, UsrPosFilePath, UsrPerfFilePath):    
+def computeUsrPos(UsrLosFilePath, UsrPosFilePath, Conf):
     # Define and Initialize Variables            
     UsrPosEpochOutputs = OrderedDict({})
     UsrPerfOutputs = OrderedDict({})
@@ -63,9 +63,7 @@ def computeUsrPosAndPerf(UsrLosFilePath, UsrPosFilePath, UsrPerfFilePath):
             # --------------------------------------------------
             usrAvlSatList = []
             usrEpochSigmaUERE2_Dict = {}
-            usrEpochRangeErrors_List = []            
-            HPE_Dict = {} # [usrId][HPE list array]
-            VPE_Dict = {} # [usrId][VPE list array]            
+            usrEpochRangeErrors_List = []
             NVSPA = 0   # Number of Visible Satellites in The PA Solutions
             NVS = 0    # Number of Visible Satellites with EL > 5
             usrSatIndex = 0
@@ -88,37 +86,31 @@ def computeUsrPosAndPerf(UsrLosFilePath, UsrPosFilePath, UsrPerfFilePath):
                 usrHlp.updatePerfOutputs(UsrPerfOutputs, usrId, {
                     "ULON": ULON, "ULAT":ULAT})
                 
-                if usrId not in HPE_Dict: 
-                    HPE_Dict[usrId] = []                    
-
-                if usrId not in VPE_Dict: 
-                    VPE_Dict[usrId] = []
-
                 # LOOP Over all Satellites, and filter them
                 # ----------------------------------------------------------
                 # Count Sats with ELEV angle more than 5 degree TODO: Change it to USER.MASK_ANGLE
-                if (float(UsrLosData[UsrLosIdx["ELEV"]]) > 5):
+                if (float(UsrLosData[UsrLosIdx["ELEV"]]) > int(Conf["USER_MASK"])):
                     NVS = NVS + 1
 
                     # Consider Sats only with Flag == 1 (Consider only PA Solutions)
                     if (int(UsrLosData[UsrLosIdx["FLAG"]]) == 1):
                         usrAvlSatList.append(UsrLosData)
-                        NVSPA = NVSPA + 1                    
+                        NVSPA = NVSPA + 1
 
-                        # Build Ranging Error Vector by adding all the different contributors                        
+                        # Build Ranging Error Vector by adding all the different contributors
                         RangeError = buildRangingErrorVector(UsrLosData)
                         usrEpochRangeErrors_List.append(RangeError)
 
                         # Build the SigmaUERE2 in line with MOPS Standard
                         SigmaUERE2 = buildSigmaUERE2(UsrLosData)
                         usrEpochSigmaUERE2_Dict[PRN] = SigmaUERE2
-                
 
-                # If reached the end of satellites on the EPOCH                                 
+
+                # If reached the end of satellites on the EPOCH
                 if (usrSatIndex == NSats):
                     usrHlp.updatePosOutputs(UsrPosEpochOutputs, usrId, {"NVS": NVS, "NVS-PA": NVSPA})
-                    # Compute PA Solution if at least 4 Satellites are valid for solution                            
-                    #----------------------------------------------------------------------
+
+                    # Compute PA Solution if at least 4 Satellites are valid for solution                    
                     if NVSPA >= 4:                                
                         # Build Geometry [G] matrix in line with SBAS Standard                                
                         GPA = buildGmatrix(usrAvlSatList)
@@ -127,12 +119,10 @@ def computeUsrPosAndPerf(UsrLosFilePath, UsrPosFilePath, UsrPerfFilePath):
                         WPA= buildWmatrix(usrAvlSatList, usrEpochSigmaUERE2_Dict)
 
                         # Compute Position Errors and Protection levels. XPE, XPL                                
-                        [HPE, VPE, HPL, VPL, PDOP, HDOP, VDOP, FLAG] = computeXpeXplXdops(GPA, WPA, usrEpochRangeErrors_List)       
+                        [HPE, VPE, HPL, VPL, PDOP, HDOP, VDOP, FLAG] = computeXpeXplXdops(GPA, WPA, usrEpochRangeErrors_List, int(Conf["PDOP_MAX"]))
 
                         HSI = computeXSI(HPE, HPL)
-                        VSI = computeXSI(VPE, VPL)
-                        HPE_Dict[usrId].append(HPE)
-                        VPE_Dict[usrId].append(VPE)
+                        VSI = computeXSI(VPE, VPL)                        
                         
                         # Update the UsrPosOuputs for SOL-FLAG, NVSPA, HPE, Nvs5, VPE, HPL, VPL
                         usrHlp.updatePosOutputs(UsrPosEpochOutputs, usrId, {
@@ -159,30 +149,29 @@ def computeUsrPosAndPerf(UsrLosFilePath, UsrPosFilePath, UsrPerfFilePath):
             fUserLos.close()
             fPosFile.close()
         # END OF LOOP over all Users Information on each Epoch:
-    # END OF LOOP for all Epochs of USR LOS file
+    # END OF LOOP for all Epochs of USR LOS file        
 
+
+def computeUsrPerf(UsrPosFilePath, UsrPerfFilePath, Conf):
+    UsrsPosData = readDataFile(UsrPosFilePath, UsrPosIdx.values())
+    HPE_Dict = {} # [usrId][HPE list array]
+    VPE_Dict = {} # [usrId][VPE list array]
+
+    for UsrData in UsrsPosData:
+        usrId = UsrData[UsrPosIdx["USER-ID"]]
+        if usrId not in HPE_Dict: HPE_Dict[usrId] = []
+        if usrId not in VPE_Dict: VPE_Dict[usrId] = []
+
+        HPE = UsrData[UsrPosIdx["HPE"]]
+        VPE = UsrData[UsrPosIdx["VPE"]]
+
+        HPE_Dict[usrId].append(HPE)
+        VPE_Dict[usrId].append(VPE)
         
-    # Open Output USR Performance File 
-    fPerfFile = open(UsrPerfFilePath, 'w')
+    # HPE95 = computePercentile95(HPE_Dict[usr])
+    # VPE95 = computePercentile95(VPE_Dict[usr])
 
-    # Compute all User Performance values
-    for usr in UsrPerfOutputs:
-        HPE95 = computePercentile95(HPE_Dict[usr])
-        VPE95 = computePercentile95(VPE_Dict[usr])
-
-
-
-
-    fPerfFile.close()
-        
-
-        # Compute the final Statistics
-        # ----------------------------------------------------------
-        # computeFinalStatistics(UsrPerfOutputs, UsrPosEpochOutputs)
-       
-
-
-
+    return
 
 # ------------------------------------------------------------------------------------
 # INTERNAL FUNCTIONS 
@@ -269,15 +258,15 @@ def buildWmatrix(satList, SigmaUERE2List):
 
     return W
 
-def computeXpeXplXdops(GPA, WPA, RangeErrors, threshold = 10000):  
+def computeXpeXplXdops(GPA, WPA, RangeErrors, PDOP_MAX):  
     """
         Return [HPE, VPE, HPL, VPL, PDOP, HDOP, VDOP, FLAG]
     """
     # Compute PDOP (Ref.: ESA GNSS Book Vol I Section 6.1.3.2)
     PDOP = computePDOP(GPA);       
 
-    # Check if the PDOP is below a threshold, 10000 by default
-    if PDOP > threshold:        
+    # Check if the PDOP is above the UsrConf threshold, return 0
+    if PDOP > PDOP_MAX:        
         return [0.0, 0.0, 0.0, 0.0, PDOP, 0.0, 0.0, 0] # FLAG: 0 = "Not Used"
     
     # Compute the Position Error Vector through the LSE process

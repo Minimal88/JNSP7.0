@@ -30,7 +30,7 @@ sys.path.insert(0, projectDir)
 from COMMON.Dates import convertJulianDay2YearMonthDay
 from COMMON.Dates import convertYearMonthDay2Doy
 from COMMON.Files import readDataFile, readConf, processConf
-from UsrFunctions import computeUsrPosAndPerf
+from UsrFunctions import computeUsrPos, computeUsrPerf
 import WP3Plots  as wp3
 
 
@@ -95,15 +95,19 @@ for Jd in range(Conf["INI_DATE_JD"], Conf["END_DATE_JD"] + 1):
     
     print('1. Processing file: ', UsrLosFilePath)
     
-    # T1. Compute USR Statistics and generate file
-    computeUsrPosAndPerf(UsrLosFilePath, UsrPosFilePath, UsrPerfFilePath)
-    
-    print('2. Created file:', UsrPosFilePath) 
+    # T1. Compute USR POSITION and generate the POS file
+    #computeUsrPos(UsrLosFilePath, UsrPosFilePath, Conf)
+    print('2. User POS file created:', UsrPosFilePath)
 
-    # print('3. Generating Figures...\n')
+    # T2. Compute USR PERFORMANCE and generate the PERF file
+    #computeUsrPerf(UsrPosFilePath, UsrPerfFilePath, Conf)
+
+    print('2. User PERF file created:', UsrPosFilePath)
+
+    print('4. Generating User Performance Figures...\n')
     
-    # T2. Generate USR Statistic Maps figures   
-    # wp3.plotUsrStatsMaps(UsrPosFilePath, yearDayText)
+    # T2. Generate USR Performance Maps figures   
+    wp3.plotUsrPerfMaps(UsrPerfFilePath, yearDayText)
     
     # T3. Generate USR Time figures     
     # wp3.plotUsrInfoTime(UsrLosFilePath, yearDayText)   

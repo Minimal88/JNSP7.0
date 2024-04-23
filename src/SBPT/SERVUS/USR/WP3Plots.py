@@ -29,56 +29,70 @@ import COMMON.Plots as plt
 from COMMON import GnssConstants
 from COMMON.Files import readDataFile
 import UsrFunctions as sft
-from UsrHelper import UsrPosIdx, UsrLosIdx
+from UsrHelper import UsrPerfIdx, UsrLosIdx
 
 # Define relative path
 RelativePath = '/OUT/USR/FIGURES/'
 # ------------------------------------------------------------------------------------
 # EXTERNAL FUNCTIONS 
 # ------------------------------------------------------------------------------------
-def plotUsrStatsMaps(UsrStatsFile, yearDayText):    
+def plotUsrPerfMaps(UsrPerfFile, yearDayText):    
     # Fecth all the columns
-    UsrStatsData = readDataFile(UsrStatsFile, UsrPosIdx.values(), 1)
+    UsrPerfData = readDataFile(UsrPerfFile, UsrPerfIdx.values(), 1)
 
-    plotUsrMapMon(UsrStatsData, yearDayText)
+    # plotUsrMapAvailability_0_100(UsrPerfData, yearDayText)
 
-    plotUsrMapMinNIPPs(UsrStatsData, yearDayText)
+    # plotUsrMapAvailability_70_99(UsrPerfData, yearDayText)
 
-    plotUsrMapMaxNIPPs(UsrStatsData, yearDayText)
+    plotUsrMapHPE_95(UsrPerfData, yearDayText)
 
-    plotUsrMapMaxVTEC(UsrStatsData, yearDayText)
+    plotUsrMapVPE_95(UsrPerfData, yearDayText)
 
-    plotUsrMapMaxGIVD(UsrStatsData, yearDayText)
+    plotUsrMapRMS_HPE(UsrPerfData, yearDayText)
 
-    plotUsrMapMaxRMSGIVDE(UsrStatsData, yearDayText)
+    plotUsrMapRMS_VPE(UsrPerfData, yearDayText)
 
-    plotUsrMapMaxGIVE(UsrStatsData, yearDayText)
+    
+    
+    
+    ## OLD Plots
+    # plotUsrMapMinNIPPs(UsrPerfData, yearDayText)
 
-    plotUsrMapMaxGIVEi(UsrStatsData, yearDayText)
+    # plotUsrMapMaxNIPPs(UsrPerfData, yearDayText)
 
-    plotUsrMapMaxSI(UsrStatsData, yearDayText)
+    # plotUsrMapMaxVTEC(UsrPerfData, yearDayText)
 
-    plotUsrMapNTRANS(UsrStatsData, yearDayText)
+    # plotUsrMapMaxGIVD(UsrPerfData, yearDayText)
 
-    plotUsrMapNMI(UsrStatsData, yearDayText)
+    # plotUsrMapMaxRMSGIVDE(UsrPerfData, yearDayText)
+
+    # plotUsrMapMaxGIVE(UsrPerfData, yearDayText)
+
+    # plotUsrMapMaxGIVEi(UsrPerfData, yearDayText)
+
+    # plotUsrMapMaxSI(UsrPerfData, yearDayText)
+
+    # plotUsrMapNTRANS(UsrPerfData, yearDayText)
+
+    # plotUsrMapNMI(UsrPerfData, yearDayText)
     return
 
 def plotUsrInfoTime(UsrInfoFile, yearDayText):
 
     positions = {
-    "CNTR": {"LAT": 45, "LON": 5},
-    "SW-1": {"LAT": 20, "LON": -20},
-    "SW-2": {"LAT": 20, "LON": 35},
-    "NW-1": {"LAT": 65, "LON": -20},
-    "NW-2": {"LAT": 60, "LON": 35}
+    "CNTR": {"ULAT": 45, "ULON": 5},
+    "SW-1": {"ULAT": 20, "ULON": -20},
+    "SW-2": {"ULAT": 20, "ULON": 35},
+    "NW-1": {"ULAT": 65, "ULON": -20},
+    "NW-2": {"ULAT": 60, "ULON": 35}
 }
     
     # Fecth target columns
     UsrInfoData = readDataFile(UsrInfoFile, [
         UsrLosIdx["SoD"], 
         UsrLosIdx["STATUS"],
-        UsrLosIdx["LAT"],
-        UsrLosIdx["LON"],
+        UsrLosIdx["ULAT"],
+        UsrLosIdx["ULON"],
         UsrLosIdx["GIVEI"],
         UsrLosIdx["GIVDE"],
         UsrLosIdx["GIVE"],
@@ -135,42 +149,182 @@ def plotUsrInfoTime(UsrInfoFile, yearDayText):
 # ------------------------------------------------------------------------------------
 
 # Generate a plot with Map for the USR Monitired Percentage
-def plotUsrMapMon(UsrStatsData, yearDayText):
-    filePath = sys.argv[1] + f'{RelativePath}USR_MON_MAP_{yearDayText}_G123_50s.png' 
-    title = f"USR Map: USR Monitoring Percentage [%] {yearDayText} G123 50s"    
+def plotUsrMapAvailability_0_100(UsrPerfData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}USR_PERF_MAP_APV-I_AVAILABILITY_0_100_{yearDayText}_G123_50s.png' 
+    title = f"APV-I Availability 0-100% {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns    
-    MON = UsrStatsData[UsrPosIdx["MON"]]
-    MONINT = [int(x) for x in MON]
-    LON = UsrStatsData[UsrPosIdx["LON"]]    
-    LAT = UsrStatsData[UsrPosIdx["LAT"]]    
+    APV1 = UsrPerfData[UsrPerfIdx["AVAILABILITY"]]
+    APV1_INT = [int(x) for x in APV1]
+    
+    LON = UsrPerfData[UsrPerfIdx["ULON"]]    
+    LAT = UsrPerfData[UsrPerfIdx["ULAT"]]    
 
     yLabel = "Latitude [deg]"
     PlotConf = plt.createPlotConfig2DLinesColorBar(
         filePath, title, 
-        LON, LAT  , MON,                            # xData, yData, zData
-        "Longitude [deg]", yLabel,"Monitoring [%]", # xLabel, yLabel, zLabel
-        's', False)                                 # Markers, applyLimits
+        LON, LAT  , APV1,                              # xData, yData, zData
+        "Longitude [deg]", yLabel,"Availability [%]", # xLabel, yLabel, zLabel
+        's', False)                                   # Markers, applyLimits
 
     plt.addMapToPlotConf(PlotConf,
-        -65, 85, 10,              # LonMin, LonMax, LonStep
-        0, 90, 10,                # LatMin, LatMax, LatStep
-        yLabel, MONINT)           # yLabel, TextData (Optional)
+        -40, 70, 10,              # LonMin, LonMax, LonStep
+        10, 90, 10,                # LatMin, LatMax, LatStep
+        yLabel, APV1_INT)           # yLabel, TextData (Optional)
+
+    plt.generatePlot(PlotConf)
+
+def plotUsrMapAvailability_70_99(UsrPerfData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}USR_PERF_MAP_APV-I_AVAILABILITY_70_99_{yearDayText}_G123_50s.png' 
+    title = f"APV-I Availability 0-100% {yearDayText} G123 50s (Availability: 70-99%)"    
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting Target columns    
+    APV1 = UsrPerfData[UsrPerfIdx["AVAILABILITY"]]    
+
+    # Filter data for availability between 70-99%
+    APV1_filtered = [x for x in APV1 if 70 <= x <= 99]
+    APV1_INT_filtered = [int(x) for x in APV1_filtered]
+    
+    # Filter LAT and LON arrays
+    LAT = [lat for i, lat in enumerate(UsrPerfData[UsrPerfIdx["ULAT"]]) if 70 <= APV1[i] <= 99]
+    LON = [lon for i, lon in enumerate(UsrPerfData[UsrPerfIdx["ULON"]]) if 70 <= APV1[i] <= 99]
+
+    yLabel = "Latitude [deg]"
+    PlotConf = plt.createPlotConfig2DLinesColorBar(
+        filePath, title, 
+        LON, LAT  , APV1_filtered,                              # xData, yData, zData
+        "Longitude [deg]", yLabel,"Availability [%]", # xLabel, yLabel, zLabel
+        's', False)                                   # Markers, applyLimits
+
+    plt.addMapToPlotConf(PlotConf,
+        -40, 70, 10,                         # LonMin, LonMax, LonStep
+        10, 90, 10,                          # LatMin, LatMax, LatStep
+        yLabel, APV1_INT_filtered)           # yLabel, TextData (Optional)
+
+    plt.generatePlot(PlotConf)
+
+
+def plotUsrMapHPE_95(UsrPerfData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}USR_PERF_MAP_APV-I_HPE_95_{yearDayText}_G123_50s.png' 
+    title = f"HPE 95% {yearDayText} G123 50s"    
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting Target columns    
+    HPE95 = UsrPerfData[UsrPerfIdx["HPE-95"]]
+    # Convert to float and round to 2 decimal places
+    HPE95_FLOAT = [round(float(x), 3) for x in HPE95]
+    
+    LON = UsrPerfData[UsrPerfIdx["ULON"]]    
+    LAT = UsrPerfData[UsrPerfIdx["ULAT"]]    
+
+    yLabel = "Latitude [deg]"
+    PlotConf = plt.createPlotConfig2DLinesColorBar(
+        filePath, title, 
+        LON, LAT  , HPE95,                            # xData, yData, zData
+        "Longitude [deg]", yLabel,"HPE95% [m]",       # xLabel, yLabel, zLabel
+        's', False)                                   # Markers, applyLimits
+
+    plt.addMapToPlotConf(PlotConf,
+        -40, 70, 10,                        # LonMin, LonMax, LonStep
+        10, 90, 10,                         # LatMin, LatMax, LatStep
+        yLabel, HPE95_FLOAT)                  # yLabel, TextData (Optional)
+
+    plt.generatePlot(PlotConf)
+
+def plotUsrMapVPE_95(UsrPerfData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}USR_PERF_MAP_APV-I_VPE_95_{yearDayText}_G123_50s.png' 
+    title = f"VPE 95% {yearDayText} G123 50s"    
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting Target columns    
+    VPE95 = UsrPerfData[UsrPerfIdx["VPE-95"]]
+    # Convert to float and round to 2 decimal places
+    VPE95_FLOAT = [round(float(x), 3) for x in VPE95]
+    
+    LON = UsrPerfData[UsrPerfIdx["ULON"]]    
+    LAT = UsrPerfData[UsrPerfIdx["ULAT"]]    
+
+    yLabel = "Latitude [deg]"
+    PlotConf = plt.createPlotConfig2DLinesColorBar(
+        filePath, title, 
+        LON, LAT  , VPE95,                            # xData, yData, zData
+        "Longitude [deg]", yLabel,"VPE95% [m]",       # xLabel, yLabel, zLabel
+        's', False)                                   # Markers, applyLimits
+
+    plt.addMapToPlotConf(PlotConf,
+        -40, 70, 10,                        # LonMin, LonMax, LonStep
+        10, 90, 10,                         # LatMin, LatMax, LatStep
+        yLabel, VPE95_FLOAT)                  # yLabel, TextData (Optional)
+
+    plt.generatePlot(PlotConf)
+
+def plotUsrMapRMS_HPE(UsrPerfData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}USR_PERF_MAP_APV-I_RMS_HPE_{yearDayText}_G123_50s.png' 
+    title = f"RMS HPE {yearDayText} G123 50s"    
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting Target columns    
+    HPE95 = UsrPerfData[UsrPerfIdx["HPE-RMS"]]
+    # Convert to float and round to 2 decimal places
+    HPE95_FLOAT = [round(float(x), 3) for x in HPE95]
+    
+    LON = UsrPerfData[UsrPerfIdx["ULON"]]    
+    LAT = UsrPerfData[UsrPerfIdx["ULAT"]]    
+
+    yLabel = "Latitude [deg]"
+    PlotConf = plt.createPlotConfig2DLinesColorBar(
+        filePath, title, 
+        LON, LAT  , HPE95,                            # xData, yData, zData
+        "Longitude [deg]", yLabel,"RMS HPE [m]",       # xLabel, yLabel, zLabel
+        's', False)                                   # Markers, applyLimits
+
+    plt.addMapToPlotConf(PlotConf,
+        -40, 70, 10,                        # LonMin, LonMax, LonStep
+        10, 90, 10,                         # LatMin, LatMax, LatStep
+        yLabel, HPE95_FLOAT)                  # yLabel, TextData (Optional)
+
+    plt.generatePlot(PlotConf)
+
+def plotUsrMapRMS_VPE(UsrPerfData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}USR_PERF_MAP_APV-I_RMS_VPE_{yearDayText}_G123_50s.png' 
+    title = f"RMS VPE {yearDayText} G123 50s"    
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting Target columns    
+    VPE95 = UsrPerfData[UsrPerfIdx["VPE-RMS"]]
+    # Convert to float and round to 2 decimal places
+    VPE95_FLOAT = [round(float(x), 3) for x in VPE95]
+    
+    LON = UsrPerfData[UsrPerfIdx["ULON"]]    
+    LAT = UsrPerfData[UsrPerfIdx["ULAT"]]    
+
+    yLabel = "Latitude [deg]"
+    PlotConf = plt.createPlotConfig2DLinesColorBar(
+        filePath, title, 
+        LON, LAT  , VPE95,                            # xData, yData, zData
+        "Longitude [deg]", yLabel,"RMS VPE [m]",       # xLabel, yLabel, zLabel
+        's', False)                                   # Markers, applyLimits
+
+    plt.addMapToPlotConf(PlotConf,
+        -40, 70, 10,                        # LonMin, LonMax, LonStep
+        10, 90, 10,                         # LatMin, LatMax, LatStep
+        yLabel, VPE95_FLOAT)                  # yLabel, TextData (Optional)
 
     plt.generatePlot(PlotConf)
     
 # Generate a plot with Map for the USR Minimum NIPPs
-def plotUsrMapMinNIPPs(UsrStatsData, yearDayText):
+def plotUsrMapMinNIPPs(UsrPerfData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}USR_MIN_NIPPs_MAP_{yearDayText}_G123_50s.png' 
     title = f"USR Map: Minimum Number of IPPs {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns    
-    MINIPPs = UsrStatsData[UsrPosIdx["MINIPPs"]]
+    MINIPPs = UsrPerfData[UsrPerfIdx["MINIPPs"]]
     MINIPPsINT = [int(x) for x in MINIPPs]
-    LON = UsrStatsData[UsrPosIdx["LON"]]    
-    LAT = UsrStatsData[UsrPosIdx["LAT"]]    
+    LON = UsrPerfData[UsrPerfIdx["ULON"]]
+    LAT = UsrPerfData[UsrPerfIdx["ULAT"]]
 
     yLabel = "Latitude [deg]"
     PlotConf = plt.createPlotConfig2DLinesColorBar(
@@ -187,16 +341,16 @@ def plotUsrMapMinNIPPs(UsrStatsData, yearDayText):
     plt.generatePlot(PlotConf)
 
 # Generate a plot with Map for the USR Maximum NIPPs
-def plotUsrMapMaxNIPPs(UsrStatsData, yearDayText):
+def plotUsrMapMaxNIPPs(UsrPerfData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}USR_MAX_NIPPs_MAP_{yearDayText}_G123_50s.png' 
     title = f"USR Map: Maximum Number of IPPs {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns    
-    MAXIPPs = UsrStatsData[UsrPosIdx["MAXIPPs"]]
+    MAXIPPs = UsrPerfData[UsrPerfIdx["MAXIPPs"]]
     MAXIPPsINT = [int(x) for x in MAXIPPs]
-    LON = UsrStatsData[UsrPosIdx["LON"]]    
-    LAT = UsrStatsData[UsrPosIdx["LAT"]]    
+    LON = UsrPerfData[UsrPerfIdx["ULON"]]    
+    LAT = UsrPerfData[UsrPerfIdx["ULAT"]]    
 
     yLabel = "Latitude [deg]"
     PlotConf = plt.createPlotConfig2DLinesColorBar(
@@ -214,16 +368,16 @@ def plotUsrMapMaxNIPPs(UsrStatsData, yearDayText):
 
 # Generate a plot with Map for the USR Maximum VTEC
 # TODO: Check the values of this plot, something is off
-def plotUsrMapMaxVTEC(UsrStatsData, yearDayText):
+def plotUsrMapMaxVTEC(UsrPerfData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}USR_MAX_VTEC_MAP_{yearDayText}_G123_50s.png' 
     title = f"USR Map: Maximum VTEC [m] {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns    
-    MAXVTEC = UsrStatsData[UsrPosIdx["MAXVTEC"]]
+    MAXVTEC = UsrPerfData[UsrPerfIdx["MAXVTEC"]]
     MAXVTECFLOAT = [round(float(x), 1) for x in MAXVTEC]
-    LON = UsrStatsData[UsrPosIdx["LON"]]    
-    LAT = UsrStatsData[UsrPosIdx["LAT"]]    
+    LON = UsrPerfData[UsrPerfIdx["ULON"]]    
+    LAT = UsrPerfData[UsrPerfIdx["ULAT"]]    
 
     yLabel = "Latitude [deg]"
     PlotConf = plt.createPlotConfig2DLinesColorBar(
@@ -240,16 +394,16 @@ def plotUsrMapMaxVTEC(UsrStatsData, yearDayText):
     plt.generatePlot(PlotConf)
 
 # Generate a plot with Map for the USR Maximum GIVD
-def plotUsrMapMaxGIVD(UsrStatsData, yearDayText):
+def plotUsrMapMaxGIVD(UsrPerfData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}USR_MAX_GIVD_MAP_{yearDayText}_G123_50s.png' 
     title = f"USR Map: Maximum GIVD [m] {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns    
-    MAXGIVD = UsrStatsData[UsrPosIdx["MAXGIVD"]]
+    MAXGIVD = UsrPerfData[UsrPerfIdx["MAXGIVD"]]
     MAXGIVDFLOAT = [round(float(x), 1) for x in MAXGIVD]
-    LON = UsrStatsData[UsrPosIdx["LON"]]    
-    LAT = UsrStatsData[UsrPosIdx["LAT"]]    
+    LON = UsrPerfData[UsrPerfIdx["ULON"]]    
+    LAT = UsrPerfData[UsrPerfIdx["ULAT"]]    
 
     yLabel = "Latitude [deg]"
     PlotConf = plt.createPlotConfig2DLinesColorBar(
@@ -266,16 +420,16 @@ def plotUsrMapMaxGIVD(UsrStatsData, yearDayText):
     plt.generatePlot(PlotConf)
 
 # Generate a plot with Map for the USR RMS GIVD Error
-def plotUsrMapMaxRMSGIVDE(UsrStatsData, yearDayText):
+def plotUsrMapMaxRMSGIVDE(UsrPerfData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}USR_MAX_RMS_GIVDE_MAP_{yearDayText}_G123_50s.png' 
     title = f"USR Map: RMS GIVD Error [m] {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns    
-    RMSGIVDE = UsrStatsData[UsrPosIdx["RMSGIVDE"]]
+    RMSGIVDE = UsrPerfData[UsrPerfIdx["RMSGIVDE"]]
     RMSGIVDEFLOAT = [round(float(x), 1) for x in RMSGIVDE]
-    LON = UsrStatsData[UsrPosIdx["LON"]]    
-    LAT = UsrStatsData[UsrPosIdx["LAT"]]    
+    LON = UsrPerfData[UsrPerfIdx["ULON"]]    
+    LAT = UsrPerfData[UsrPerfIdx["ULAT"]]    
 
     yLabel = "Latitude [deg]"
     PlotConf = plt.createPlotConfig2DLinesColorBar(
@@ -292,16 +446,16 @@ def plotUsrMapMaxRMSGIVDE(UsrStatsData, yearDayText):
     plt.generatePlot(PlotConf)
 
 # Generate a plot with Map for the USR Maximum GIVE
-def plotUsrMapMaxGIVE(UsrStatsData, yearDayText):
+def plotUsrMapMaxGIVE(UsrPerfData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}USR_MAX_GIVE_MAP_{yearDayText}_G123_50s.png' 
     title = f"USR Map: Maximum GIVE [m] {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns    
-    MAXGIVE = UsrStatsData[UsrPosIdx["MAXGIVE"]]
+    MAXGIVE = UsrPerfData[UsrPerfIdx["MAXGIVE"]]
     MAXGIVEFLOAT = [round(float(x), 1) for x in MAXGIVE]
-    LON = UsrStatsData[UsrPosIdx["LON"]]    
-    LAT = UsrStatsData[UsrPosIdx["LAT"]]    
+    LON = UsrPerfData[UsrPerfIdx["ULON"]]    
+    LAT = UsrPerfData[UsrPerfIdx["ULAT"]]    
 
     yLabel = "Latitude [deg]"
     PlotConf = plt.createPlotConfig2DLinesColorBar(
@@ -318,16 +472,16 @@ def plotUsrMapMaxGIVE(UsrStatsData, yearDayText):
     plt.generatePlot(PlotConf)
 
 # Generate a plot with Map for the USR Maximum GIVEi
-def plotUsrMapMaxGIVEi(UsrStatsData, yearDayText):
+def plotUsrMapMaxGIVEi(UsrPerfData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}USR_MAX_GIVEi_MAP_{yearDayText}_G123_50s.png' 
     title = f"USR Map: Maximum GIVEi [m] {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns    
-    MAXGIVEi = UsrStatsData[UsrPosIdx["MAXGIVEI"]]
+    MAXGIVEi = UsrPerfData[UsrPerfIdx["MAXGIVEI"]]
     MAXGIVEiFLOAT = [round(float(x), 1) for x in MAXGIVEi]
-    LON = UsrStatsData[UsrPosIdx["LON"]]    
-    LAT = UsrStatsData[UsrPosIdx["LAT"]]    
+    LON = UsrPerfData[UsrPerfIdx["ULON"]]    
+    LAT = UsrPerfData[UsrPerfIdx["ULAT"]]    
 
     yLabel = "Latitude [deg]"
     PlotConf = plt.createPlotConfig2DLinesColorBar(
@@ -344,16 +498,16 @@ def plotUsrMapMaxGIVEi(UsrStatsData, yearDayText):
     plt.generatePlot(PlotConf)
 
 # Generate a plot with Map for the USR Maximum SI
-def plotUsrMapMaxSI(UsrStatsData, yearDayText):
+def plotUsrMapMaxSI(UsrPerfData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}USR_MAX_SI_MAP_{yearDayText}_G123_50s.png' 
     title = f"USR Map: Maximum SI {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns    
-    MAXSI = UsrStatsData[UsrPosIdx["MAXSI"]]
+    MAXSI = UsrPerfData[UsrPerfIdx["MAXSI"]]
     MAXSIFLOAT = [round(float(x), 1) for x in MAXSI]
-    LON = UsrStatsData[UsrPosIdx["LON"]]    
-    LAT = UsrStatsData[UsrPosIdx["LAT"]]    
+    LON = UsrPerfData[UsrPerfIdx["ULON"]]    
+    LAT = UsrPerfData[UsrPerfIdx["ULAT"]]    
 
     yLabel = "Latitude [deg]"
     PlotConf = plt.createPlotConfig2DLinesColorBar(
@@ -370,15 +524,15 @@ def plotUsrMapMaxSI(UsrStatsData, yearDayText):
     plt.generatePlot(PlotConf)
 
 # Generate a plot with Map for the USR NTRANS Number of Transitions
-def plotUsrMapNTRANS(UsrStatsData, yearDayText):
+def plotUsrMapNTRANS(UsrPerfData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}USR_NTRANS_MAP_{yearDayText}_G123_50s.png' 
     title = f"USR Map: Number of Transitions MtoNM MtoDU {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns    
-    NTRANS = UsrStatsData[UsrPosIdx["NTRANS"]]
-    LON = UsrStatsData[UsrPosIdx["LON"]]    
-    LAT = UsrStatsData[UsrPosIdx["LAT"]]    
+    NTRANS = UsrPerfData[UsrPerfIdx["NTRANS"]]
+    LON = UsrPerfData[UsrPerfIdx["ULON"]]    
+    LAT = UsrPerfData[UsrPerfIdx["ULAT"]]    
 
     yLabel = "Latitude [deg]"
     PlotConf = plt.createPlotConfig2DLinesColorBar(
@@ -395,15 +549,15 @@ def plotUsrMapNTRANS(UsrStatsData, yearDayText):
     plt.generatePlot(PlotConf)    
 
 # Generate a plot with Map for the USR NMI Number of MI
-def plotUsrMapNMI(UsrStatsData, yearDayText):
+def plotUsrMapNMI(UsrPerfData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}USR_NMI_MAP_{yearDayText}_G123_50s.png' 
     title = f"USR Map: Number of MI {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns    
-    NMI = UsrStatsData[UsrPosIdx["NMI"]]
-    LON = UsrStatsData[UsrPosIdx["LON"]]    
-    LAT = UsrStatsData[UsrPosIdx["LAT"]]    
+    NMI = UsrPerfData[UsrPerfIdx["NMI"]]
+    LON = UsrPerfData[UsrPerfIdx["ULON"]]    
+    LAT = UsrPerfData[UsrPerfIdx["ULAT"]]    
 
     yLabel = "Latitude [deg]"
     PlotConf = plt.createPlotConfig2DLinesColorBar(
@@ -463,14 +617,14 @@ def plotUsrTimeMon(UsrInfoData, yearDayText):
 # Generate a Plot with the GIVDE, GIVE, GIVEi and Monitoring flag along the hour of the day for a specific Lon|Lat.
 def plotUsrTimeGivdeGiveGiveiMon(UsrInfoData, yearDayText, pos, posLabel):
     filePath = sys.argv[1] + f'{RelativePath}USR_TIME_GIVDE_GIVE_GIVEI_{posLabel}_{yearDayText}_G123_50s.png' 
-    lon = pos["LON"]
-    lat = pos["LAT"]
+    lon = pos["ULON"]
+    lat = pos["ULAT"]
     title = f"USR {posLabel} [Lon|Lat]:[{lon}:{lat}] {yearDayText}"    
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting and Filtering  Target columns
-    FilterCondLon = UsrInfoData[UsrLosIdx["LON"]] == lon
-    FilterCondLat = UsrInfoData[UsrLosIdx["LAT"]] == lat
+    FilterCondLon = UsrInfoData[UsrLosIdx["ULON"]] == lon
+    FilterCondLat = UsrInfoData[UsrLosIdx["ULAT"]] == lat
     HOD = UsrInfoData[UsrLosIdx["SoD"]][FilterCondLat][FilterCondLon] / GnssConstants.S_IN_H  # Converting to hours    
     MON = UsrInfoData[UsrLosIdx["STATUS"]][FilterCondLat][FilterCondLon]
     GIVDE = UsrInfoData[UsrLosIdx["GIVDE"]][FilterCondLat][FilterCondLon]
@@ -499,14 +653,14 @@ def plotUsrTimeGivdeGiveGiveiMon(UsrInfoData, yearDayText, pos, posLabel):
 # Generate a Plot GIVD and VTEC Evolution along the day for a specific Lon|Lat.
 def plotUsrTimeGivdVtecMon(UsrInfoData, yearDayText, pos, posLabel, yLimits = None):
     filePath = sys.argv[1] + f'{RelativePath}USR_TIME_GIVD_VTEC_{posLabel}_{yearDayText}_G123_50s.png' 
-    lon = pos["LON"]
-    lat = pos["LAT"]
+    lon = pos["ULON"]
+    lat = pos["ULAT"]
     title = f"USR {posLabel} [Lon|Lat]:[{lon}:{lat}] {yearDayText}"    
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting and Filtering  Target columns
-    FilterCondLon = UsrInfoData[UsrLosIdx["LON"]] == lon
-    FilterCondLat = UsrInfoData[UsrLosIdx["LAT"]] == lat
+    FilterCondLon = UsrInfoData[UsrLosIdx["ULON"]] == lon
+    FilterCondLat = UsrInfoData[UsrLosIdx["ULAT"]] == lat
     HOD = UsrInfoData[UsrLosIdx["SoD"]][FilterCondLat][FilterCondLon] / GnssConstants.S_IN_H  # Converting to hours    
     MON = UsrInfoData[UsrLosIdx["STATUS"]][FilterCondLat][FilterCondLon]
     GIVD = UsrInfoData[UsrLosIdx["GIVD"]][FilterCondLat][FilterCondLon]
@@ -545,10 +699,10 @@ def plotUsrTimeVtecAllPositions(UsrInfoData, yearDayText, positions):
     VTECs = []
     VTECsLabels = []
     for pos in positions:
-        lon = positions[pos]["LON"]
-        lat = positions[pos]["LAT"]
-        FilterCondLon = UsrInfoData[UsrLosIdx["LON"]] == lon
-        FilterCondLat = UsrInfoData[UsrLosIdx["LAT"]] == lat
+        lon = positions[pos]["ULON"]
+        lat = positions[pos]["ULAT"]
+        FilterCondLon = UsrInfoData[UsrLosIdx["ULON"]] == lon
+        FilterCondLat = UsrInfoData[UsrLosIdx["ULAT"]] == lat
         VTECs.append(UsrInfoData[UsrLosIdx["VTEC"]][FilterCondLat][FilterCondLon])
         VTECsLabels.append(f'VTEC {pos} [{lon} {lat}]')
         HOD = UsrInfoData[UsrLosIdx["SoD"]][FilterCondLat][FilterCondLon] / GnssConstants.S_IN_H   
@@ -578,10 +732,10 @@ def plotUsrTimeSiAllPositions(UsrInfoData, yearDayText, positions):
     SI = []
     SILabels = []
     for pos in positions:
-        lon = positions[pos]["LON"]
-        lat = positions[pos]["LAT"]
-        FilterCondLon = UsrInfoData[UsrLosIdx["LON"]] == lon
-        FilterCondLat = UsrInfoData[UsrLosIdx["LAT"]] == lat
+        lon = positions[pos]["ULON"]
+        lat = positions[pos]["ULAT"]
+        FilterCondLon = UsrInfoData[UsrLosIdx["ULON"]] == lon
+        FilterCondLat = UsrInfoData[UsrLosIdx["ULAT"]] == lat
         GIVDE = UsrInfoData[UsrLosIdx["GIVDE"]][FilterCondLat][FilterCondLon]
         GIVE = UsrInfoData[UsrLosIdx["GIVE"]][FilterCondLat][FilterCondLon]
         SI.append(GIVDE / (GIVE * 5.33))
