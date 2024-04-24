@@ -52,8 +52,27 @@ def plotUsrPerfMaps(UsrPerfFile, yearDayText):
 
     plotUsrMapRMS_VPE(UsrPerfData, yearDayText)
 
+    plotUsrMapMAX_HSI(UsrPerfData, yearDayText)
+
+    plotUsrMapMAX_VSI(UsrPerfData, yearDayText)
+
+    plotUsrMapNSV_MAX(UsrPerfData, yearDayText)
+
+    plotUsrMapNSV_MIN(UsrPerfData, yearDayText)
     
+    plotUsrMapMAX_HPL(UsrPerfData, yearDayText)
+
+    plotUsrMapMIN_HPL(UsrPerfData, yearDayText)
     
+    plotUsrMapMAX_VPL(UsrPerfData, yearDayText)
+
+    plotUsrMapMIN_VPL(UsrPerfData, yearDayText)
+
+    plotUsrMapMAX_HDOP(UsrPerfData, yearDayText)
+
+    plotUsrMapMAX_VDOP(UsrPerfData, yearDayText)
+
+    plotUsrMapMAX_PDOP(UsrPerfData, yearDayText)
     
     ## OLD Plots
     # plotUsrMapMinNIPPs(UsrPerfData, yearDayText)
@@ -205,7 +224,6 @@ def plotUsrMapAvailability_70_99(UsrPerfData, yearDayText):
 
     plt.generatePlot(PlotConf)
 
-
 def plotUsrMapHPE_95(UsrPerfData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}USR_PERF_MAP_APV-I_HPE_95_{yearDayText}_G123_50s.png' 
     title = f"HPE 95% {yearDayText} G123 50s"    
@@ -314,6 +332,307 @@ def plotUsrMapRMS_VPE(UsrPerfData, yearDayText):
 
     plt.generatePlot(PlotConf)
     
+def plotUsrMapMAX_HSI(UsrPerfData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}USR_PERF_MAP_HSI_MAX_{yearDayText}_G123_50s.png'
+    title = f"MAX HSI {yearDayText} G123 50s"
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting Target columns
+    MAX_HSI = UsrPerfData[UsrPerfIdx["HSI-MAX"]]
+    # Convert to float and round to 2 decimal places
+    MAXHSI_FLOAT = [round(float(x), 2) for x in MAX_HSI]    
+
+    LON = UsrPerfData[UsrPerfIdx["ULON"]]
+    LAT = UsrPerfData[UsrPerfIdx["ULAT"]]
+
+    yLabel = "Latitude [deg]"
+    PlotConf = plt.createPlotConfig2DLinesColorBar(
+        filePath, title,
+        LON, LAT  , MAX_HSI,                            # xData, yData, zData
+        "Longitude [deg]", yLabel,"MAX HSI",          # xLabel, yLabel, zLabel
+        's', False)                                   # Markers, applyLimits
+
+    plt.addMapToPlotConf(PlotConf,
+        -40, 70, 10,                        # LonMin, LonMax, LonStep
+        10, 90, 10,                         # LatMin, LatMax, LatStep
+        yLabel, MAXHSI_FLOAT)                  # yLabel, TextData (Optional)
+
+    plt.generatePlot(PlotConf)
+
+def plotUsrMapMAX_VSI(UsrPerfData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}USR_PERF_MAP_VSI_MAX_{yearDayText}_G123_50s.png'
+    title = f"MAX VSI {yearDayText} G123 50s"
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting Target columns
+    MAX_VSI = UsrPerfData[UsrPerfIdx["VSI-MAX"]]
+    # Convert to float and round to 2 decimal places
+    MAXVSI_FLOAT = [round(float(x), 2) for x in MAX_VSI]
+
+    LON = UsrPerfData[UsrPerfIdx["ULON"]]
+    LAT = UsrPerfData[UsrPerfIdx["ULAT"]]
+
+    yLabel = "Latitude [deg]"
+    PlotConf = plt.createPlotConfig2DLinesColorBar(
+        filePath, title,
+        LON, LAT  , MAX_VSI,                            # xData, yData, zData
+        "Longitude [deg]", yLabel,"MAX VSI",          # xLabel, yLabel, zLabel
+        's', False)                                   # Markers, applyLimits
+
+    plt.addMapToPlotConf(PlotConf,
+        -40, 70, 10,                        # LonMin, LonMax, LonStep
+        10, 90, 10,                         # LatMin, LatMax, LatStep
+        yLabel, MAXVSI_FLOAT)               # yLabel, TextData (Optional)
+
+    plt.generatePlot(PlotConf)
+
+def plotUsrMapNSV_MAX(UsrPerfData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}USR_PERF_MAP_NSV_MAX_{yearDayText}_G123_50s.png'
+    title = f"MAX Number of Satellites on {yearDayText} G123 50s"
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting Target columns
+    NSV_MAX = UsrPerfData[UsrPerfIdx["NVS-MAX"]]
+    NSV_MAX_INT = [int(x) for x in NSV_MAX]    
+
+    LON = UsrPerfData[UsrPerfIdx["ULON"]]
+    LAT = UsrPerfData[UsrPerfIdx["ULAT"]]
+
+    yLabel = "Latitude [deg]"
+    PlotConf = plt.createPlotConfig2DLinesColorBar(
+        filePath, title,
+        LON, LAT  , NSV_MAX,                                 # xData, yData, zData
+        "Longitude [deg]", yLabel,"MAX Num of Satellites",   # xLabel, yLabel, zLabel
+        's', False)                                          # Markers, applyLimits
+
+    plt.addMapToPlotConf(PlotConf,
+        -40, 70, 10,                        # LonMin, LonMax, LonStep
+        10, 90, 10,                         # LatMin, LatMax, LatStep
+        yLabel, NSV_MAX_INT)                # yLabel, TextData (Optional)
+
+    plt.generatePlot(PlotConf)
+
+def plotUsrMapNSV_MIN(UsrPerfData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}USR_PERF_MAP_NSV_MIN_{yearDayText}_G123_50s.png'
+    title = f"MIN Number of Satellites on {yearDayText} G123 50s"
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting Target columns
+    NSV_MIN = UsrPerfData[UsrPerfIdx["NVS-MIN"]]
+    # Convert to float and round to 2 decimal places
+    NSV_MIN_INT = [int(x) for x in NSV_MIN]
+
+    LON = UsrPerfData[UsrPerfIdx["ULON"]]
+    LAT = UsrPerfData[UsrPerfIdx["ULAT"]]
+
+    yLabel = "Latitude [deg]"
+    PlotConf = plt.createPlotConfig2DLinesColorBar(
+        filePath, title,
+        LON, LAT  , NSV_MIN,                                 # xData, yData, zData
+        "Longitude [deg]", yLabel,"MIN Num of Satellites",   # xLabel, yLabel, zLabel
+        's', False)                                          # Markers, applyLimits
+
+    plt.addMapToPlotConf(PlotConf,
+        -40, 70, 10,                        # LonMin, LonMax, LonStep
+        10, 90, 10,                         # LatMin, LatMax, LatStep
+        yLabel, NSV_MIN_INT)              # yLabel, TextData (Optional)
+
+    plt.generatePlot(PlotConf)
+
+def plotUsrMapMAX_HPL(UsrPerfData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}USR_PERF_MAP_HPL_MAX_{yearDayText}_G123_50s.png'
+    title = f"MAX HPL {yearDayText} G123 50s"
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting Target columns
+    MAX_HPL = UsrPerfData[UsrPerfIdx["HPL-MAX"]]
+    # Convert to float and round to 2 decimal places
+    MAXHPL_FLOAT = [round(float(x), 2) for x in MAX_HPL]
+
+    LON = UsrPerfData[UsrPerfIdx["ULON"]]
+    LAT = UsrPerfData[UsrPerfIdx["ULAT"]]
+
+    yLabel = "Latitude [deg]"
+    PlotConf = plt.createPlotConfig2DLinesColorBar(
+        filePath, title,
+        LON, LAT  , MAX_HPL,                          # xData, yData, zData
+        "Longitude [deg]", yLabel,"MAX HPL",          # xLabel, yLabel, zLabel
+        's', False)                                   # Markers, applyLimits
+
+    plt.addMapToPlotConf(PlotConf,
+        -40, 70, 10,                        # LonMin, LonMax, LonStep
+        10, 90, 10,                         # LatMin, LatMax, LatStep
+        yLabel, MAXHPL_FLOAT)               # yLabel, TextData (Optional)
+
+    plt.generatePlot(PlotConf)
+
+def plotUsrMapMIN_HPL(UsrPerfData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}USR_PERF_MAP_HPL_MIN_{yearDayText}_G123_50s.png'
+    title = f"MIN HPL {yearDayText} G123 50s"
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting Target columns
+    MIN_HPL = UsrPerfData[UsrPerfIdx["HPL-MIN"]]
+    # Convert to float and round to 2 decimal places
+    MINHPL_FLOAT = [round(float(x), 2) for x in MIN_HPL]
+
+    LON = UsrPerfData[UsrPerfIdx["ULON"]]
+    LAT = UsrPerfData[UsrPerfIdx["ULAT"]]
+
+    yLabel = "Latitude [deg]"
+    PlotConf = plt.createPlotConfig2DLinesColorBar(
+        filePath, title,
+        LON, LAT  , MIN_HPL,                          # xData, yData, zData
+        "Longitude [deg]", yLabel,"MIN HPL",          # xLabel, yLabel, zLabel
+        's', False)                                   # Markers, applyLimits
+
+    plt.addMapToPlotConf(PlotConf,
+        -40, 70, 10,                        # LonMin, LonMin, LonStep
+        10, 90, 10,                         # LatMin, LatMin, LatStep
+        yLabel, MINHPL_FLOAT)               # yLabel, TextData (Optional)
+
+    plt.generatePlot(PlotConf)
+
+def plotUsrMapMAX_VPL(UsrPerfData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}USR_PERF_MAP_VPL_MAX_{yearDayText}_G123_50s.png'
+    title = f"MAX VPL {yearDayText} G123 50s"
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting Target columns
+    MAX_VPL = UsrPerfData[UsrPerfIdx["VPL-MAX"]]
+    # Convert to float and round to 2 decimal places
+    MAXVPL_FLOAT = [round(float(x), 2) for x in MAX_VPL]
+
+    LON = UsrPerfData[UsrPerfIdx["ULON"]]
+    LAT = UsrPerfData[UsrPerfIdx["ULAT"]]
+
+    yLabel = "Latitude [deg]"
+    PlotConf = plt.createPlotConfig2DLinesColorBar(
+        filePath, title,
+        LON, LAT  , MAX_VPL,                          # xData, yData, zData
+        "Longitude [deg]", yLabel,"MAX VPL",          # xLabel, yLabel, zLabel
+        's', False)                                   # Markers, applyLimits
+
+    plt.addMapToPlotConf(PlotConf,
+        -40, 70, 10,                        # LonMin, LonMax, LonStep
+        10, 90, 10,                         # LatMin, LatMax, LatStep
+        yLabel, MAXVPL_FLOAT)               # yLabel, TextData (Optional)
+
+    plt.generatePlot(PlotConf)
+
+def plotUsrMapMIN_VPL(UsrPerfData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}USR_PERF_MAP_VPL_MIN_{yearDayText}_G123_50s.png'
+    title = f"MIN VPL {yearDayText} G123 50s"
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting Target columns
+    MIN_VPL = UsrPerfData[UsrPerfIdx["VPL-MIN"]]
+    # Convert to float and round to 2 decimal places
+    MINVPL_FLOAT = [round(float(x), 2) for x in MIN_VPL]
+
+    LON = UsrPerfData[UsrPerfIdx["ULON"]]
+    LAT = UsrPerfData[UsrPerfIdx["ULAT"]]
+
+    yLabel = "Latitude [deg]"
+    PlotConf = plt.createPlotConfig2DLinesColorBar(
+        filePath, title,
+        LON, LAT  , MIN_VPL,                          # xData, yData, zData
+        "Longitude [deg]", yLabel,"MIN VPL",          # xLabel, yLabel, zLabel
+        's', False)                                   # Markers, applyLimits
+
+    plt.addMapToPlotConf(PlotConf,
+        -40, 70, 10,                        # LonMin, LonMin, LonStep
+        10, 90, 10,                         # LatMin, LatMin, LatStep
+        yLabel, MINVPL_FLOAT)               # yLabel, TextData (Optional)
+
+    plt.generatePlot(PlotConf)
+
+def plotUsrMapMAX_HDOP(UsrPerfData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}USR_PERF_MAP_HDOP_MAX_{yearDayText}_G123_50s.png'
+    title = f"MAX HDOP {yearDayText} G123 50s"
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting Target columns
+    MAX_HDOP = UsrPerfData[UsrPerfIdx["HDOP-MAX"]]
+    # Convert to float and round to 2 decimal places
+    MAXHDOP_FLOAT = [round(float(x), 2) for x in MAX_HDOP]
+
+    LON = UsrPerfData[UsrPerfIdx["ULON"]]
+    LAT = UsrPerfData[UsrPerfIdx["ULAT"]]
+
+    yLabel = "Latitude [deg]"
+    PlotConf = plt.createPlotConfig2DLinesColorBar(
+        filePath, title,
+        LON, LAT  , MAX_HDOP,                          # xData, yData, zData
+        "Longitude [deg]", yLabel,"MAX HDOP",          # xLabel, yLabel, zLabel
+        's', False)                                    # Markers, applyLimits
+
+    plt.addMapToPlotConf(PlotConf,
+        -40, 70, 10,                        # LonMin, LonMax, LonStep
+        10, 90, 10,                         # LatMin, LatMax, LatStep
+        yLabel, MAXHDOP_FLOAT)              # yLabel, TextData (Optional)
+
+    plt.generatePlot(PlotConf)
+
+
+def plotUsrMapMAX_VDOP(UsrPerfData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}USR_PERF_MAP_VDOP_MAX_{yearDayText}_G123_50s.png'
+    title = f"MAX VDOP {yearDayText} G123 50s"
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting Target columns
+    MAX_VDOP = UsrPerfData[UsrPerfIdx["VDOP-MAX"]]
+    # Convert to float and round to 2 decimal places
+    MAXVDOP_FLOAT = [round(float(x), 2) for x in MAX_VDOP]
+
+    LON = UsrPerfData[UsrPerfIdx["ULON"]]
+    LAT = UsrPerfData[UsrPerfIdx["ULAT"]]
+
+    yLabel = "Latitude [deg]"
+    PlotConf = plt.createPlotConfig2DLinesColorBar(
+        filePath, title,
+        LON, LAT  , MAX_VDOP,                          # xData, yData, zData
+        "Longitude [deg]", yLabel,"MAX VDOP",          # xLabel, yLabel, zLabel
+        's', False)                                    # Markers, applyLimits
+
+    plt.addMapToPlotConf(PlotConf,
+        -40, 70, 10,                        # LonMin, LonMax, LonStep
+        10, 90, 10,                         # LatMin, LatMax, LatStep
+        yLabel, MAXVDOP_FLOAT)              # yLabel, TextData (Optional)
+
+    plt.generatePlot(PlotConf)
+
+
+def plotUsrMapMAX_PDOP(UsrPerfData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}USR_PERF_MAP_PDOP_MAX_{yearDayText}_G123_50s.png'
+    title = f"MAX PDOP {yearDayText} G123 50s"
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting Target columns
+    MAX_PDOP = UsrPerfData[UsrPerfIdx["PDOP-MAX"]]
+    # Convert to float and round to 2 decimal places
+    MAXPDOP_FLOAT = [round(float(x), 2) for x in MAX_PDOP]
+
+    LON = UsrPerfData[UsrPerfIdx["ULON"]]
+    LAT = UsrPerfData[UsrPerfIdx["ULAT"]]
+
+    yLabel = "Latitude [deg]"
+    PlotConf = plt.createPlotConfig2DLinesColorBar(
+        filePath, title,
+        LON, LAT  , MAX_PDOP,                          # xData, yData, zData
+        "Longitude [deg]", yLabel,"MAX PDOP",          # xLabel, yLabel, zLabel
+        's', False)                                    # Markers, applyLimits
+
+    plt.addMapToPlotConf(PlotConf,
+        -40, 70, 10,                        # LonMin, LonMax, LonStep
+        10, 90, 10,                         # LatMin, LatMax, LatStep
+        yLabel, MAXPDOP_FLOAT)              # yLabel, TextData (Optional)
+
+    plt.generatePlot(PlotConf)
+
+
+
+
 # Generate a plot with Map for the USR Minimum NIPPs
 def plotUsrMapMinNIPPs(UsrPerfData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}USR_MIN_NIPPs_MAP_{yearDayText}_G123_50s.png' 
