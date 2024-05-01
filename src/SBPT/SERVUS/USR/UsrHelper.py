@@ -74,9 +74,9 @@ UsrPosIdx = dict([
     ("VPL", 10),
     ("HSI", 11),
     ("VSI", 12),
-    ("HDOP", 13),
-    ("VDOP", 14),
-    ("PDOP", 15)    
+    ("PDOP", 13),
+    ("HDOP", 14),
+    ("VDOP", 15)    
 ])
 
 # Define Usr POS file format list
@@ -105,9 +105,9 @@ UsrPerfIdx = dict([
     ("VPL-MAX", 17),
     ("HPL-MIN", 18),
     ("VPL-MIN", 19),
+    ("PDOP-MAX", 22),
     ("HDOP-MAX", 20),
-    ("VDOP-MAX", 21),
-    ("PDOP-MAX", 22)
+    ("VDOP-MAX", 21)    
 ])
 
 # Define User Performance Output file format list

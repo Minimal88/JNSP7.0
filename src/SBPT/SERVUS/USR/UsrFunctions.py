@@ -48,7 +48,7 @@ def computeUsrPos(UsrLosFilePath, UsrPosFilePath, Conf):
     
     # Write Header of Output files                
     # header_string = usrHlp.delim.join(UsrPosIdx) + "\n"
-    header_string = "#   SOD  USER-ID   ULON       ULAT     SOL-FLAG   NVS   NVS-PA    HPE        VPE        HPL        VPL        HSI        VSI        HDOP       VDOP       PDOP\n"
+    header_string = "#   SOD  USER-ID   ULON       ULAT     SOL-FLAG   NVS   NVS-PA    HPE        VPE        HPL        VPL        HSI        VSI        PDOP       HDOP       VDOP\n"
     fPosFile.write(header_string)    
 
     # LOOP over all Epochs of USR INFO file
@@ -63,7 +63,7 @@ def computeUsrPos(UsrLosFilePath, UsrPosFilePath, Conf):
             # --------------------------------------------------
             usrAvlSatList = []
             usrEpochSigmaUERE2_Dict = {}
-            usrEpochRangeErrors_List = []
+            usrEpochRangeErrors_List = []            
             NVSPA = 0   # Number of Visible Satellites in The PA Solutions
             NVS = 0    # Number of Visible Satellites with EL > 5
             usrSatIndex = 0
@@ -75,7 +75,7 @@ def computeUsrPos(UsrLosFilePath, UsrPosFilePath, Conf):
                 ULON = float(UsrLosData[UsrLosIdx["ULON"]])
                 ULAT = float(UsrLosData[UsrLosIdx["ULAT"]])        
                 PRN = int(UsrLosData[UsrLosIdx["PRN"]])
-                NSats = countTotalSatsOfUsrInEpoch(usrId, UsrLosEpochData)
+                NSatsOfUsrInEpoch = countTotalSatsOfUsrInEpoch(usrId, UsrLosEpochData)
                 usrSatIndex = usrSatIndex + 1
 
                 # Update the UsrPosOuputs for SOD, ULON, ULAT
@@ -106,29 +106,36 @@ def computeUsrPos(UsrLosFilePath, UsrPosFilePath, Conf):
                         usrEpochSigmaUERE2_Dict[PRN] = SigmaUERE2
 
 
-                # If reached the end of satellites on the EPOCH
-                if (usrSatIndex == NSats):
+                # If reached the end of satellites on the EPOCH for the current user
+                if (usrSatIndex == NSatsOfUsrInEpoch):
                     usrHlp.updatePosOutputs(UsrPosEpochOutputs, usrId, {"NVS": NVS, "NVS-PA": NVSPA})
+                    SOL_FLAG = PDOP = HDOP = VDOP = HPE = VPE = HPL = VPL = HSI = VSI = 0
 
                     # Compute PA Solution if at least 4 Satellites are valid for solution                    
                     if NVSPA >= 4:                                
                         # Build Geometry [G] matrix in line with SBAS Standard                                
                         GPA = buildGmatrix(usrAvlSatList)
 
-                        # Build Weighting [W] matrix in line with SBAS Standards                                
-                        WPA= buildWmatrix(usrAvlSatList, usrEpochSigmaUERE2_Dict)
+                        # Compute PDOP (Ref.: ESA GNSS Book Vol I Section 6.1.3.2)
+                        [PDOP, HDOP, VDOP] = computeXDOPs(GPA);
 
-                        # Compute Position Errors and Protection levels. XPE, XPL                                
-                        [HPE, VPE, HPL, VPL, PDOP, HDOP, VDOP, FLAG] = computeXpeXplXdops(GPA, WPA, usrEpochRangeErrors_List, int(Conf["PDOP_MAX"]))
+                        # Check if the PDOP is under the UsrConf threshold (10000)
+                        if PDOP <= int(Conf["PDOP_MAX"]):        
+                            # Build Weighting [W] matrix in line with SBAS Standards                                
+                            WPA= buildWmatrix(usrAvlSatList, usrEpochSigmaUERE2_Dict)
 
-                        HSI = computeXSI(HPE, HPL)
-                        VSI = computeXSI(VPE, VPL)                        
+                            # Compute Position Errors and Protection levels. XPE, XPL                                
+                            [HPE, VPE, HPL, VPL] = computeXpeXpl(GPA, WPA, usrEpochRangeErrors_List)
+
+                            HSI = computeXSI(HPE, HPL)
+                            VSI = computeXSI(VPE, VPL)
+                            SOL_FLAG = 1
                         
-                        # Update the UsrPosOuputs for SOL-FLAG, NVSPA, HPE, Nvs5, VPE, HPL, VPL
-                        usrHlp.updatePosOutputs(UsrPosEpochOutputs, usrId, {
-                            "SOL-FLAG":FLAG, "HPE":HPE, "VPE":VPE, 
-                            "HPL":HPL, "VPL":VPL, "HSI":HSI, "VSI":VSI, 
-                            "PDOP":PDOP, "HDOP":HDOP, "VDOP":VDOP})
+                    # Update the UsrPosOuputs for SOL-FLAG, NVSPA, HPE, Nvs5, VPE, HPL, VPL
+                    usrHlp.updatePosOutputs(UsrPosEpochOutputs, usrId, {
+                        "SOL-FLAG":SOL_FLAG, "HPE":HPE, "VPE":VPE, 
+                        "HPL":HPL, "VPL":VPL, "HSI":HSI, "VSI":VSI, 
+                        "PDOP":PDOP, "HDOP":HDOP, "VDOP":VDOP})
                     
                     # Reset Loop variable, for the next iteration
                     usrAvlSatList = []   
@@ -136,7 +143,7 @@ def computeUsrPos(UsrLosFilePath, UsrPosFilePath, Conf):
                     usrEpochRangeErrors_List = []
                     NVSPA = 0
                     NVS = 0
-                    usrSatIndex = 0
+                    usrSatIndex = 0                    
 
             # END OF LOOP For ALL Users in EPOCH
 
@@ -153,10 +160,13 @@ def computeUsrPos(UsrLosFilePath, UsrPosFilePath, Conf):
 
 
 def computeUsrPerf(UsrPosFilePath, UsrPerfFilePath, Conf):
+    # TODO:  Improve by reading UsrPosFilePath epoch by epoch
     UsrsPosData = readDataFile(UsrPosFilePath, UsrPosIdx.values())
     HPE_Dict = {} # [usrId][HPE list array]
     VPE_Dict = {} # [usrId][VPE list array]
-
+    HAL = 40
+    VAL = 50
+    
     for UsrData in UsrsPosData:
         usrId = UsrData[UsrPosIdx["USER-ID"]]
         if usrId not in HPE_Dict: HPE_Dict[usrId] = []
@@ -165,9 +175,15 @@ def computeUsrPerf(UsrPosFilePath, UsrPerfFilePath, Conf):
         HPE = UsrData[UsrPosIdx["HPE"]]
         VPE = UsrData[UsrPosIdx["VPE"]]
 
-        HPE_Dict[usrId].append(HPE)
-        VPE_Dict[usrId].append(VPE)
+        HPL = UsrData[UsrPosIdx["HPL"]]
+        VPL = UsrData[UsrPosIdx["VPL"]]
         
+        if (HPL < HAL) and (VPL < VAL):
+            HPE_Dict[usrId].append(HPE)
+            VPE_Dict[usrId].append(VPE)
+    
+
+    # For each user call np.percentile     
     # HPE95 = computePercentile95(HPE_Dict[usr])
     # VPE95 = computePercentile95(VPE_Dict[usr])
 
@@ -258,16 +274,10 @@ def buildWmatrix(satList, SigmaUERE2List):
 
     return W
 
-def computeXpeXplXdops(GPA, WPA, RangeErrors, PDOP_MAX):  
+def computeXpeXpl(GPA, WPA, RangeErrors):  
     """
-        Return [HPE, VPE, HPL, VPL, PDOP, HDOP, VDOP, FLAG]
-    """
-    # Compute PDOP (Ref.: ESA GNSS Book Vol I Section 6.1.3.2)
-    PDOP = computePDOP(GPA);       
-
-    # Check if the PDOP is above the UsrConf threshold, return 0
-    if PDOP > PDOP_MAX:        
-        return [0.0, 0.0, 0.0, 0.0, PDOP, 0.0, 0.0, 0] # FLAG: 0 = "Not Used"
+        Return [HPE, VPE, HPL, VPL]
+    """    
     
     # Compute the Position Error Vector through the LSE process
     [EPE, NPE, UPE] = computePositionErrorVector(GPA, WPA, RangeErrors)
@@ -279,19 +289,21 @@ def computeXpeXplXdops(GPA, WPA, RangeErrors, PDOP_MAX):
     VPE = abs(UPE)
 
     # Compute Protection levels in line with Appendix J of MOPS
-    [HPL, VPL, HDOP, VDOP] = computeProtectionLevels(GPA, WPA)
+    [HPL, VPL] = computeProtectionLevels(GPA, WPA)
 
-    return [HPE, VPE, HPL, VPL, PDOP, HDOP, VDOP, 1] # FLAG: 1 = "Used For PA"
+    return [HPE, VPE, HPL, VPL]
 
-def computePDOP(G):
+def computeXDOPs(G):
     """
-    Compute the Dilution of Precision (DOP) Matrix [Q] and Position Dilution of Precision (PDOP)
+    Compute the Position/Horizontal/Vertical Dilution of Precision
 
     Parameters:
     G (list of lists): Geometry Matrix (G)
 
     Returns:
     PDOP (float): Position Dilution of Precision (PDOP)
+    HDOP (float): Horizontal Dilution of Precision (HDOP)
+    VDOP (float): Vertical Dilution of Precision (VDOP)
     """
     # Compute the Transposed Geometry Matrix ([G]T)
     GT = np.transpose(G)
@@ -307,29 +319,23 @@ def computePDOP(G):
     # Compute the total PDOP=sqrt(qE^2 + qN^2 + qU^2)
     PDOP = np.sqrt(qE**2 + qN**2 + qU**2)    
 
-    return PDOP
-
-def computeHVDOPs(D):
-    """
-    Compute Dilution of Precision (DOP) for Position Accuracy (PA) solution
-
-    Parameters:
-    D (numpy array): pseudo-inverse of the Weighted Normal Matrix (G^T W G)^-1
-
-    Returns:
-    HDOP (float): Horizontal Dilution of Precision
-    VDOP (float): Vertical Dilution of Precision
-    """
-    # Extract the relevant elements from the pseudo-inverse matrix D
-    D11 = D[0, 0]
-    D22 = D[1, 1]
-    D33 = D[2, 2]
+    # # Horizontal/Vertical Dilution of Precision 
+    # # Extract the relevant elements from the pseudo-inverse matrix D
+    # G11 = G[0, 0]
+    # G22 = G[1, 1]
+    # G33 = G[2, 2]
     
-    # Compute HDOP and VDOP
-    HDOP = np.sqrt(D11 + D22)
-    VDOP = np.sqrt(D33)
+    # # Compute HDOP and VDOP
+    # HDOP = np.sqrt(G11 + G22)
+    # VDOP = np.sqrt(G33)
 
-    return HDOP, VDOP
+    # Calculate Horizontal Dilution of Precision (HDOP)
+    HDOP = np.sqrt(qE**2 + qN**2)
+
+    # Vertical Dilution of Precision (VDOP)
+    VDOP = qU
+
+    return PDOP, HDOP, VDOP
 
 def computePositionErrorVector(G, W, RangeErrors):
     """
@@ -374,9 +380,6 @@ def computeProtectionLevels(G, W):
     # Compute the pseudo-inverse of the Weighted Normal Matrix (G^T W G)^-1
     D = np.linalg.pinv(np.dot(np.dot(np.transpose(G), W), G))   
 
-    # Horizontal/Vertical Dilution of Precision 
-    [HDOP, VDOP] = computeHVDOPs(D)
-
     # Compute intermediate variables
     deast2 = D[0,0]
     dnorth2 = D[1,1]
@@ -396,7 +399,7 @@ def computeProtectionLevels(G, W):
     # VPL = 2.576 * np.sqrt(D[2, 2])
     VPL = 5.33 * dU
 
-    return HPL, VPL, HDOP, VDOP
+    return HPL, VPL
 
 def computeXSI(XPE, XPL):
     """
