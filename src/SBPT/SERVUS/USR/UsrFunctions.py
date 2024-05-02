@@ -63,7 +63,7 @@ def computeUsrPos(UsrLosFilePath, UsrPosFilePath, Conf):
             # --------------------------------------------------
             usrAvlSatList = []
             usrEpochSigmaUERE2_Dict = {}
-            usrEpochRangeErrors_List = []            
+            usrEpochRangeErrors_Vector = []
             NVSPA = 0   # Number of Visible Satellites in The PA Solutions
             NVS = 0    # Number of Visible Satellites with EL > 5
             usrSatIndex = 0
@@ -81,11 +81,11 @@ def computeUsrPos(UsrLosFilePath, UsrPosFilePath, Conf):
                 # Update the UsrPosOuputs for SOD, ULON, ULAT
                 usrHlp.updatePosOutputs(UsrPosEpochOutputs, usrId, {
                     "SOD": SOD, "ULON": ULON, "ULAT":ULAT})
-                
+
                 # Update the UsrPerfOutputs
                 usrHlp.updatePerfOutputs(UsrPerfOutputs, usrId, {
                     "ULON": ULON, "ULAT":ULAT})
-                
+
                 # LOOP Over all Satellites, and filter them
                 # ----------------------------------------------------------
                 # Count Sats with ELEV angle more than 5 degree TODO: Change it to USER.MASK_ANGLE
@@ -98,11 +98,11 @@ def computeUsrPos(UsrLosFilePath, UsrPosFilePath, Conf):
                         NVSPA = NVSPA + 1
 
                         # Build Ranging Error Vector by adding all the different contributors
-                        RangeError = buildRangingErrorVector(UsrLosData)
-                        usrEpochRangeErrors_List.append(RangeError)
+                        RangeError = computeRangingError(UsrLosData)
+                        usrEpochRangeErrors_Vector.append(RangeError)
 
                         # Build the SigmaUERE2 in line with MOPS Standard
-                        SigmaUERE2 = buildSigmaUERE2(UsrLosData)
+                        SigmaUERE2 = computeSigmaUERE2(UsrLosData)
                         usrEpochSigmaUERE2_Dict[PRN] = SigmaUERE2
 
 
@@ -125,7 +125,7 @@ def computeUsrPos(UsrLosFilePath, UsrPosFilePath, Conf):
                             WPA= buildWmatrix(usrAvlSatList, usrEpochSigmaUERE2_Dict)
 
                             # Compute Position Errors and Protection levels. XPE, XPL                                
-                            [HPE, VPE, HPL, VPL] = computeXpeXpl(GPA, WPA, usrEpochRangeErrors_List)
+                            [HPE, VPE, HPL, VPL] = computeXpeXpl(GPA, WPA, usrEpochRangeErrors_Vector)
 
                             HSI = computeXSI(HPE, HPL)
                             VSI = computeXSI(VPE, VPL)
@@ -140,7 +140,7 @@ def computeUsrPos(UsrLosFilePath, UsrPosFilePath, Conf):
                     # Reset Loop variable, for the next iteration
                     usrAvlSatList = []   
                     usrEpochSigmaUERE2_Dict = {}
-                    usrEpochRangeErrors_List = []
+                    usrEpochRangeErrors_Vector = []
                     NVSPA = 0
                     NVS = 0
                     usrSatIndex = 0                    
@@ -199,30 +199,30 @@ def displayUsage():
     sys.stderr.write("ERROR: Please provide SAT.dat file (satellite instantaneous\n\
 information file) as a unique argument\n")
 
-def buildRangingErrorVector(UsrLosData):
+def computeRangingError(UsrLosData):
     """
-        Build Ranging Error Vector by adding all the different contributors 
+        Compute Ranging Error by adding all the different contributors 
         RANGEERROR = SREU + UISDE + TropoE + AirE
     """
-    # SREU = UsrLosData(UsrLosIdx["SREU"])
-    # UISDE = UsrLosData(UsrLosIdx["UISDE"])
-    # TropoE = UsrLosData(UsrLosIdx[])
-    # AirE = UsrLosData(UsrLosIdx["SREU"])
-    
-    return float(UsrLosData[UsrLosIdx["RERROR"]])
+    SREU = float(UsrLosData[UsrLosIdx["SREU"]])
+    UISDE = float(UsrLosData[UsrLosIdx["UISDE"]])
+    TropoE = float(UsrLosData[UsrLosIdx["STROPOE"]])
+    AirE = float(UsrLosData[UsrLosIdx["AIRERR"]])
 
-def buildSigmaUERE2(UsrLosData):
+    return SREU + UISDE + TropoE + AirE
+
+def computeSigmaUERE2(UsrLosData):
     """
         Build the SigmaUERE2 in line with MOPS Standard
         SigmaUERE2 = SigmaFLT2 + SigmaUIRE2 + SigmaTropo2 + SigmaAIR2
     """
 
-    # SigmaFLT2 = float(UsrLosData(UsrLosIdx["SFLT"])) ** 2
-    # SigmaUIRE2 = float(UsrLosData(UsrLosIdx[""])) ** 2
-    # SigmaTropo2 = float(UsrLosData(UsrLosIdx["SIGMTROPO"])) ** 2
-    # SigmaAIR2 = float(UsrLosData(UsrLosIdx["SIGMAIR"])) ** 2
+    SigmaFLT2 = float(UsrLosData[UsrLosIdx["SFLT"]]) ** 2
+    SigmaUIRE2 = float(UsrLosData[UsrLosIdx["UIRE"]]) ** 2
+    SigmaTropo2 = float(UsrLosData[UsrLosIdx["SIGMTROPO"]]) ** 2
+    SigmaAIR2 = float(UsrLosData[UsrLosIdx["SIGMAIR"]]) ** 2
     
-    return float(UsrLosData[UsrLosIdx["UERE"]]) ** 2
+    return SigmaFLT2 + SigmaUIRE2 + SigmaTropo2 + SigmaAIR2
 
 def buildGmatrix(satList):
     """
