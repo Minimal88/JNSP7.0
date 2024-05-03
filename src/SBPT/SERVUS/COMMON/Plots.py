@@ -4,6 +4,7 @@ import matplotlib as mpl
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 import matplotlib.pyplot as plt
+from scipy.interpolate import griddata
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 import conda
@@ -318,6 +319,41 @@ def generateVerticalBarPlot(PlotConf):
 
     saveFigure(fig, PlotConf["Path"])
 
+def generateInterpolatedMapPlot(PlotConf):
+    # Create figure and axis
+    fig, ax = createFigure(PlotConf)
+
+    # Draw map if specified
+    if "Map" in PlotConf and PlotConf["Map"]:
+        drawMap(PlotConf, ax)
+    if "ColorBar" in PlotConf:
+            normalize, Cmap = prepareColorBar(PlotConf, ax, PlotConf["zData"])
+
+    # Generate meshgrid for interpolation
+    lon_grid, lat_grid = np.meshgrid(
+        np.linspace(PlotConf["LonMin"], PlotConf["LonMax"], 100),
+        np.linspace(PlotConf["LatMin"], PlotConf["LatMax"], 100)
+    )
+
+    # Interpolate zData (availability) on the meshgrid
+    zData_interpolated = griddata(
+        (PlotConf["xData"], PlotConf["yData"]), PlotConf["zData"], (lon_grid, lat_grid), method='cubic'
+    )
+
+    # Plot interpolated data
+    contour = ax.contourf(lon_grid, lat_grid, zData_interpolated, cmap=Cmap)
+
+    
+
+    # Set labels and title
+    ax.set_xlabel(PlotConf["xLabel"], labelpad=50) 
+    ax.set_ylabel(PlotConf["yLabel"], labelpad=50) 
+    ax.set_title(PlotConf["Title"])  
+
+    # Save and show the plot
+    saveFigure(fig, PlotConf["Path"])
+    plt.show()
+
 
 # ------------------------------------------------------------------------------------
 # EXTERNAL FUNCTIONS 
@@ -471,6 +507,33 @@ def createPlotConfig2DLinesColorBar(filepath, title, xData, yData, zData, xLabel
     PlotConf["ColorBarLabel"] = zLabel
     PlotConf["ColorBarMin"] = min(zData)
     PlotConf["ColorBarMax"] = max(zData)      
+    PlotConf["Path"] = filepath
+
+    return PlotConf
+
+def createPlotConfig3DMapColorBar(filepath, title, xData, yData, zData, xLabel, yLabel, zLabel, LonMin, LonMax, LonStep, LatMin, LatMax, LatStep):
+    PlotConf = {}
+    PlotConf["Type"] = "Lines"
+    PlotConf["FigSize"] = (16.8, 15.2)
+    PlotConf["Title"] = title
+    PlotConf["yLabel"] = yLabel
+    PlotConf["xLabel"] = xLabel        
+    PlotConf["LineWidth"] = 1.5
+    PlotConf["Grid"] = True            
+    PlotConf["xData"] = xData
+    PlotConf["yData"] = yData    
+    PlotConf["zData"] = zData  
+    PlotConf["ColorBar"] = "gnuplot"
+    PlotConf["ColorBarLabel"] = zLabel
+    PlotConf["ColorBarMin"] = min(zData)
+    PlotConf["ColorBarMax"] = max(zData)
+    PlotConf["Map"] = True    
+    PlotConf["LonMin"] = LonMin
+    PlotConf["LonMax"] = LonMax
+    PlotConf["LonStep"] = LonStep
+    PlotConf["LatMin"] = LatMin
+    PlotConf["LatMax"] = LatMax
+    PlotConf["LatStep"] = LatStep
     PlotConf["Path"] = filepath
 
     return PlotConf

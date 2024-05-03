@@ -40,9 +40,11 @@ def plotUsrPerfMaps(UsrPerfFile, yearDayText):
     # Fecth all the columns
     UsrPerfData = readDataFile(UsrPerfFile, UsrPerfIdx.values(), 1)
 
-    # plotUsrMapAvailability_0_100(UsrPerfData, yearDayText)
+    plotUsrMapAvailability_0_100(UsrPerfData, yearDayText)
 
-    # plotUsrMapAvailability_70_99(UsrPerfData, yearDayText)
+    plotUsrMapAvailability_70_99(UsrPerfData, yearDayText)
+
+    plotUsrMapAvailability_0_99_NoInterpolation(UsrPerfData, yearDayText)
 
     plotUsrMapHPE_95(UsrPerfData, yearDayText)
 
@@ -175,28 +177,24 @@ def plotUsrMapAvailability_0_100(UsrPerfData, yearDayText):
 
     # Extracting Target columns    
     APV1 = UsrPerfData[UsrPerfIdx["AVAILABILITY"]]
-    APV1_INT = [int(x) for x in APV1]
     
-    LON = UsrPerfData[UsrPerfIdx["ULON"]]    
-    LAT = UsrPerfData[UsrPerfIdx["ULAT"]]    
+    # Get LAT and LON arrays
+    LAT = UsrPerfData[UsrPerfIdx["ULAT"]]
+    LON = UsrPerfData[UsrPerfIdx["ULON"]]
 
     yLabel = "Latitude [deg]"
-    PlotConf = plt.createPlotConfig2DLinesColorBar(
+    PlotConf = plt.createPlotConfig3DMapColorBar(
         filePath, title, 
-        LON, LAT  , APV1,                              # xData, yData, zData
-        "Longitude [deg]", yLabel,"Availability [%]", # xLabel, yLabel, zLabel
-        's', False)                                   # Markers, applyLimits
+        LON, LAT  , APV1,                               # xData, yData, zData
+        "Longitude [deg]", yLabel,"Availability [%]",   # xLabel, yLabel, zLabel
+        -35, 50, 5,                                     # LonMin, LonMax, LonStep
+        15, 80, 5)                                      # LatMin, LatMax, LatStep
 
-    plt.addMapToPlotConf(PlotConf,
-        -40, 70, 10,              # LonMin, LonMax, LonStep
-        10, 90, 10,                # LatMin, LatMax, LatStep
-        yLabel, APV1_INT)           # yLabel, TextData (Optional)
-
-    plt.generatePlot(PlotConf)
+    plt.generateInterpolatedMapPlot(PlotConf)
 
 def plotUsrMapAvailability_70_99(UsrPerfData, yearDayText):
     filePath = sys.argv[1] + f'{RelativePath}USR_PERF_MAP_APV-I_AVAILABILITY_70_99_{yearDayText}_G123_50s.png' 
-    title = f"APV-I Availability 0-100% {yearDayText} G123 50s (Availability: 70-99%)"    
+    title = f"APV-I Availability 70-99% {yearDayText} G123 50s"    
     print( f'Ploting: {title}\n -> {filePath}')
 
     # Extracting Target columns    
@@ -211,16 +209,39 @@ def plotUsrMapAvailability_70_99(UsrPerfData, yearDayText):
     LON = [lon for i, lon in enumerate(UsrPerfData[UsrPerfIdx["ULON"]]) if 70 <= APV1[i] <= 99]
 
     yLabel = "Latitude [deg]"
+    PlotConf = plt.createPlotConfig3DMapColorBar(
+        filePath, title, 
+        LON, LAT  , APV1_INT_filtered,                  # xData, yData, zData
+        "Longitude [deg]", yLabel,"Availability [%]",   # xLabel, yLabel, zLabel
+        -35, 50, 5,                                     # LonMin, LonMax, LonStep
+        15, 80, 5)                                      # LatMin, LatMax, LatStep
+    
+    plt.generateInterpolatedMapPlot(PlotConf)
+
+
+def plotUsrMapAvailability_0_99_NoInterpolation(UsrPerfData, yearDayText):
+    filePath = sys.argv[1] + f'{RelativePath}USR_PERF_MAP_APV-I_AVAILABILITY_0_100_NoInterpolation_{yearDayText}_G123_50s.png' 
+    title = f"APV-I Availability 0-100% No Interpolation {yearDayText} G123 50s "    
+    print( f'Ploting: {title}\n -> {filePath}')
+
+    # Extracting Target columns    
+    APV1 = UsrPerfData[UsrPerfIdx["AVAILABILITY"]]    
+
+    # Get LAT and LON arrays
+    LAT = UsrPerfData[UsrPerfIdx["ULAT"]]
+    LON = UsrPerfData[UsrPerfIdx["ULON"]]
+
+    yLabel = "Latitude [deg]"
     PlotConf = plt.createPlotConfig2DLinesColorBar(
         filePath, title, 
-        LON, LAT  , APV1_filtered,                              # xData, yData, zData
+        LON, LAT  , APV1,                              # xData, yData, zData
         "Longitude [deg]", yLabel,"Availability [%]", # xLabel, yLabel, zLabel
         's', False)                                   # Markers, applyLimits
 
     plt.addMapToPlotConf(PlotConf,
         -40, 70, 10,                         # LonMin, LonMax, LonStep
         10, 90, 10,                          # LatMin, LatMax, LatStep
-        yLabel, APV1_INT_filtered)           # yLabel, TextData (Optional)
+        yLabel, APV1)           # yLabel, TextData (Optional)
 
     plt.generatePlot(PlotConf)
 
