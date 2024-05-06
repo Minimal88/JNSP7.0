@@ -91,7 +91,7 @@ UsrPerfIdx = dict([
     ("SOLSAMP", 3),
     ("NVS-MIN", 4),
     ("NVS-MAX", 5),
-    ("SAMP-AVL", 6),
+    ("AVAILSAMP", 6),
     ("AVAILABILITY", 7),
     ("HPE-RMS", 8),
     ("VPE-RMS", 9),
@@ -200,7 +200,8 @@ def initializeInterPerfOutputs(PerfInterOutputs):
     for usrId in range(1,295):
         PerfInterOutputs[usrId] = {
             "HPE_list": [],
-            "VPE_list": []
+            "VPE_list": [],
+            "TotalSamples": 0
             
         }
     return

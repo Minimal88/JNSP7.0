@@ -169,7 +169,7 @@ def computeUsrPosAndPerf(UsrLosFilePath, UsrPosFilePath, UsrPerfFilePath, Conf):
     fPerfFile = open(UsrPerfFilePath, 'w')    
     # Write Header of PERF file
     # header_string = usrHlp.delim.join(UsrPerfIdx) + "\n"
-    header_string = "USER-ID     ULON       ULAT    SOLSAMP  NVS-MIN NVS-MAX    SAMP-AVL AVAILABILITY   HPE-RMS    VPE-RMS    HPE-95     VPE-95     HPE-MAX    VPE-MAX    HSI-MAX    VSI-MAX   HPL-MAX    VPL-MAX    HPL-MIN    VPL-MIN     HDOP-MAX   VDOP-MAX   PDOP-MAX\n"
+    header_string = "USER-ID     ULON       ULAT    SOLSAMP  NVS-MIN NVS-MAX    AVAILSAMP AVAILABILITY   HPE-RMS    VPE-RMS    HPE-95     VPE-95     HPE-MAX    VPE-MAX    HSI-MAX    VSI-MAX   HPL-MAX    VPL-MAX    HPL-MIN    VPL-MIN     HDOP-MAX   VDOP-MAX   PDOP-MAX\n"
     fPerfFile.write(header_string)
 
     # Write the USR PERF file with all the data from UsrPerfOutputs
@@ -487,7 +487,11 @@ def computeUsrEpochPerfomances(UsrPosEpochOutputs, UsrPerfOutputs, UsrPerfInterO
         HSI = UsrPosData["HSI"]
         VSI = UsrPosData["VSI"]
         
+        UsrPerfInterOutputs[usrId]["TotalSamples"] = UsrPerfInterOutputs[usrId]["TotalSamples"] + 1
+
         if (solFlag == 1):
+            UsrPerfOutputs[usrId]["SOLSAMP"] = UsrPerfOutputs[usrId]["SOLSAMP"] + 1
+            
             if (UsrPerfOutputs[usrId]["NVS-MAX"] < NVSPA):
                 UsrPerfOutputs[usrId]["NVS-MAX"] = NVSPA
 
@@ -500,8 +504,8 @@ def computeUsrEpochPerfomances(UsrPosEpochOutputs, UsrPerfOutputs, UsrPerfInterO
             if (UsrPerfOutputs[usrId]["VSI-MAX"] < VSI):
                 UsrPerfOutputs[usrId]["VSI-MAX"] = VSI
 
-            if (HPL < HAL) and (VPL < VAL):
-                UsrPerfOutputs[usrId]["SAMP-AVL"] = UsrPerfOutputs[usrId]["SAMP-AVL"] + 1
+            if (HPL < HAL) and (VPL < VAL) and (HPL > 0) and (VPL > 0) and (NVSPA >= 4):
+                UsrPerfOutputs[usrId]["AVAILSAMP"] = UsrPerfOutputs[usrId]["AVAILSAMP"] + 1
 
                 UsrPerfInterOutputs[usrId]["HPE_list"].append(HPE)
                 UsrPerfInterOutputs[usrId]["VPE_list"].append(VPE)
@@ -559,23 +563,9 @@ def computeUsrFinalPerformances(UsrPerfOutputs, UsrPerfInterOutputs):
         if(UsrPerfOutputs[usrId]["NVS-MIN"] == 1000000000000):
             UsrPerfOutputs[usrId]["NVS-MIN"] = 0
         
-        # TODO: Compute AVAILABILITY
-
-
-def computeFinalStatistics(InterOutputs, Outputs):
-    for usrId in Outputs.keys():
-
-        # Rejects Data with no samples
-        if(InterOutputs[usrId]["NSAMPS"] <= 0):
-            continue
-
-        # Estimate the Monitoring percentage = Monitored epochs / Total epochs
-        Outputs[usrId]["MON"] = Outputs[usrId]["MON"] * 100.0 / InterOutputs[usrId]["NSAMPS"]
-
-        # Compute final RMS
-        rmsGIVDE = usrHlp.computeUsrRmsFromInterOuputs(InterOutputs, usrId)
-        Outputs[usrId]["RMSGIVDE"] = rmsGIVDE        
-
+        TotalSamples = UsrPerfInterOutputs[usrId]["TotalSamples"]
+        if (TotalSamples != 0):
+            UsrPerfOutputs[usrId]["AVAILABILITY"] = (UsrPerfOutputs[usrId]["AVAILSAMP"] / TotalSamples) * 100
 
 
 ########################################################################
