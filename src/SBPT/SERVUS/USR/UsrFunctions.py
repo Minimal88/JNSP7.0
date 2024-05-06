@@ -26,7 +26,7 @@ from UsrHelper import UsrLosIdx, UsrPosIdx, UsrPerfIdx
 # ------------------------------------------------------------------------------------
 # EXTERNAL FUNCTIONS 
 # ------------------------------------------------------------------------------------
-def computeUsrPos(UsrLosFilePath, UsrPosFilePath, Conf):
+def computeUsrPosAndPerf(UsrLosFilePath, UsrPosFilePath, UsrPerfFilePath, Conf):
     # Define and Initialize Variables            
     UsrPosEpochOutputs = OrderedDict({})
     UsrPerfOutputs = OrderedDict({})
@@ -34,7 +34,7 @@ def computeUsrPos(UsrLosFilePath, UsrPosFilePath, Conf):
     EndOfFile = False
     UsrLosEpochData = []
     # Initialize Outputs
-    usrHlp.initializePosOutputs(UsrPosEpochOutputs)
+    usrHlp.initializePosEpochOutputs(UsrPosEpochOutputs)
     usrHlp.initializePerfOutputs(UsrPerfOutputs)
     usrHlp.initializeInterPerfOutputs(UsrPerfInterOutputs)
 
@@ -46,7 +46,7 @@ def computeUsrPos(UsrLosFilePath, UsrPosFilePath, Conf):
     # Read header line of USR LOS File
     fUserLos.readline()
     
-    # Write Header of Output files                
+    # Write Header of POS file
     # header_string = usrHlp.delim.join(UsrPosIdx) + "\n"
     header_string = "#   SOD  USER-ID   ULON       ULAT     SOL-FLAG   NVS   NVS-PA    HPE        VPE        HPL        VPL        HSI        VSI        PDOP       HDOP       VDOP\n"
     fPosFile.write(header_string)    
@@ -88,7 +88,7 @@ def computeUsrPos(UsrLosFilePath, UsrPosFilePath, Conf):
 
                 # LOOP Over all Satellites, and filter them
                 # ----------------------------------------------------------
-                # Count Sats with ELEV angle more than 5 degree TODO: Change it to USER.MASK_ANGLE
+                # Count Sats with ELEV angle more than 5 degree
                 if (float(UsrLosData[UsrLosIdx["ELEV"]]) > int(Conf["USER_MASK"])):
                     NVS = NVS + 1
 
@@ -130,6 +130,9 @@ def computeUsrPos(UsrLosFilePath, UsrPosFilePath, Conf):
                             HSI = computeXSI(HPE, HPL)
                             VSI = computeXSI(VPE, VPL)
                             SOL_FLAG = 1
+
+                            usrHlp.updatePerfOutputs(UsrPerfOutputs, usrId, {
+                            "SOLSAMP": NVSPA + UsrPerfOutputs[usrId]["SOLSAMP"]})
                         
                     # Update the UsrPosOuputs for SOL-FLAG, NVSPA, HPE, Nvs5, VPE, HPL, VPL
                     usrHlp.updatePosOutputs(UsrPosEpochOutputs, usrId, {
@@ -145,49 +148,35 @@ def computeUsrPos(UsrLosFilePath, UsrPosFilePath, Conf):
                     NVS = 0
                     usrSatIndex = 0                    
 
-            # END OF LOOP For ALL Users in EPOCH
+            # END OF LOOP For ALL Users in the current EPOCH
 
-            # Write USR POS File with the all the Usrs of the EPOCH
-            # ----------------------------------------------------------
-            usrHlp.WriteUsrsEpochPosFile(fPosFile, UsrPosEpochOutputs)            
+            # Write USR POS File with the all the Usrs of the EPOCH            
+            usrHlp.WriteUsrsEpochPosFile(fPosFile, UsrPosEpochOutputs)
+            
+            computeUsrEpochPerfomances(UsrPosEpochOutputs, UsrPerfOutputs, UsrPerfInterOutputs)
+
         else:
             EndOfFile = True
             # Close the all the open files
             fUserLos.close()
             fPosFile.close()
         # END OF LOOP over all Users Information on each Epoch:
-    # END OF LOOP for all Epochs of USR LOS file        
+    # END OF LOOP for all Epochs of USR LOS file      
+    del UsrPosEpochOutputs
+    computeUsrFinalPerformances(UsrPerfOutputs, UsrPerfInterOutputs)
+
+    # Open Output USR Perf File 
+    fPerfFile = open(UsrPerfFilePath, 'w')    
+    # Write Header of PERF file
+    # header_string = usrHlp.delim.join(UsrPerfIdx) + "\n"
+    header_string = "USER-ID     ULON       ULAT    SOLSAMP  NVS-MIN NVS-MAX    SAMP-AVL AVAILABILITY   HPE-RMS    VPE-RMS    HPE-95     VPE-95     HPE-MAX    VPE-MAX    HSI-MAX    VSI-MAX   HPL-MAX    VPL-MAX    HPL-MIN    VPL-MIN     HDOP-MAX   VDOP-MAX   PDOP-MAX\n"
+    fPerfFile.write(header_string)
+
+    # Write the USR PERF file with all the data from UsrPerfOutputs
+    usrHlp.WriteAllUsrPerfFile(fPerfFile, UsrPerfOutputs)
+    fPerfFile.close()  
 
 
-def computeUsrPerf(UsrPosFilePath, UsrPerfFilePath, Conf):
-    # TODO:  Improve by reading UsrPosFilePath epoch by epoch
-    UsrsPosData = readDataFile(UsrPosFilePath, UsrPosIdx.values())
-    HPE_Dict = {} # [usrId][HPE list array]
-    VPE_Dict = {} # [usrId][VPE list array]
-    HAL = 40
-    VAL = 50
-    
-    for UsrData in UsrsPosData:
-        usrId = UsrData[UsrPosIdx["USER-ID"]]
-        if usrId not in HPE_Dict: HPE_Dict[usrId] = []
-        if usrId not in VPE_Dict: VPE_Dict[usrId] = []
-
-        HPE = UsrData[UsrPosIdx["HPE"]]
-        VPE = UsrData[UsrPosIdx["VPE"]]
-
-        HPL = UsrData[UsrPosIdx["HPL"]]
-        VPL = UsrData[UsrPosIdx["VPL"]]
-        
-        if (HPL < HAL) and (VPL < VAL):
-            HPE_Dict[usrId].append(HPE)
-            VPE_Dict[usrId].append(VPE)
-    
-
-    # For each user call np.percentile     
-    # HPE95 = computePercentile95(HPE_Dict[usr])
-    # VPE95 = computePercentile95(VPE_Dict[usr])
-
-    return
 
 # ------------------------------------------------------------------------------------
 # INTERNAL FUNCTIONS 
@@ -311,7 +300,7 @@ def computeXDOPs(G):
     # Compute the DOP Matrix [Q] = ([G]T * G)^-1
     Q = np.linalg.inv(np.dot(GT, G))
 
-    # Calculate the Position Dilution of Precision (PDOP) components
+    # Compute the Position Dilution of Precision (PDOP) components
     qE = np.sqrt(Q[0, 0])  # East DOP
     qN = np.sqrt(Q[1, 1])  # North DOP
     qU = np.sqrt(Q[2, 2])  # Up DOP
@@ -319,20 +308,10 @@ def computeXDOPs(G):
     # Compute the total PDOP=sqrt(qE^2 + qN^2 + qU^2)
     PDOP = np.sqrt(qE**2 + qN**2 + qU**2)    
 
-    # # Horizontal/Vertical Dilution of Precision 
-    # # Extract the relevant elements from the pseudo-inverse matrix D
-    # G11 = G[0, 0]
-    # G22 = G[1, 1]
-    # G33 = G[2, 2]
-    
-    # # Compute HDOP and VDOP
-    # HDOP = np.sqrt(G11 + G22)
-    # VDOP = np.sqrt(G33)
-
-    # Calculate Horizontal Dilution of Precision (HDOP)
+    # Compute Horizontal Dilution of Precision (HDOP)
     HDOP = np.sqrt(qE**2 + qN**2)
 
-    # Vertical Dilution of Precision (VDOP)
+    # Compute Vertical Dilution of Precision (VDOP)
     VDOP = qU
 
     return PDOP, HDOP, VDOP
@@ -471,111 +450,116 @@ def countTotalSatsOfUsrInEpoch(targetId, UsrLosEpochData):
     return totalSats
 
 
-
-
-
-
-
-
-
-
-
-# Not used
-def updateEpochPos(UsrInfo, InterOutputs, Outputs):
+def computeRmsFromList(List):
     """
-    Update the USR POS for the current epoch based on the LOS data.
+    Compute the Root Mean Square (RMS)
 
     Parameters:
-    - UsrInfo: Information for a USR in a single epoch.
-    - interOutputs: Intermediate outputs to store computed values for each USR.
-    - outputs: Output dictionary containing computed statistics for each USR.
+    - List: NumPy array or list of values.
 
-    For each USR in the epoch, it calculates and updates the intermediate outputs
-    such as TBD.
+    Returns:
+    - RMS: RMS value from the List of samples.
     """
-    
-    # Extract ID Column
-    usrId = int(UsrInfo[UsrLosIdx["USER-ID"]])
+    if len(List) == 0:
+        return 0
 
-    # Add Number of samples
-    InterOutputs[usrId]["NSAMPS"] = InterOutputs[usrId]["NSAMPS"] + 1
+    # Calculate RMS value
+    RMS = np.sqrt(np.mean(np.square(List)))
 
-    # Add NTRANS Monitored to Not Monitored (MtoNM) or to Don't USE (MtoDU)
-    prevMon = InterOutputs[usrId]["MONPREV"]
-    currMon = int(UsrInfo[UsrLosIdx["STATUS"]])
-    if(((prevMon == 1) and (currMon == 0)) or ((prevMon == 1) and (currMon == -1))):
-        Outputs[usrId]["NTRANS"] += 1      
+    return RMS
 
-    updateEpochMaxMinStatsNonMonitored(UsrInfo, usrId, Outputs)
+def computeUsrEpochPerfomances(UsrPosEpochOutputs, UsrPerfOutputs, UsrPerfInterOutputs):
+    HAL = 40
+    VAL = 50
 
-    # Reject if USR STATUS is not OK:
-    if(currMon != 1):        
-        usrHlp.updatePreviousInterOutputsFromCurrentUsrInfo(InterOutputs, UsrInfo)
-        return
-    
-    # Add Satellite Monitoring if Satellite is Monitored
-    Outputs[usrId]["MON"] += 1    
+    # Loop over all the Users in the current EPOCH 
+    for UsrPosData in UsrPosEpochOutputs.values():
+        usrId = UsrPosData["USER-ID"]
+        solFlag = UsrPosData["SOL-FLAG"]
+        NVSPA = UsrPosData["NVS-PA"]
+        HPE = UsrPosData["HPE"]
+        VPE = UsrPosData["VPE"]
+        HPL = UsrPosData["HPL"]
+        VPL = UsrPosData["VPL"]
+        HDOP = UsrPosData["HDOP"]
+        VDOP = UsrPosData["VDOP"]
+        PDOP = UsrPosData["PDOP"]
+        HSI = UsrPosData["HSI"]
+        VSI = UsrPosData["VSI"]
+        
+        if (solFlag == 1):
+            if (UsrPerfOutputs[usrId]["NVS-MAX"] < NVSPA):
+                UsrPerfOutputs[usrId]["NVS-MAX"] = NVSPA
 
-    # Reject if GIVDE_STAT IS NOT OK:
-    if(UsrInfo[UsrLosIdx["GIVDE_STAT"]] != '1'): 
-        usrHlp.updatePreviousInterOutputsFromCurrentUsrInfo(InterOutputs, UsrInfo)        
-        return
-    
-    # Update number of samples GIVDESAMPS
-    InterOutputs[usrId]["GIVDESAMPS"] += 1
+            if (UsrPerfOutputs[usrId]["NVS-MIN"] > NVSPA):
+                UsrPerfOutputs[usrId]["NVS-MIN"] = NVSPA
+            
+            if (UsrPerfOutputs[usrId]["HSI-MAX"] < HSI):
+                UsrPerfOutputs[usrId]["HSI-MAX"] = HSI
+            
+            if (UsrPerfOutputs[usrId]["VSI-MAX"] < VSI):
+                UsrPerfOutputs[usrId]["VSI-MAX"] = VSI
 
-    updateEpochMaxMinStatsMonitored(UsrInfo, usrId, Outputs)
+            if (HPL < HAL) and (VPL < VAL):
+                UsrPerfOutputs[usrId]["SAMP-AVL"] = UsrPerfOutputs[usrId]["SAMP-AVL"] + 1
 
-    Outputs[usrId]["BAND"] = int(UsrInfo[UsrLosIdx["BAND"]])
-    Outputs[usrId]["BIT"] = int(UsrInfo[UsrLosIdx["BIT"]])
-    Outputs[usrId]["LON"] = float(UsrInfo[UsrLosIdx["LON"]])
-    Outputs[usrId]["LAT"] = float(UsrInfo[UsrLosIdx["LAT"]])
+                UsrPerfInterOutputs[usrId]["HPE_list"].append(HPE)
+                UsrPerfInterOutputs[usrId]["VPE_list"].append(VPE)
 
-    # Update sum of squared GIVDE values in InterOutputs[usrId]
-    InterOutputs[usrId]["GIVDESUM2"] += float(UsrInfo[UsrLosIdx["GIVDE"]])**2
-    
-    # Update the previous values with the current UsrInfo Values
-    usrHlp.updatePreviousInterOutputsFromCurrentUsrInfo(InterOutputs, UsrInfo)
+                if (UsrPerfOutputs[usrId]["HPE-MAX"] < HPE):
+                    UsrPerfOutputs[usrId]["HPE-MAX"] = HPE
+                
+                if (UsrPerfOutputs[usrId]["VPE-MAX"] < VPE):
+                    UsrPerfOutputs[usrId]["VPE-MAX"] = VPE
 
-def updateEpochMaxMinStatsNonMonitored(UsrInfo, usrId, Outputs):
-    # Update the Minimum Number of IPPs surrounding the USR
-    NIPP = int(UsrInfo[UsrLosIdx["NIPP"]])
-    if( NIPP < Outputs[usrId]["MINIPPs"]):
-        Outputs[usrId]["MINIPPs"] = NIPP
-    
-    # Update the Maximum Number of IPPs surrounding the USR
-    if( NIPP > Outputs[usrId]["MAXIPPs"]):
-        Outputs[usrId]["MAXIPPs"] = NIPP        
-    
-    # Update the Maximun VTEC
-    currVTEC = float(UsrInfo[UsrLosIdx["VTEC"]])
-    if( currVTEC > Outputs[usrId]["MAXVTEC"]):
-        Outputs[usrId]["MAXVTEC"] = currVTEC
+                if (UsrPerfOutputs[usrId]["HPL-MAX"] < HPL):
+                    UsrPerfOutputs[usrId]["HPL-MAX"] = HPL
+                
+                if (UsrPerfOutputs[usrId]["VPL-MAX"] < VPL):
+                    UsrPerfOutputs[usrId]["VPL-MAX"] = VPL
 
-def updateEpochMaxMinStatsMonitored(UsrInfo, usrId, Outputs):
-    # Update the Maximun GIVD
-    currGIVD = float(UsrInfo[UsrLosIdx["GIVD"]])
-    if( currGIVD > Outputs[usrId]["MAXGIVD"]):
-        Outputs[usrId]["MAXGIVD"] = currGIVD
+                if (UsrPerfOutputs[usrId]["HPL-MIN"] > HPL):
+                    UsrPerfOutputs[usrId]["HPL-MIN"] = HPL
+                
+                if (UsrPerfOutputs[usrId]["VPL-MIN"] > VPL):
+                    UsrPerfOutputs[usrId]["VPL-MIN"] = VPL
+                
+                if (UsrPerfOutputs[usrId]["HDOP-MAX"] < HDOP):
+                    UsrPerfOutputs[usrId]["HDOP-MAX"] = HDOP
 
-    # Update the Maximun GIVE
-    currGIVE = float(UsrInfo[UsrLosIdx["GIVE"]])
-    if( currGIVE > Outputs[usrId]["MAXGIVE"]):
-        Outputs[usrId]["MAXGIVE"] = currGIVE
+                if (UsrPerfOutputs[usrId]["VDOP-MAX"] < VDOP):
+                    UsrPerfOutputs[usrId]["VDOP-MAX"] = VDOP
+                
+                if (UsrPerfOutputs[usrId]["PDOP-MAX"] < PDOP):
+                    UsrPerfOutputs[usrId]["PDOP-MAX"] = PDOP
 
-    # Update the Maximun GIVEI
-    currGIVEI = float(UsrInfo[UsrLosIdx["GIVEI"]])
-    if( currGIVEI > Outputs[usrId]["MAXGIVEI"]):
-        Outputs[usrId]["MAXGIVEI"] = currGIVEI 
-    
-    # Update the Maximun SI
-    currSIW = float(UsrInfo[UsrLosIdx["SI-W"]])
-    if( currSIW > Outputs[usrId]["MAXSI"]):
-        Outputs[usrId]["MAXSI"] = currSIW
-    
-    # Update the Number of USR MIs (Misleading Information) NMI = SI > 1
-    if(currSIW > 1):
-        Outputs[usrId]["NMI"] += 1    
+def computeUsrFinalPerformances(UsrPerfOutputs, UsrPerfInterOutputs):
+    for usrId in UsrPerfOutputs.keys():
+        HPE_List = UsrPerfInterOutputs[usrId]["HPE_list"]
+        VPE_List = UsrPerfInterOutputs[usrId]["VPE_list"]
+        
+        if (len(HPE_List) > 0) and ((len(VPE_List) > 0)):
+            HPERMS = computeRmsFromList(HPE_List)
+            VPERMS = computeRmsFromList(VPE_List)
+            UsrPerfOutputs[usrId]["HPE-RMS"] = HPERMS
+            UsrPerfOutputs[usrId]["VPE-RMS"] = VPERMS
+
+            HPE95 = np.percentile(HPE_List, 95)
+            VPE95 = np.percentile(VPE_List, 95)
+            UsrPerfOutputs[usrId]["HPE-95"] = HPE95
+            UsrPerfOutputs[usrId]["VPE-95"] = VPE95
+        
+        HPL_MIN = UsrPerfOutputs[usrId]["HPL-MIN"]
+        if(UsrPerfOutputs[usrId]["HPL-MIN"] == 1000000000000):
+            UsrPerfOutputs[usrId]["HPL-MIN"] = 0
+        
+        if(UsrPerfOutputs[usrId]["VPL-MIN"] == 1000000000000):
+            UsrPerfOutputs[usrId]["VPL-MIN"] = 0
+        
+        if(UsrPerfOutputs[usrId]["NVS-MIN"] == 1000000000000):
+            UsrPerfOutputs[usrId]["NVS-MIN"] = 0
+        
+        # TODO: Compute AVAILABILITY
 
 
 def computeFinalStatistics(InterOutputs, Outputs):
@@ -591,9 +575,6 @@ def computeFinalStatistics(InterOutputs, Outputs):
         # Compute final RMS
         rmsGIVDE = usrHlp.computeUsrRmsFromInterOuputs(InterOutputs, usrId)
         Outputs[usrId]["RMSGIVDE"] = rmsGIVDE        
-
-
-
 
 
 

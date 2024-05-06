@@ -88,10 +88,10 @@ UsrPerfIdx = dict([
     ("USER-ID", 0),
     ("ULON", 1),
     ("ULAT", 2),
-    ("TOTALSAMP", 3),
+    ("SOLSAMP", 3),
     ("NVS-MIN", 4),
     ("NVS-MAX", 5),
-    ("SAMP-AVL ", 6),
+    ("SAMP-AVL", 6),
     ("AVAILABILITY", 7),
     ("HPE-RMS", 8),
     ("VPE-RMS", 9),
@@ -105,13 +105,13 @@ UsrPerfIdx = dict([
     ("VPL-MAX", 17),
     ("HPL-MIN", 18),
     ("VPL-MIN", 19),
-    ("PDOP-MAX", 22),
-    ("HDOP-MAX", 20),
-    ("VDOP-MAX", 21)    
+    ("HDOP-MAX", 22),
+    ("VDOP-MAX", 20),
+    ("PDOP-MAX", 21)    
 ])
 
 # Define User Performance Output file format list
-UsrPerfOutputFormat = "%d %f %f %d %d %d %d %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f"
+UsrPerfOutputFormat = "%7d %10.3f %10.3f %8d %8d %8d %10d %10.4f %10.4f %10.4f %10.4f %10.4f %10.4f %10.4f %10.4f %10.4f %10.4f %10.4f %10.4f %10.4f %10.4f %10.4f %10.4f"
 PerfFileOutputFormatList =UsrPerfOutputFormat.split()
 
 delim = " "
@@ -154,7 +154,7 @@ def readUsrLosEpoch(f):
 
     return EpochUsrLos
 
-def initializePosOutputs(PosOutputs):    
+def initializePosEpochOutputs(PosOutputs):    
     # Loop over all 294 USRs of the GRID
     for usrId in range(1,295):            
         PosOutputs[usrId] = OrderedDict({})
@@ -178,6 +178,12 @@ def initializePerfOutputs(PerfOutputs):
         for var in UsrPerfIdx.keys():
             if (var == "USER-ID"):
                 PerfOutputs[usrId][var] = int(usrId)
+            elif (var == "HPL-MIN"):
+                PerfOutputs[usrId][var] = 1000000000000
+            elif (var == "VPL-MIN"):
+                PerfOutputs[usrId][var] = 1000000000000    
+            elif (var == "NVS-MIN"):
+                PerfOutputs[usrId][var] = 1000000000000        
             else:
                 PerfOutputs[usrId][var] = 0.0
     return
@@ -194,9 +200,7 @@ def initializeInterPerfOutputs(PerfInterOutputs):
     for usrId in range(1,295):
         PerfInterOutputs[usrId] = {
             "HPE_list": [],
-            "VPE_list": [],
-            "NSAMPS": 0,
-            "MONPREV": 0
+            "VPE_list": []
             
         }
     return
@@ -303,10 +307,10 @@ def WriteUsrsEpochPosFile(fOut, UsrPosEpochOutputs):
 
         fOut.write("\n")
 
-def WriteLineInUsrPerfFile(fOut, UsrPerfEpochOutputs):
-     for usr in UsrPerfEpochOutputs.keys():        
-        for i, result in enumerate(UsrPerfEpochOutputs[usr]):
-            fOut.write(((PerfFileOutputFormatList[i] + delim) % UsrPerfEpochOutputs[usr][result]))
+def WriteAllUsrPerfFile(fOut, UsrPerfOutputs):
+     for usr in UsrPerfOutputs.keys():        
+        for i, result in enumerate(UsrPerfOutputs[usr]):
+            fOut.write(((PerfFileOutputFormatList[i] + delim) % UsrPerfOutputs[usr][result]))
 
         fOut.write("\n")
 
