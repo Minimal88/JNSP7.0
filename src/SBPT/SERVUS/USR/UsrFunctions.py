@@ -130,9 +130,6 @@ def computeUsrPosAndPerf(UsrLosFilePath, UsrPosFilePath, UsrPerfFilePath, Conf):
                             HSI = computeXSI(HPE, HPL)
                             VSI = computeXSI(VPE, VPL)
                             SOL_FLAG = 1
-
-                            usrHlp.updatePerfOutputs(UsrPerfOutputs, usrId, {
-                            "SOLSAMP": NVSPA + UsrPerfOutputs[usrId]["SOLSAMP"]})
                         
                     # Update the UsrPosOuputs for SOL-FLAG, NVSPA, HPE, Nvs5, VPE, HPL, VPL
                     usrHlp.updatePosOutputs(UsrPosEpochOutputs, usrId, {
