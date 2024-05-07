@@ -1,6 +1,7 @@
 
 import sys, os
 import matplotlib as mpl
+from matplotlib.colors import ListedColormap
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 import matplotlib.pyplot as plt
@@ -98,12 +99,37 @@ def prepareColorBar(PlotConf, ax, Values):
         for v in Values.values():
             Maxs.append(max(v))
         Max = max(Maxs)
-    normalize = mpl.cm.colors.Normalize(vmin=Min, vmax=Max)
 
+    normalize = mpl.cm.colors.Normalize(vmin=Min, vmax=Max)
     divider = make_axes_locatable(ax)
+
     # size size% of the plot and gap of pad% from the plot
     color_ax = divider.append_axes("right", size="3%", pad="2%")
-    cmap = mpl.cm.get_cmap(PlotConf["ColorBar"])
+
+    if PlotConf["ColorBar"] == "Availability_0_100":
+        cmapTmp = mpl.cm.get_cmap("jet", 100)        
+        newcolors = cmapTmp(np.linspace(0, 1, 100))
+        gray = np.array([0.5, 0.5, 0.5, 1])
+        start_index = int(0.99 * len(newcolors))  # Index corresponding to 99% of segments
+        newcolors[start_index:, :] = gray
+        cmap = ListedColormap(newcolors)
+        
+    elif PlotConf["ColorBar"] == "Availability_70_99":
+        cmapTmp = mpl.cm.get_cmap("jet", 100)        
+        newcolors = cmapTmp(np.linspace(0, 1, 100))       
+        white = np.array([1, 1, 1, 1])
+        end_index_white = int(0.7 * len(newcolors)) # Assign white color to the first 70% of segments
+        newcolors[:end_index_white, :] = white
+
+        gray = np.array([0.5, 0.5, 0.5, 1])
+        start_index_gray = int(0.99 * len(newcolors)) # Assign gray color to the last 99% of segments
+        newcolors[start_index_gray:, :] = gray
+
+        # Create new colormap        
+        cmap = ListedColormap(newcolors)
+
+    else:
+        cmap = mpl.cm.get_cmap(PlotConf["ColorBar"], 100)
     
     if "ColorBarTicks" in PlotConf:
         cbar = mpl.colorbar.ColorbarBase(color_ax, 
@@ -327,7 +353,7 @@ def generateInterpolatedMapPlot(PlotConf):
     if "Map" in PlotConf and PlotConf["Map"]:
         drawMap(PlotConf, ax)
     if "ColorBar" in PlotConf:
-            normalize, Cmap = prepareColorBar(PlotConf, ax, PlotConf["zData"])
+        normalize, Cmap = prepareColorBar(PlotConf, ax, PlotConf["zData"])
 
     # Generate meshgrid for interpolation
     lon_grid, lat_grid = np.meshgrid(
@@ -341,9 +367,7 @@ def generateInterpolatedMapPlot(PlotConf):
     )
 
     # Plot interpolated data
-    contour = ax.contourf(lon_grid, lat_grid, zData_interpolated, cmap=Cmap)
-
-    
+    contour = ax.contourf(lon_grid, lat_grid, zData_interpolated, cmap=Cmap)    
 
     # Set labels and title
     ax.set_xlabel(PlotConf["xLabel"], labelpad=50) 
@@ -503,7 +527,7 @@ def createPlotConfig2DLinesColorBar(filepath, title, xData, yData, zData, xLabel
     PlotConf["xData"][yLabel] = xData
     PlotConf["yData"][yLabel] = yData    
     PlotConf["zData"][yLabel] = zData  
-    PlotConf["ColorBar"] = "gnuplot"
+    PlotConf["ColorBar"] = "jet"
     PlotConf["ColorBarLabel"] = zLabel
     PlotConf["ColorBarMin"] = min(zData)
     PlotConf["ColorBarMax"] = max(zData)      
@@ -511,7 +535,7 @@ def createPlotConfig2DLinesColorBar(filepath, title, xData, yData, zData, xLabel
 
     return PlotConf
 
-def createPlotConfig3DMapColorBar(filepath, title, xData, yData, zData, xLabel, yLabel, zLabel, LonMin, LonMax, LonStep, LatMin, LatMax, LatStep):
+def createPlotConfig3DMapColorBarInterpolated(filepath, title, xData, yData, zData, xLabel, yLabel, zLabel, LonMin, LonMax, LonStep, LatMin, LatMax, LatStep, ColorBar):
     PlotConf = {}
     PlotConf["Type"] = "Lines"
     PlotConf["FigSize"] = (16.8, 15.2)
@@ -523,7 +547,7 @@ def createPlotConfig3DMapColorBar(filepath, title, xData, yData, zData, xLabel, 
     PlotConf["xData"] = xData
     PlotConf["yData"] = yData    
     PlotConf["zData"] = zData  
-    PlotConf["ColorBar"] = "gnuplot"
+    PlotConf["ColorBar"] = ColorBar
     PlotConf["ColorBarLabel"] = zLabel
     PlotConf["ColorBarMin"] = min(zData)
     PlotConf["ColorBarMax"] = max(zData)
