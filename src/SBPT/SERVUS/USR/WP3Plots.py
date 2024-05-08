@@ -123,7 +123,8 @@ def plotUsrMapAvailability_0_100(UsrPerfData, yearDayText):
         LON, LAT  , APV1,                               # xData, yData, zData
         "Longitude [deg]", yLabel,"Availability [%]",   # xLabel, yLabel, zLabel
         -35, 50, 5,                                     # LonMin, LonMax, LonStep
-        15, 80, 5, "Availability_0_100")                # LatMin, LatMax, LatStep, ColorBar
+        15, 80, 5,                                      # LatMin, LatMax, LatStep, 
+        0, 100, "Availability_0_100")                   # ColorBarMin, ColorBarMax, ColorBar
 
     plt.generateInterpolatedMapPlot(PlotConf)
 
@@ -145,7 +146,8 @@ def plotUsrMapAvailability_70_99(UsrPerfData, yearDayText):
         LON, LAT  , APV1,                               # xData, yData, zData
         "Longitude [deg]", yLabel,"Availability [%]",   # xLabel, yLabel, zLabel
         -35, 50, 5,                                     # LonMin, LonMax, LonStep
-        15, 80, 5, "Availability_70_99")                # LatMin, LatMax, LatStep, ColorBar
+        15, 80, 5,                                      # LatMin, LatMax, LatStep, 
+        70, 99, "Availability_70_99")                   # ColorBarMin, ColorBarMax, ColorBar
     
     plt.generateInterpolatedMapPlot(PlotConf)
 

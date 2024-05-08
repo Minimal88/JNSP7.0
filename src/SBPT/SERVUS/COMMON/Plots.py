@@ -115,15 +115,16 @@ def prepareColorBar(PlotConf, ax, Values):
         cmap = ListedColormap(newcolors)
         
     elif PlotConf["ColorBar"] == "Availability_70_99":
-        cmapTmp = mpl.cm.get_cmap("jet", 100)        
-        newcolors = cmapTmp(np.linspace(0, 1, 100))       
+        cmapTmp = mpl.cm.get_cmap("jet", 100)
+        newcolors = cmapTmp(np.linspace(0, 1, 100))
         white = np.array([1, 1, 1, 1])
-        end_index_white = int(0.7 * len(newcolors)) # Assign white color to the first 70% of segments
+        end_index_white = int(0.7 * len(newcolors))  # Assign white color to the first 70% of segments
         newcolors[:end_index_white, :] = white
-
         gray = np.array([0.5, 0.5, 0.5, 1])
-        start_index_gray = int(0.99 * len(newcolors)) # Assign gray color to the last 99% of segments
-        newcolors[start_index_gray:, :] = gray
+        start_index_gray = len(newcolors) - 1  # Assign gray color to the last segment (value 100)
+        newcolors[start_index_gray, :] = gray
+        # Create new colormap
+        cmap = ListedColormap(newcolors)
 
         # Create new colormap        
         cmap = ListedColormap(newcolors)
@@ -355,19 +356,23 @@ def generateInterpolatedMapPlot(PlotConf):
     if "ColorBar" in PlotConf:
         normalize, Cmap = prepareColorBar(PlotConf, ax, PlotConf["zData"])
 
-    # Generate meshgrid for interpolation
-    lon_grid, lat_grid = np.meshgrid(
-        np.linspace(PlotConf["LonMin"], PlotConf["LonMax"], 100),
-        np.linspace(PlotConf["LatMin"], PlotConf["LatMax"], 100)
-    )
-
     # Interpolate zData (availability) on the meshgrid
-    zData_interpolated = griddata(
-        (PlotConf["xData"], PlotConf["yData"]), PlotConf["zData"], (lon_grid, lat_grid), method='cubic'
-    )
+    # zData_interpolated = griddata(
+    #     (PlotConf["xData"], PlotConf["yData"]), PlotConf["zData"], (lon_grid, lat_grid), method='cubic'
+    # )
+
+    # Generate meshgrid for interpolation
+    longitude = PlotConf["xData"]
+    latitude = PlotConf["yData"]
+    colorBar = PlotConf["zData"]
+    lon_grid, lat_grid = np.meshgrid(longitude, latitude)    
+
+    # Reshape the colorBar array to match the dimensions of lon_grid and lat_grid
+    # colorBar_2D = np.reshape(colorBar.values, lon_grid.shape)    
+    colorBar_2D = griddata((longitude, latitude), colorBar.values, (lon_grid, lat_grid), method='cubic')    
 
     # Plot interpolated data
-    contour = ax.contourf(lon_grid, lat_grid, zData_interpolated, cmap=Cmap)    
+    contour = ax.contourf(lon_grid, lat_grid, colorBar_2D, cmap=Cmap)    
 
     # Set labels and title
     ax.set_xlabel(PlotConf["xLabel"], labelpad=50) 
@@ -535,7 +540,10 @@ def createPlotConfig2DLinesColorBar(filepath, title, xData, yData, zData, xLabel
 
     return PlotConf
 
-def createPlotConfig3DMapColorBarInterpolated(filepath, title, xData, yData, zData, xLabel, yLabel, zLabel, LonMin, LonMax, LonStep, LatMin, LatMax, LatStep, ColorBar):
+def createPlotConfig3DMapColorBarInterpolated(
+        filepath, title, xData, yData, zData, xLabel, yLabel, zLabel, 
+        LonMin, LonMax, LonStep, LatMin, LatMax, LatStep, 
+        ColorBarMin, ColorBarMax, ColorBar):
     PlotConf = {}
     PlotConf["Type"] = "Lines"
     PlotConf["FigSize"] = (16.8, 15.2)
@@ -549,8 +557,8 @@ def createPlotConfig3DMapColorBarInterpolated(filepath, title, xData, yData, zDa
     PlotConf["zData"] = zData  
     PlotConf["ColorBar"] = ColorBar
     PlotConf["ColorBarLabel"] = zLabel
-    PlotConf["ColorBarMin"] = min(zData)
-    PlotConf["ColorBarMax"] = max(zData)
+    PlotConf["ColorBarMin"] = ColorBarMin
+    PlotConf["ColorBarMax"] = ColorBarMax
     PlotConf["Map"] = True    
     PlotConf["LonMin"] = LonMin
     PlotConf["LonMax"] = LonMax
