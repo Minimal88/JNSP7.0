@@ -74,7 +74,7 @@ def plotUsrPerfMaps(UsrPerfFile, yearDayText):
 
     plotUsrMapMAX_VDOP(UsrPerfData, yearDayText)
 
-    # plotUsrMapMAX_PDOP(UsrPerfData, yearDayText)    
+    plotUsrMapMAX_PDOP(UsrPerfData, yearDayText)    
 
 def plotUsrInfoTime(UsrInfoFile, yearDayText):
 

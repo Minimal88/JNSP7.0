@@ -350,29 +350,19 @@ def generateInterpolatedMapPlot(PlotConf):
     # Create figure and axis
     fig, ax = createFigure(PlotConf)
 
+    Y, X = np.meshgrid(np.unique(PlotConf["yData"]),
+    np.unique(PlotConf["xData"]))
+
+    Z = np.reshape(np.array(PlotConf["zData"]), 
+    X.shape)
+
     # Draw map if specified
     if "Map" in PlotConf and PlotConf["Map"]:
         drawMap(PlotConf, ax)
     if "ColorBar" in PlotConf:
         normalize, Cmap = prepareColorBar(PlotConf, ax, PlotConf["zData"])
 
-    # Interpolate zData (availability) on the meshgrid
-    # zData_interpolated = griddata(
-    #     (PlotConf["xData"], PlotConf["yData"]), PlotConf["zData"], (lon_grid, lat_grid), method='cubic'
-    # )
-
-    # Generate meshgrid for interpolation
-    longitude = PlotConf["xData"]
-    latitude = PlotConf["yData"]
-    colorBar = PlotConf["zData"]
-    lon_grid, lat_grid = np.meshgrid(longitude, latitude)    
-
-    # Reshape the colorBar array to match the dimensions of lon_grid and lat_grid
-    # colorBar_2D = np.reshape(colorBar.values, lon_grid.shape)    
-    colorBar_2D = griddata((longitude, latitude), colorBar.values, (lon_grid, lat_grid), method='cubic')    
-
-    # Plot interpolated data
-    contour = ax.contourf(lon_grid, lat_grid, colorBar_2D, cmap=Cmap)    
+    ax.contourf(X, Y, Z, cmap=Cmap, norm=normalize)    
 
     # Set labels and title
     ax.set_xlabel(PlotConf["xLabel"], labelpad=50) 
