@@ -117,16 +117,13 @@ def prepareColorBar(PlotConf, ax, Values):
     elif PlotConf["ColorBar"] == "Availability_70_99":
         cmapTmp = mpl.cm.get_cmap("jet", 100)
         newcolors = cmapTmp(np.linspace(0, 1, 100))
-        white = np.array([1, 1, 1, 1])
-        end_index_white = int(0.7 * len(newcolors))  # Assign white color to the first 70% of segments
-        newcolors[:end_index_white, :] = white
         gray = np.array([0.5, 0.5, 0.5, 1])
         start_index_gray = len(newcolors) - 1  # Assign gray color to the last segment (value 100)
         newcolors[start_index_gray, :] = gray
+        white = np.array([1, 1, 1, 1])
+        end_index_white = int(0.01 * len(newcolors))  # Assign white color to the first 70% of segments
+        newcolors[:end_index_white, :] = white
         # Create new colormap
-        cmap = ListedColormap(newcolors)
-
-        # Create new colormap        
         cmap = ListedColormap(newcolors)
 
     else:
@@ -135,13 +132,13 @@ def prepareColorBar(PlotConf, ax, Values):
     if "ColorBarTicks" in PlotConf:
         cbar = mpl.colorbar.ColorbarBase(color_ax, 
         cmap=cmap,
-        norm=mpl.colors.Normalize(vmin=Min, vmax=Max),
+        norm=normalize,
         label=PlotConf["ColorBarLabel"],
         ticks=PlotConf["ColorBarTicks"])
     else: 
         cbar = mpl.colorbar.ColorbarBase(color_ax, 
         cmap=cmap,
-        norm=mpl.colors.Normalize(vmin=Min, vmax=Max),
+        norm=normalize,
         label=PlotConf["ColorBarLabel"])
 
     return normalize, cmap
@@ -362,7 +359,7 @@ def generateInterpolatedMapPlot(PlotConf):
     if "ColorBar" in PlotConf:
         normalize, Cmap = prepareColorBar(PlotConf, ax, PlotConf["zData"])
 
-    ax.contourf(X, Y, Z, cmap=Cmap, norm=normalize)    
+    ax.contourf(X, Y, Z, 100, cmap=Cmap, norm=normalize)    
 
     # Set labels and title
     ax.set_xlabel(PlotConf["xLabel"], labelpad=50) 
