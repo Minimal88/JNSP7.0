@@ -98,11 +98,11 @@ for Jd in range(Conf["INI_DATE_JD"], Conf["END_DATE_JD"] + 1):
     # T1. Compute USR POSITION and USR PERFORMANCES
     computeUsrPosAndPerf(UsrLosFilePath, UsrPosFilePath, UsrPerfFilePath, Conf)
     print('2. User POS file created:', UsrPosFilePath)
-    print('3. User PERF file created:', UsrPosFilePath)
+    print('3. User PERF file created:', UsrPerfFilePath)
+
+    # T3. Generate USR Performance Maps figures
     print('4. Generating User Performance Figures...\n')
-    
-    # T3. Generate USR Performance Maps figures   
-    # wp3.plotUsrPerfMaps(UsrPerfFilePath, yearDayText)
+    wp3.plotUsrPerfMaps(UsrPerfFilePath, yearDayText)
     
     # T4. Generate USR Time figures     
     # wp3.plotUsrInfoTime(UsrPerfFilePath, yearDayText)   
